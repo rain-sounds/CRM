@@ -5,7 +5,7 @@
 
 
     <select id="list" resultType="cn.cordys.crm.opportunity.dto.response.OpportunityListResponse">
-        SELECT
+        SELECT DISTINCT
             o.id,
             o.NAME,
             c.id AS customerId,
@@ -33,6 +33,8 @@
             opportunity o
         LEFT JOIN customer c ON o.customer_id = c.id
         LEFT JOIN opportunity_stage_config osc ON o.stage = osc.id
+        LEFT JOIN opportunity_field_blob fb ON o.id = fb.resource_id
+        LEFT JOIN opportunity_field f ON o.id = f.resource_id
         <include refid="fieldConditionJoin">
             <property name="conditions" value="request.filters"/>
             <property name="tablePrefix" value="filter"/>
@@ -64,7 +66,11 @@
         where o.organization_id = #{orgId}
 
         <if test="dataPermission != null and dataPermission.self">
-            and o.owner = #{userId}
+            and (
+            o.owner = #{userId}
+            or fb.field_value=concat('["',#{userId},'"]')
+            or f.field_value=#{userId}
+            )
         </if>
 
         <if test="!source and request.keyword != null and request.keyword != ''">
