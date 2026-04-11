@@ -1,5 +1,6 @@
 package cn.cordys.crm.submission.controller;
 
+import cn.cordys.common.constants.FormKey;
 import cn.cordys.common.constants.PermissionConstants;
 import cn.cordys.common.dto.request.PosRequest;
 import cn.cordys.common.pager.PagerWithOption;
@@ -11,6 +12,8 @@ import cn.cordys.crm.submission.dto.response.SubmissionGetResponse;
 import cn.cordys.crm.submission.dto.response.SubmissionListResponse;
 import cn.cordys.crm.submission.service.SubmissionService;
 import cn.cordys.crm.system.dto.request.ResourceBatchEditRequest;
+import cn.cordys.crm.system.dto.response.ModuleFormConfigDTO;
+import cn.cordys.crm.system.service.ModuleFormCacheService;
 import cn.cordys.security.SessionUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +32,15 @@ public class SubmissionController {
 
     @Resource
     private SubmissionService submissionService;
+
+    @Resource
+    private ModuleFormCacheService moduleFormCacheService;
+
+    @GetMapping("/module/form")
+    @Operation(summary = "获取投稿表单配置")
+    public ModuleFormConfigDTO getModuleFormConfig() {
+        return moduleFormCacheService.getBusinessFormConfig(FormKey.SUBMISSION.getKey(), OrganizationContext.getOrganizationId());
+    }
 
     @PostMapping("/page")
     @RequiresPermissions("submission:read")

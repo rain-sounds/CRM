@@ -11,7 +11,7 @@ export default {
   'crmFormCreate.drawer.recordClue': '跟进记录',
   'crmFormCreate.drawer.planClue': '跟进计划',
   'crmFormCreate.drawer.opportunity': '商机',
-  'crmFormCreate.drawer.product': '产品',
+  'crmFormCreate.drawer.product': '期刊',
   'crmFormCreate.drawer.contract': '合同',
   'crmFormCreate.drawer.contractPaymentPlan': '回款计划',
   'crmFormCreate.drawer.contractPaymentRecord': '回款记录',
@@ -20,4 +20,5 @@ export default {
   'crmFormCreate.drawer.invoice': '发票',
   'crmFormCreate.drawer.businessTitle': '工商抬头',
   'crmFormCreate.drawer.order': '订单',
+  'crmFormCreate.drawer.submission': '投稿',
 };

@@ -17,7 +17,7 @@ public class SubmissionEditRequest {
     @Schema(description = "名称")
     private String name;
 
-    @Schema(description = "产品id")
+    @Schema(description = "期刊id")
     private String productId;
 
     @Schema(description = "商机id")

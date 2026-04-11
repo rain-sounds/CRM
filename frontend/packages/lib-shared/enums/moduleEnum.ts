@@ -14,7 +14,7 @@ export enum ModuleConfigEnum {
   /** 数据管理 TODO 先不做 */
   // DATA_MANAGEMENT = 'data',
 
-  /** 产品管理 */
+  /** 期刊管理 */
   PRODUCT_MANAGEMENT = 'product',
 
   /** 系统设置 */

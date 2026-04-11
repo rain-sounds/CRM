@@ -195,9 +195,9 @@
         <div class="text-[var(--text-n6)]">{{ t('crmFormDesign.formulaPlaceholder') }}</div>
 
         <div class="flex items-center">
-          <div :style="{ color: FUN_COLOR }">SUM</div>(<div :style="{ color: ARRAY_COLOR }">订阅产品.金额</div>) +
-          <div :style="{ color: FUN_COLOR }">SUM</div>(<div :style="{ color: ARRAY_COLOR }">授权产品.金额</div>) +
-          <div :style="{ color: FUN_COLOR }">SUM</div>(<div :style="{ color: ARRAY_COLOR }">续费产品.金额</div>)
+          <div :style="{ color: FUN_COLOR }">SUM</div>(<div :style="{ color: ARRAY_COLOR }">订阅期刊.金额</div>) +
+          <div :style="{ color: FUN_COLOR }">SUM</div>(<div :style="{ color: ARRAY_COLOR }">授权期刊.金额</div>) +
+          <div :style="{ color: FUN_COLOR }">SUM</div>(<div :style="{ color: ARRAY_COLOR }">续费期刊.金额</div>)
         </div>
       </div>
     </div>

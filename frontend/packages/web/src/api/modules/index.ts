@@ -9,6 +9,7 @@ import useHomeApi from '@lib/shared/api/modules/home';
 import useOpportunityApi from '@lib/shared/api/modules/opportunity';
 import useOrderApi from '@lib/shared/api/modules/order';
 import useProductApi from '@lib/shared/api/modules/product';
+import useSubmissionApi from '@lib/shared/api/modules/submission';
 import useSysApi from '@lib/shared/api/modules/sys';
 import useLicenseApi from '@lib/shared/api/modules/system/authorizedManagement';
 import useBusinessApi from '@lib/shared/api/modules/system/business';
@@ -47,6 +48,7 @@ const dashboardApi = useDashboard(CDR);
 const opportunityApi = useOpportunityApi(CDR);
 const contractApi = useContractApi(CDR);
 const orderApi = useOrderApi(CDR);
+const submissionApi = useSubmissionApi(CDR);
 
 export const {
   getOrderFormConfig,
@@ -78,6 +80,18 @@ export const {
   deleteOrderStatus,
   getOrderStatistic,
 } = orderApi;
+
+export const {
+  getSubmissionPage,
+  getSubmissionDetail,
+  addSubmission,
+  updateSubmission,
+  batchUpdateSubmission,
+  deleteSubmission,
+  batchDeleteSubmission,
+  dragSortSubmission,
+  getSubmissionFormConfig,
+} = submissionApi;
 
 export const {
   getFollowPlanTab,

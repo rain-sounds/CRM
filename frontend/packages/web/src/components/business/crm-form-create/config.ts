@@ -29,6 +29,7 @@ import {
   addProduct,
   addProductPrice,
   addQuotation,
+  addSubmission,
   advancedSearchOptPage,
   ClueTransitionCustomer,
   deleteOrder,
@@ -106,6 +107,9 @@ import {
   getQuotationList,
   getQuotationSnapshotDetail,
   getQuotationSnapshotFormConfig,
+  getSubmissionDetail,
+  getSubmissionFormConfig,
+  getSubmissionPage,
   updateClue,
   updateClueFollowPlan,
   updateClueFollowRecord,
@@ -126,6 +130,7 @@ import {
   updateProduct,
   updateProductPrice,
   updateQuotation,
+  updateSubmission,
 } from '@/api/modules';
 
 import type { FormCreateField, FormCreateFieldRule, FormDetail } from './types';
@@ -794,6 +799,17 @@ export const getFormConfigApiMap: Record<FormDesignKeyEnum, (id?: string) => Pro
   [FormDesignKeyEnum.CONTRACT_ORDER]: getOrderFormConfig,
   [FormDesignKeyEnum.CUSTOMER_ORDER]: getOrderFormConfig,
   [FormDesignKeyEnum.ORDER_SNAPSHOT]: (id) => getOrderFormSnapshotConfig(id),
+  [FormDesignKeyEnum.SUBMISSION]: async () => {
+    const res = await getSubmissionFormConfig();
+    if (res && res.fields) {
+      res.fields.forEach((field) => {
+        if (field.internalKey === 'submissionProductId' && field.name === '产品') {
+          field.name = '期刊';
+        }
+      });
+    }
+    return res;
+  },
 };
 
 export const createFormApi: Record<FormDesignKeyEnum, (data: any) => Promise<any>> = {
@@ -838,6 +854,7 @@ export const createFormApi: Record<FormDesignKeyEnum, (data: any) => Promise<any
   [FormDesignKeyEnum.ORDER_SNAPSHOT]: addOrder,
   [FormDesignKeyEnum.CONTRACT_ORDER]: async () => ({}),
   [FormDesignKeyEnum.CUSTOMER_ORDER]: async () => ({}),
+  [FormDesignKeyEnum.SUBMISSION]: addSubmission,
 };
 
 export const updateFormApi: Record<FormDesignKeyEnum, (data: any) => Promise<any>> = {
@@ -882,6 +899,7 @@ export const updateFormApi: Record<FormDesignKeyEnum, (data: any) => Promise<any
   [FormDesignKeyEnum.ORDER_SNAPSHOT]: updateOrder,
   [FormDesignKeyEnum.CONTRACT_ORDER]: async () => ({}),
   [FormDesignKeyEnum.CUSTOMER_ORDER]: async () => ({}),
+  [FormDesignKeyEnum.SUBMISSION]: updateSubmission,
 };
 
 export const getFormDetailApiMap: Partial<Record<FormDesignKeyEnum, (id: string) => Promise<FormDetail>>> = {
@@ -922,6 +940,7 @@ export const getFormDetailApiMap: Partial<Record<FormDesignKeyEnum, (id: string)
   [FormDesignKeyEnum.CONTRACT_ORDER]: getOrderDetailSnapshot,
   [FormDesignKeyEnum.CUSTOMER_ORDER]: getOrderDetailSnapshot,
   [FormDesignKeyEnum.ORDER_SNAPSHOT]: getOrderDetailSnapshot,
+  [FormDesignKeyEnum.SUBMISSION]: getSubmissionDetail,
 };
 
 export const getFormListApiMap: Partial<Record<FormDesignKeyEnum, (data: any) => Promise<CommonList<any>>>> = {
@@ -955,6 +974,7 @@ export const getFormListApiMap: Partial<Record<FormDesignKeyEnum, (data: any) =>
   [FormDesignKeyEnum.ORDER]: getOrderList,
   [FormDesignKeyEnum.CONTRACT_ORDER]: getOrderInContractList,
   [FormDesignKeyEnum.CUSTOMER_ORDER]: getCustomerOrderList,
+  [FormDesignKeyEnum.SUBMISSION]: getSubmissionPage,
 };
 
 export const dataSourceFilterFormKeyMap: Partial<Record<FieldDataSourceTypeEnum, FormDesignKeyEnum>> = {

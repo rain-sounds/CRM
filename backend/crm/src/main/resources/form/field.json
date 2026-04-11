@@ -2580,7 +2580,7 @@
       "enableMask": false
     },
     {
-      "name": "产品",
+      "name": "期刊",
       "internalKey": "submissionProductId",
       "type": "DATA_SOURCE",
       "dataSourceType": "PRODUCT",

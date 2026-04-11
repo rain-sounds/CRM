@@ -4,7 +4,7 @@ import { PreviewPictureUrl } from '@lib/shared/api/requrls/system/module';
 import { FieldTypeEnum, FormDesignKeyEnum } from '@lib/shared/enums/formDesignEnum';
 import { SpecialColumnEnum, TableKeyEnum } from '@lib/shared/enums/tableEnum';
 import { useI18n } from '@lib/shared/hooks/useI18n';
-import { formatNumberValueToString, transformData } from '@lib/shared/method/formCreate';
+import { formatNumberValueToString, specialBusinessKeyMap, transformData } from '@lib/shared/method/formCreate';
 import type { StageConfigItem } from '@lib/shared/models/opportunity';
 
 import type { CrmDataTableColumn } from '@/components/pure/crm-table/type';
@@ -50,6 +50,7 @@ export type FormKey =
   | FormDesignKeyEnum.CONTRACT_INVOICE
   | FormDesignKeyEnum.ORDER
   | FormDesignKeyEnum.CONTRACT_ORDER
+  | FormDesignKeyEnum.SUBMISSION
   | FormDesignKeyEnum.CUSTOMER_ORDER;
 
 export interface FormCreateTableProps {
@@ -109,6 +110,7 @@ export default async function useFormCreateTable(props: FormCreateTableProps) {
     [FormDesignKeyEnum.CONTRACT_INVOICE]: TableKeyEnum.CONTRACT_INVOICE,
     [FormDesignKeyEnum.ORDER]: TableKeyEnum.ORDER,
     [FormDesignKeyEnum.CONTRACT_ORDER]: TableKeyEnum.CONTRACT_ORDER,
+    [FormDesignKeyEnum.SUBMISSION]: TableKeyEnum.SUBMISSION,
     [FormDesignKeyEnum.CUSTOMER_ORDER]: TableKeyEnum.ORDER,
   };
   const noPaginationKey = [FormDesignKeyEnum.CUSTOMER_CONTACT];
@@ -302,6 +304,8 @@ export default async function useFormCreateTable(props: FormCreateTableProps) {
           if (
             !field.resourceFieldId &&
             (field.businessKey === 'customerId' ||
+              field.businessKey === 'productId' ||
+              field.businessKey === 'opportunityId' ||
               ([
                 FormDesignKeyEnum.CONTRACT_PAYMENT,
                 FormDesignKeyEnum.CONTRACT_CONTRACT_PAYMENT,
@@ -323,7 +327,10 @@ export default async function useFormCreateTable(props: FormCreateTableProps) {
               sortOrder: false,
               sorter: sorter && !field.resourceFieldId,
               filedType: field.type,
-              render: props.specialRender?.[field.businessKey],
+              render: props.specialRender?.[field.businessKey] || ((row: any) => {
+                const nameKey = specialBusinessKeyMap[field.businessKey] || field.businessKey;
+                return row[nameKey] || row[field.businessKey] || '-';
+              }),
               resourceFieldId: field.resourceFieldId,
             };
           }

@@ -1,44 +1,64 @@
 <template>
-  <div class="submission-detail">
-    <h2>投稿详情</h2>
-    <el-descriptions border :column="2">
-      <el-descriptions-item label="名称">{{ detail.name }}</el-descriptions-item>
-      <el-descriptions-item label="产品">{{ detail.productId }}</el-descriptions-item>
-      <el-descriptions-item label="商机">{{ detail.opportunityId }}</el-descriptions-item>
-      <el-descriptions-item label="状态">{{ detail.status }}</el-descriptions-item>
-      <!-- 动态字段展示 -->
-      <template v-for="field in detail.moduleFields">
-        <el-descriptions-item :key="field.id" :label="field.name">{{ field.value }}</el-descriptions-item>
-      </template>
-    </el-descriptions>
-    <div style="margin-top: 20px">
-      <el-button @click="$router.back()">返回</el-button>
+  <CrmDrawer v-model:show="visible" resizable no-padding :width="800" :footer="false" :title="title">
+    <template #titleRight>
+      <n-button
+        v-permission="['submission:update']"
+        type="primary"
+        ghost
+        class="n-btn-outline-primary"
+        @click="emit('edit', props.sourceId)"
+      >
+        {{ t('common.edit') }}
+      </n-button>
+    </template>
+    <div class="h-full bg-[var(--text-n9)] px-[16px] pt-[16px]">
+      <CrmCard hide-footer>
+        <div class="flex-1">
+          <CrmFormDescription
+            :form-key="FormDesignKeyEnum.SUBMISSION"
+            :source-id="props.sourceId"
+            :column="3"
+            :refresh-key="props.refreshId"
+            label-width="auto"
+            value-align="start"
+            tooltip-position="top-start"
+            @init="handleInit"
+          />
+        </div>
+      </CrmCard>
     </div>
-  </div>
+  </CrmDrawer>
 </template>
 
-<script>
-  import { getSubmissionDetail } from '@/api/submission';
+<script lang="ts" setup>
+  import { ref } from 'vue';
+  import { NButton } from 'naive-ui';
 
-  export default {
-    name: 'SubmissionDetail',
-    data() {
-      return {
-        detail: {},
-      };
-    },
-    created() {
-      const { id } = this.$route.query;
-      if (id) {
-        this.fetchData(id);
-      }
-    },
-    methods: {
-      fetchData(id) {
-        getSubmissionDetail(id).then((response) => {
-          this.detail = response.data;
-        });
-      },
-    },
-  };
+  import { FormDesignKeyEnum } from '@lib/shared/enums/formDesignEnum';
+  import { useI18n } from '@lib/shared/hooks/useI18n';
+  import { CollaborationType } from '@lib/shared/models/customer';
+
+  import CrmCard from '@/components/pure/crm-card/index.vue';
+  import CrmDrawer from '@/components/pure/crm-drawer/index.vue';
+  import CrmFormDescription from '@/components/business/crm-form-description/index.vue';
+
+  const props = defineProps<{
+    sourceId: string;
+    refreshId?: number;
+  }>();
+
+  const emit = defineEmits<{
+    (e: 'edit', sourceId: string): void;
+  }>();
+
+  const visible = defineModel<boolean>('visible', {
+    required: true,
+  });
+
+  const { t } = useI18n();
+  const title = ref('');
+
+  function handleInit(type?: CollaborationType, name?: string) {
+    title.value = name || t('module.submission');
+  }
 </script>

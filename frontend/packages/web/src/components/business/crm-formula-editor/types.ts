@@ -169,7 +169,7 @@ export interface FormulaFieldMeta {
 
 export interface FormulaSerializeResult {
   source: string; // SUM(${123}, ${456}) + DAYS(...)
-  display: string; // SUM(报价产品.价格, 订阅表格.价格)
+  display: string; // SUM(报价期刊.价格, 订阅表格.价格)
   fields: FormulaFieldMeta[];
   ir: IRNode | null; // 公式 IR
 }

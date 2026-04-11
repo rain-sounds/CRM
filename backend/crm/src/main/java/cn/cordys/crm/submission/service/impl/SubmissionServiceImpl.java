@@ -69,6 +69,16 @@ public class SubmissionServiceImpl implements SubmissionService {
 
         ModuleFormConfigDTO formConfig = moduleFormCacheService.getBusinessFormConfig("submission", orgId);
         List<BaseModuleFieldValue> moduleFieldValues = moduleFormService.getBaseModuleFieldValues(list, SubmissionListResponse::getModuleFields);
+        
+        list.forEach(item -> {
+            if (StringUtils.isNotBlank(item.getProductId())) {
+                moduleFieldValues.add(new BaseModuleFieldValue("productId", item.getProductId()));
+            }
+            if (StringUtils.isNotBlank(item.getOpportunityId())) {
+                moduleFieldValues.add(new BaseModuleFieldValue("opportunityId", item.getOpportunityId()));
+            }
+        });
+
         Map<String, List<OptionDTO>> optionMap = moduleFormService.getOptionMap(formConfig, moduleFieldValues);
         
         return PageUtils.setPageInfoWithOption(page, buildList, optionMap);
@@ -90,6 +100,15 @@ public class SubmissionServiceImpl implements SubmissionService {
         SubmissionGetResponse response = BeanUtils.copyBean(new SubmissionGetResponse(), submission);
         List<BaseModuleFieldValue> fields = submissionFieldService.getModuleFieldValuesByResourceId(id);
         response.setModuleFields(fields);
+        
+        // 补充标准字段的值，以便 optionMap 解析
+        if (StringUtils.isNotBlank(submission.getProductId())) {
+            fields.add(new BaseModuleFieldValue("productId", submission.getProductId()));
+        }
+        if (StringUtils.isNotBlank(submission.getOpportunityId())) {
+            fields.add(new BaseModuleFieldValue("opportunityId", submission.getOpportunityId()));
+        }
+
         ModuleFormConfigDTO formConfig = moduleFormCacheService.getBusinessFormConfig("submission", submission.getOrganizationId());
         response.setOptionMap(moduleFormService.getOptionMap(formConfig, fields));
         response.setAttachmentMap(moduleFormService.getAttachmentMap(formConfig, fields));

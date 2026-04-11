@@ -13,7 +13,7 @@ export enum FormDesignKeyEnum {
   BUSINESS = 'opportunity', // 商机
   FOLLOW_RECORD_BUSINESS = 'recordBusiness', // 商机跟进记录
   FOLLOW_PLAN_BUSINESS = 'planBusiness', // 商机跟进计划
-  PRODUCT = 'product', // 产品
+  PRODUCT = 'product', // 期刊
   BUSINESS_CONTACT = 'opportunityContact', // 商机联系人
   CUSTOMER_OPPORTUNITY = 'customerOpportunity', // 客户商机
   FOLLOW_PLAN = 'followPlan',
@@ -89,7 +89,7 @@ export enum FieldDataSourceTypeEnum {
   CUSTOMER = 'CUSTOMER', // 客户
   CONTACT = 'CONTACT', // 联系人
   BUSINESS = 'OPPORTUNITY', // 商机
-  PRODUCT = 'PRODUCT', // 产品
+  PRODUCT = 'PRODUCT', // 期刊
   CLUE = 'CLUE', // 线索
   CUSTOMER_OPTIONS = 'CUSTOMER_OPTIONS', // 客户选项
   USER_OPTIONS = 'USER_OPTIONS', // 成员选项

@@ -3,7 +3,7 @@ CREATE TABLE submission
 (
     `id`              VARCHAR(32)  NOT NULL COMMENT 'id',
     `name`            VARCHAR(255) NOT NULL COMMENT '名称',
-    `product_id`      VARCHAR(32)  NOT NULL COMMENT '产品id',
+    `product_id`      VARCHAR(32)  NOT NULL COMMENT '期刊id',
     `opportunity_id`  VARCHAR(32)  NOT NULL COMMENT '商机id',
     `status`          VARCHAR(32)  NOT NULL COMMENT '状态',
     `organization_id` VARCHAR(32)  NOT NULL COMMENT '组织机构id',

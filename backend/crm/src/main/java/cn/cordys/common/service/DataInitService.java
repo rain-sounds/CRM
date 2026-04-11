@@ -73,7 +73,6 @@ public class DataInitService {
             initOneTime(moduleFormService::initOrderFormScenarioProp, "init.order.form.scenario");
 			initOneTime(moduleFieldExtService::modifyInternalSubSumColumn, "modify.internal.sum.column");
 			initOneTime(moduleFieldExtService::modifyInternalSubCalcFormula, "modify.internal.calc.formula");
-            initOneTime(moduleFormService::initUpgradeForm, "init.upgrade.form.submission");
 		} finally {
             lock.unlock();
         }

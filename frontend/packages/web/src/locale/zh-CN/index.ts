@@ -27,7 +27,7 @@ export default {
     'menu.opportunity': '商机',
     'menu.quotation': '报价',
     'menu.collapsedOpportunity': '商机',
-    'menu.collapsedProduct': '产品',
+    'menu.collapsedProduct': '期刊',
     'menu.clue': '线索',
     'menu.customer': '客户',
     'menu.contact': '联系人',

@@ -4,7 +4,7 @@ export default {
   'formCreate.customer': '客户',
   'formCreate.contract': '联系人',
   'formCreate.business': '商机',
-  'formCreate.product': '产品',
+  'formCreate.product': '期刊',
   'formCreate.clue': '线索',
   'formCreate.member': '成员',
   'formCreate.department': '部门',

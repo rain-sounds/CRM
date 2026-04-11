@@ -31,7 +31,7 @@ export interface SaveOpportunityParams {
   name: string;
   customerId: string; // 客户id
   amount: number; // 金额
-  products: string[]; // 意向产品
+  products: string[]; // 意向期刊
   possible: number; // 可能性
   contactId: string; // 联系人ID
   owner: string; // 负责人

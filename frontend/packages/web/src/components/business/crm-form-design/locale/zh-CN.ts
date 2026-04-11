@@ -105,7 +105,7 @@ export default {
   'crmFormDesign.customer': '客户',
   'crmFormDesign.contact': '联系人',
   'crmFormDesign.opportunity': '商机',
-  'crmFormDesign.product': '产品',
+  'crmFormDesign.product': '期刊',
   'crmFormDesign.clue': '线索',
   'crmFormDesign.plan': '跟进计划',
   'crmFormDesign.showRule': '显隐规则',
@@ -228,7 +228,7 @@ export default {
   'crmFormDesign.tip.CLUE_TO_CONTACT':
     '线索转换联系人时，将线索的表单字段内容填充到联系人表单字段。注：联系人表单的客户名称字段由系统逻辑填充，请勿配置！',
   'crmFormDesign.tip.CONTRACT_TO_ORDER': '在合同详情创建订单时，将合同表单字段填充到订单表单',
-  'crmFormDesign.productTable': '产品表格',
+  'crmFormDesign.productTable': '期刊表格',
   'crmFormDesign.quotationTable': '报价表格',
   'crmFormDesign.sum': '汇总',
   'crmFormDesign.fixedCol': '固定列',

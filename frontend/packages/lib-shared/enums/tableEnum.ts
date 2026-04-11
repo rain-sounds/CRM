@@ -41,6 +41,7 @@ export enum TableKeyEnum {
   SEARCH_ADVANCED_CLUE_POOL = 'searchAdvancedCluePool', // 线索池
   SEARCH_ADVANCED_OPPORTUNITY = 'searchAdvancedOpportunity', // 商机
   CONTRACT_BUSINESS_NAME = 'contractBusinessName', // 工商抬头
+  SUBMISSION = 'submission', // 投稿
 }
 
 // 具有特殊功能的列

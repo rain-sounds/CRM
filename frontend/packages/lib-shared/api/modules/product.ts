@@ -47,46 +47,46 @@ import type { FormDesignConfigDetailParams } from '@lib/shared/models/system/mod
 import { ValidateInfo } from '@lib/shared/models/system/org';
 
 export default function useProductApi(CDR: CordysAxios) {
-  // 添加产品
+  // 添加期刊
   function addProduct(data: SaveProductParams) {
     return CDR.post({ url: AddProductUrl, data });
   }
 
-  // 更新产品
+  // 更新期刊
   function updateProduct(data: UpdateProductParams) {
     return CDR.post({ url: UpdateProductUrl, data });
   }
 
-  // 获取产品列表
+  // 获取期刊列表
   function getProductList(data: TableQueryParams) {
     return CDR.post<CommonList<ProductListItem>>({ url: GetProductListUrl, data });
   }
 
-  // 获取产品表单配置
+  // 获取期刊表单配置
   function getProductFormConfig() {
     return CDR.get<FormDesignConfigDetailParams>({ url: GetProductFormConfigUrl });
   }
 
-  // 获取产品详情
+  // 获取期刊详情
   function getProduct(id: string) {
     return CDR.get<ProductListItem>({ url: `${GetProductUrl}/${id}` });
   }
 
-  // 删除产品
+  // 删除期刊
   function deleteProduct(id: string) {
     return CDR.get({ url: `${DeleteProductUrl}/${id}` });
   }
 
-  // 批量删除产品
+  // 批量删除期刊
   function batchDeleteProduct(data: (string | number)[]) {
     return CDR.post({ url: BatchDeleteProductUrl, data });
   }
 
-  // 批量更新产品
+  // 批量更新期刊
   function batchUpdateProduct(data: BatchUpdatePoolAccountParams) {
     return CDR.post({ url: BatchUpdateProductUrl, data });
   }
-  // 拖拽排序产品
+  // 拖拽排序期刊
   function dragSortProduct(data: TableDraggedParams) {
     return CDR.post({ url: DragSortProductUrl, data });
   }
@@ -109,7 +109,7 @@ export default function useProductApi(CDR: CordysAxios) {
     return CDR.uploadFile({ url: ImportProductUrl }, { fileList: [file] }, 'file');
   }
 
-  // 获取意向产品选项
+  // 获取意向期刊选项
   function getProductOptions() {
     return CDR.get<{ id: string; name: string }[]>({ url: GetProductOptionsUrl });
   }

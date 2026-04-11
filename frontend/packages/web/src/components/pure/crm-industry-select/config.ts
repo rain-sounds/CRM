@@ -406,7 +406,7 @@ export const industryOptions: CascaderOption[] = [
         value: '79',
       },
       {
-        label: '机动车、电子产品和日用产品修理业',
+        label: '机动车、电子期刊和日用期刊修理业',
         value: '80',
       },
       {

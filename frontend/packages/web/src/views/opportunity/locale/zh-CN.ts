@@ -10,7 +10,7 @@ export default {
   'opportunity.department': '部门',
   'opportunity.region': '区域',
   'opportunity.disabledContentTip': '禁用后，成员无法查到该商机',
-  'opportunity.intendedProducts': '意向产品',
+  'opportunity.intendedProducts': '意向期刊',
   'opportunity.belongDays': '归属天数',
   'opportunity.remainingBelong': '剩余归属',
   'opportunity.followUp': '跟进',
@@ -68,6 +68,6 @@ export default {
   'opportunity.operationResult': '{name}结果',
   'opportunity.quotation.amount': '累计金额',
   'opportunity.quotation.exportingPdf': '报价 PDF 导出中...',
-  'opportunity.quotation.productInfo': '产品信息',
+  'opportunity.quotation.productInfo': '期刊信息',
   'opportunity.quotation.exportPdfSuccess': 'PDF 导出成功',
 };

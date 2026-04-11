@@ -1,0 +1,12 @@
+export const GetSubmissionPageUrl = '/api/submission/page';
+export const GetSubmissionDetailUrl = '/api/submission/get';
+export const AddSubmissionUrl = '/api/submission/add';
+export const UpdateSubmissionUrl = '/api/submission/update';
+export const BatchUpdateSubmissionUrl = '/api/submission/batch/update';
+export const DeleteSubmissionUrl = '/api/submission/delete';
+export const BatchDeleteSubmissionUrl = '/api/submission/batch/delete';
+export const DragSortSubmissionUrl = '/api/submission/edit/pos';
+export const GetSubmissionFormConfigUrl = '/api/submission/module/form';
+export const DownloadSubmissionTemplateUrl = '/api/submission/template/download';
+export const PreCheckSubmissionImportUrl = '/api/submission/import/pre-check';
+export const ImportSubmissionUrl = '/api/submission/import';
