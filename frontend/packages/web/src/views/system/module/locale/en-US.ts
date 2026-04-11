@@ -118,6 +118,8 @@ export default {
   'module.businessTitle': 'Business Title',
   'module.priceTableFormSetting': 'Price Table Form Setting',
   'module.tender': 'Tender',
+  'module.submission': 'Submission',
+  'module.submissionFormSetting': 'Submission Form Setting',
   'module.contract.businessNameValidateConfig': 'Business Title Form Required Settings',
   'module.contract.invoiceFormSetting': 'Invoice Form Settings',
   'module.invoice': 'Invoice Records',

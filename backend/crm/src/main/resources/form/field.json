@@ -2549,5 +2549,97 @@
       "mobile": true,
       "format": "11"
     }
+  ],
+  "submission": [
+    {
+      "name": "基本信息",
+      "internalKey": "submissionBaseInfo",
+      "type": "DIVIDER",
+      "showLabel": true,
+      "readable": true,
+      "fieldWidth": 1,
+      "dividerClass": "divider--normal",
+      "dividerColor": "#edf0f1",
+      "titleColor": "#323535"
+    },
+    {
+      "name": "投稿名称",
+      "internalKey": "submissionName",
+      "type": "INPUT",
+      "showLabel": true,
+      "readable": true,
+      "editable": true,
+      "fieldWidth": 1,
+      "rules": [
+        {
+          "key": "required"
+        }
+      ],
+      "mobile": true,
+      "unique": false,
+      "enableMask": false
+    },
+    {
+      "name": "产品",
+      "internalKey": "submissionProductId",
+      "type": "DATA_SOURCE",
+      "dataSourceType": "PRODUCT",
+      "dataSourceMultiple": false,
+      "showLabel": true,
+      "readable": true,
+      "editable": true,
+      "fieldWidth": 1,
+      "rules": [
+        {
+          "key": "required"
+        }
+      ],
+      "mobile": true
+    },
+    {
+      "name": "商机",
+      "internalKey": "submissionOpportunityId",
+      "type": "DATA_SOURCE",
+      "dataSourceType": "OPPORTUNITY",
+      "dataSourceMultiple": false,
+      "showLabel": true,
+      "readable": true,
+      "editable": true,
+      "fieldWidth": 1,
+      "rules": [
+        {
+          "key": "required"
+        }
+      ],
+      "mobile": true
+    },
+    {
+      "name": "状态",
+      "internalKey": "submissionStatus",
+      "type": "SELECT",
+      "showLabel": true,
+      "readable": true,
+      "editable": true,
+      "fieldWidth": 1,
+      "rules": [
+        {
+          "key": "required"
+        }
+      ],
+      "options": [
+        {
+          "id": "1",
+          "label": "待处理",
+          "value": "1"
+        },
+        {
+          "id": "2",
+          "label": "已处理",
+          "value": "2"
+        }
+      ],
+      "mobile": true,
+      "multiple": false
+    }
   ]
 }

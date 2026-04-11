@@ -174,6 +174,11 @@
       key: ModuleConfigEnum.TENDER,
       icon: 'iconicon_target',
     },
+    {
+      label: t('module.submission'),
+      key: ModuleConfigEnum.SUBMISSION,
+      icon: 'iconicon_target',
+    },
   ]);
 
   const moduleNavList = ref<ModuleNavItem[]>([]);

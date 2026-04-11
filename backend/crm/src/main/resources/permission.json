@@ -675,5 +675,30 @@
         ]
       }
     ]
+    }
+  ],
+  {
+    "id": "SUBMISSION_MANAGEMENT",
+    "name": "permission.submission_management.name",
+    "children": [
+      {
+        "id": "SUBMISSION_MANAGEMENT_SUBMISSION",
+        "name": "permission.submission_management.submission.name",
+        "permissions": [
+          {
+            "id": "submission:read"
+          },
+          {
+            "id": "submission:add"
+          },
+          {
+            "id": "submission:update"
+          },
+          {
+            "id": "submission:delete"
+          }
+        ]
+      }
+    ]
   }
 ]

@@ -78,6 +78,7 @@
   <ContractPaymentPlanFormDrawer v-model:visible="contractPaymentPlanFormVisible" />
   <ContractPaymentRecordFormDrawer v-model:visible="contractPaymentRecordFormVisible" />
   <contractInvoiceFormDrawer v-model:visible="contractInvoiceFormVisible" />
+  <SubmissionFormDrawer v-model:visible="submissionFormVisible" />
 </template>
 
 <script setup lang="ts">
@@ -116,6 +117,7 @@
   import OrderFormFormDrawer from './order/orderFormFormDrawer.vue';
   import ProductFromDrawer from './productManagement/formDrawer.vue';
   import priceTableFormDrawer from './productManagement/priceTableFormDrawer.vue';
+  import SubmissionFormDrawer from './submission/formDrawer.vue';
 
   import { getReasonConfig, toggleModuleNavStatus, updateReasonEnable } from '@/api/modules';
   import useModal from '@/hooks/useModal';
@@ -509,6 +511,18 @@
       groupList: [],
       enable: true,
     },
+    {
+      label: t('module.submission'),
+      key: ModuleConfigEnum.SUBMISSION,
+      icon: 'iconicon_target',
+      groupList: [
+        {
+          label: t('module.submissionFormSetting'),
+          key: 'newForm',
+        },
+      ],
+      enable: true,
+    },
   ];
 
   const moduleConfigList = computed<ModuleConfigItem[]>(() => {
@@ -593,6 +607,8 @@
   const productManagementFormVisible = ref(false);
   const priceTableFormVisible = ref(false);
 
+  const submissionFormVisible = ref(false);
+
   const contractFormVisible = ref(false);
   const contractPaymentPlanFormVisible = ref(false);
   const contractPaymentRecordFormVisible = ref(false);
@@ -644,6 +660,11 @@
           productManagementFormVisible.value = true;
         } else if (key === 'newPriceForm') {
           priceTableFormVisible.value = true;
+        }
+        break;
+      case ModuleConfigEnum.SUBMISSION:
+        if (key === 'newForm') {
+          submissionFormVisible.value = true;
         }
         break;
       case ModuleConfigEnum.ORDER:

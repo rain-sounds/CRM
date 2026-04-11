@@ -54,3 +54,7 @@ INSERT INTO sys_role_permission (id, role_id, permission_id) VALUES (UUID_SHORT(
 INSERT INTO sys_role_permission (id, role_id, permission_id) VALUES (UUID_SHORT(), 'org_admin', 'submission:add');
 INSERT INTO sys_role_permission (id, role_id, permission_id) VALUES (UUID_SHORT(), 'org_admin', 'submission:update');
 INSERT INTO sys_role_permission (id, role_id, permission_id) VALUES (UUID_SHORT(), 'org_admin', 'submission:delete');
+
+-- 插入投稿模块记录
+INSERT INTO sys_module (id, organization_id, module_key, enable, pos, create_user, create_time, update_user, update_time) 
+VALUES (UUID_SHORT(), '100001', 'submission', true, 11, 'admin', UNIX_TIMESTAMP() * 1000, 'admin', UNIX_TIMESTAMP() * 1000);

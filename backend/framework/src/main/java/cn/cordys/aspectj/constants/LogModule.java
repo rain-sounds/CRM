@@ -148,4 +148,9 @@ public class LogModule {
      */
     public static final String ORDER_INDEX = "ORDER_INDEX";
 
+    /**
+     * 投稿
+     */
+    public static final String SUBMISSION_INDEX = "SUBMISSION_INDEX";
+
 }

@@ -68,7 +68,11 @@ public enum FormKey {
     /**
      * 订单
      */
-    ORDER("order");
+    ORDER("order"),
+    /**
+     * 投稿
+     */
+    SUBMISSION("submission");
 
     private final String key;
 

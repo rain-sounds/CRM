@@ -286,8 +286,13 @@ public enum BusinessModuleField {
     ORDER_NO("orderNo", "number", Set.of("rules.required"), FormKey.ORDER.getKey()),
     ORDER_TOTAL_AMOUNT("orderAmount", "amount", Set.of("rules.required", "mobile", "readable"), FormKey.ORDER.getKey()),
     /*------ end: ORDER ------*/
-
-
+    
+    /*------ start: SUBMISSION ------*/
+    SUBMISSION_NAME("submissionName", "name", Set.of("rules.required", "mobile", "readable"), FormKey.SUBMISSION.getKey()),
+    SUBMISSION_PRODUCT("submissionProductId", "productId", Set.of("rules.required", "mobile", "readable", "dataSourceType"), FormKey.SUBMISSION.getKey()),
+    SUBMISSION_OPPORTUNITY("submissionOpportunityId", "opportunityId", Set.of("rules.required", "mobile", "readable", "dataSourceType"), FormKey.SUBMISSION.getKey()),
+    SUBMISSION_STATUS("submissionStatus", "status", Set.of("rules.required", "mobile", "readable"), FormKey.SUBMISSION.getKey()),
+    /*------ end: SUBMISSION ------*/
     ;
 
     /**
