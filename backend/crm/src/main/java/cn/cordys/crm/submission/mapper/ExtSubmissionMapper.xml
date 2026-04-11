@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.cordys.crm.submission.mapper.ExtSubmissionMapper">
+    <update id="batchUpdate">
+        UPDATE submission
+        <set>
+            <if test="request.fieldName == 'name'">
+                name = #{request.fieldValue},
+            </if>
+            <if test="request.fieldName == 'status'">
+                status = #{request.fieldValue},
+            </if>
+            <if test="request.fieldName == 'productId'">
+                product_id = #{request.fieldValue},
+            </if>
+            <if test="request.fieldName == 'opportunityId'">
+                opportunity_id = #{request.fieldValue},
+            </if>
+            update_time = #{request.updateTime},
+            update_user = #{request.updateUser},
+        </set>
+        WHERE id IN
+        <foreach collection="request.ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="list" resultType="cn.cordys.crm.submission.dto.response.SubmissionListResponse">
+        select p.id, p.name, p.product_id, p.opportunity_id, p.status, p.organization_id, p.create_time, p.update_time, p.create_user, p.update_user
+        from submission p
+
+        <include refid="fieldConditionJoin">
+            <property name="conditions" value="request.filters"/>
+            <property name="tablePrefix" value="filter"/>
+        </include>
+        <include refid="fieldConditionJoin">
+            <property name="conditions" value="request.combineSearch.conditions"/>
+            <property name="tablePrefix" value="combine"/>
+        </include>
+
+        <include refid="fieldSortJoin">
+            <property name="sort" value="request.sort"/>
+        </include>
+
+        where p.organization_id = #{orgId}
+        <if test="request.status != null and request.status != ''">
+            and p.status = #{request.status}
+        </if>
+        <if test="request.keyword != null and request.keyword != ''">
+            and p.name like concat('%', #{request.keyword},'%')
+        </if>
+        <include refid="filters">
+            <property name="filters" value="request.filters"/>
+        </include>
+        <include refid="combine">
+            <property name="combineSearch" value="request.combineSearch"/>
+        </include>
+        <include refid="sort">
+            <property name="sort" value="request.sort"/>
+        </include>
+    </select>
+
+    <sql id="fieldConditionJoin">
+        <if test="${conditions} != null and ${conditions}.size() > 0">
+            <foreach collection="${conditions}" item="condition" index="i">
+                <if test="condition.name != 'name'
+                and condition.name != 'status'
+                and condition.name != 'productId'
+                and condition.name != 'opportunityId'
+                and condition.name != 'updateUser'
+                and condition.name != 'createTime'
+                and condition.name != 'updateTime'
+                and condition.name != 'createUser'
+                and condition.name != 'update_user'
+                and condition.name != 'create_time'
+                and condition.name != 'update_time'
+                and condition.name != 'create_user'
+                ">
+                    <if test="condition.multipleValue">
+                        inner join submission_field_blob ${tablePrefix}_${i}
+                        on p.id = ${tablePrefix}_${i}.resource_id and ${tablePrefix}_${i}.field_id = #{condition.name}
+                    </if>
+                    <if test="!condition.multipleValue">
+                        inner join submission_field ${tablePrefix}_${i}
+                        on p.id = ${tablePrefix}_${i}.resource_id and ${tablePrefix}_${i}.field_id = #{condition.name}
+                    </if>
+                </if>
+            </foreach>
+        </if>
+    </sql>
+
+    <sql id="fieldSortJoin">
+        <if test="${sort} != null and ${sort}.name != 'name'
+                and ${sort}.name != 'status'
+                and ${sort}.name != 'productId'
+                and ${sort}.name != 'opportunityId'
+                and ${sort}.name != 'create_user'
+                and ${sort}.name != 'create_time'
+                and ${sort}.name != 'update_time'
+                and ${sort}.name != 'update_user'
+                ">
+            <if test="${sort}.multipleValue">
+                left join submission_field_blob sort
+                on p.id = sort.resource_id and sort.field_id = #{${sort}.name}
+            </if>
+            <if test="!${sort}.multipleValue">
+                left join submission_field sort
+                on p.id = sort.resource_id and sort.field_id = #{${sort}.name}
+            </if>
+        </if>
+    </sql>
+
+    <sql id="filters">
+        <if test="${filters} != null and ${filters}.size() > 0">
+            <foreach collection="${filters}" item="condition" index="i">
+                <include refid="condition">
+                    <property name="tablePrefix" value="filter"/>
+                    <property name="condition" value="condition"/>
+                    <property name="index" value="i"/>
+                </include>
+            </foreach>
+        </if>
+    </sql>
+    
+    <sql id="combine">
+        <if test="${combineSearch} != null and ${combineSearch}.conditions != null and ${combineSearch}.conditions.size() > 0">
+            and (
+            <foreach collection="${combineSearch}.conditions" item="condition" index="i" separator=" ${combineSearch}.operator ">
+                <include refid="condition">
+                    <property name="tablePrefix" value="combine"/>
+                    <property name="condition" value="condition"/>
+                    <property name="index" value="i"/>
+                </include>
+            </foreach>
+            )
+        </if>
+    </sql>
+    
+    <sql id="sort">
+        <if test="${sort} != null">
+            <if test="${sort}.name == 'name'
+                or ${sort}.name == 'status'
+                or ${sort}.name == 'create_time'
+                or ${sort}.name == 'update_time'
+                or ${sort}.name == 'create_user'
+                or ${sort}.name == 'update_user'">
+                order by p.${${sort}.name} ${${sort}.order}
+            </if>
+            <if test="${sort}.name != 'name'
+                and ${sort}.name != 'status'
+                and ${sort}.name != 'productId'
+                and ${sort}.name != 'opportunityId'
+                and ${sort}.name != 'create_time'
+                and ${sort}.name != 'update_time'
+                and ${sort}.name != 'create_user'
+                and ${sort}.name != 'update_user'">
+                order by sort.field_value ${${sort}.order}
+            </if>
+        </if>
+        <if test="${sort} == null">
+            order by p.update_time desc
+        </if>
+    </sql>
+
+    <sql id="condition">
+        <if test="${condition}.name == 'name'">
+            <if test="${condition}.operator == 'like'">
+                and p.name like concat('%', #{${condition}.value}, '%')
+            </if>
+            <if test="${condition}.operator == 'eq'">
+                and p.name = #{${condition}.value}
+            </if>
+            <if test="${condition}.operator == 'in'">
+                and p.name in
+                <foreach collection="${condition}.value" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+        </if>
+        <if test="${condition}.name == 'status'">
+            <if test="${condition}.operator == 'eq'">
+                and p.status = #{${condition}.value}
+            </if>
+            <if test="${condition}.operator == 'in'">
+                and p.status in
+                <foreach collection="${condition}.value" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+        </if>
+        <if test="${condition}.name == 'productId'">
+            <if test="${condition}.operator == 'eq'">
+                and p.product_id = #{${condition}.value}
+            </if>
+        </if>
+        <if test="${condition}.name == 'opportunityId'">
+            <if test="${condition}.operator == 'eq'">
+                and p.opportunity_id = #{${condition}.value}
+            </if>
+        </if>
+        <if test="${condition}.name == 'createTime'">
+            <if test="${condition}.operator == 'between'">
+                and p.create_time between #{${condition}.value[0]} and #{${condition}.value[1]}
+            </if>
+        </if>
+        <if test="${condition}.name == 'updateTime'">
+            <if test="${condition}.operator == 'between'">
+                and p.update_time between #{${condition}.value[0]} and #{${condition}.value[1]}
+            </if>
+        </if>
+        <if test="${condition}.name == 'createUser'">
+            <if test="${condition}.operator == 'in'">
+                and p.create_user in
+                <foreach collection="${condition}.value" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+        </if>
+        <if test="${condition}.name == 'updateUser'">
+            <if test="${condition}.operator == 'in'">
+                and p.update_user in
+                <foreach collection="${condition}.value" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+        </if>
+        <if test="${condition}.name != 'name'
+                and ${condition}.name != 'status'
+                and ${condition}.name != 'productId'
+                and ${condition}.name != 'opportunityId'
+                and ${condition}.name != 'updateUser'
+                and ${condition}.name != 'createTime'
+                and ${condition}.name != 'updateTime'
+                and ${condition}.name != 'createUser'
+                and ${condition}.name != 'update_user'
+                and ${condition}.name != 'create_time'
+                and ${condition}.name != 'update_time'
+                and ${condition}.name != 'create_user'
+                ">
+            <if test="${condition}.operator == 'like'">
+                and ${tablePrefix}_${index}.field_value like concat('%', #{${condition}.value}, '%')
+            </if>
+            <if test="${condition}.operator == 'eq'">
+                and ${tablePrefix}_${index}.field_value = #{${condition}.value}
+            </if>
+            <if test="${condition}.operator == 'in'">
+                and ${tablePrefix}_${index}.field_value in
+                <foreach collection="${condition}.value" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+        </if>
+    </sql>
+
+</mapper>

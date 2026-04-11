@@ -77,6 +77,11 @@ export enum TenderRouteEnum {
   TENDER_INDEX = 'tenderIndex',
 }
 
+export enum SubmissionRouteEnum {
+  SUBMISSION = 'submission',
+  SUBMISSION_INDEX = 'submissionIndex',
+}
+
 export enum FullPageEnum {
   FULL_PAGE = 'fullPage',
   FULL_PAGE_DASHBOARD = 'fullPageDashboard',
@@ -97,4 +102,5 @@ export const AppRouteEnum = {
   ...ContractRouteEnum,
   ...OrderRouteEnum,
   ...TenderRouteEnum,
+  ...SubmissionRouteEnum,
 };

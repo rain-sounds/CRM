@@ -34,6 +34,7 @@ export default {
     'menu.dashboard': '仪表板',
     'menu.agent': '智能体',
     'menu.tender': '标讯',
+    'menu.submission': '投稿',
     'menu.settings.businessSetting': '企业设置',
     'menu.settings.license': 'License',
     'menu.settings.messageSetting': '消息设置',

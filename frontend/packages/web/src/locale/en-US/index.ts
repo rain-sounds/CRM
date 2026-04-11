@@ -35,6 +35,7 @@ export default {
     'menu.dashboard': 'Dashboard',
     'menu.agent': 'Agent',
     'menu.tender': 'Tender',
+    'menu.submission': 'Submission',
     'menu.settings.businessSetting': 'Enterprise',
     'menu.settings.license': 'License',
     'menu.settings.messageSetting': 'Notification',
