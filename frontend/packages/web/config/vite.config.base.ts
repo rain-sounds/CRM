@@ -8,6 +8,7 @@ import vueSetupExtend from 'vite-plugin-vue-setup-extend';
 import svgLoader from 'vite-svg-loader';
 
 export default defineConfig({
+  base: '/web/',
   plugins: [
     vue(),
     vueJsx(),

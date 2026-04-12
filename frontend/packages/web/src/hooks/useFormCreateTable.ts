@@ -327,9 +327,10 @@ export default async function useFormCreateTable(props: FormCreateTableProps) {
               sortOrder: false,
               sorter: sorter && !field.resourceFieldId,
               filedType: field.type,
-              render: props.specialRender?.[field.businessKey] || ((row: any) => {
-                const nameKey = specialBusinessKeyMap[field.businessKey] || field.businessKey;
-                return row[nameKey] || row[field.businessKey] || '-';
+              render: props.specialRender?.[field.businessKey as string] || ((row: any) => {
+                const key = field.businessKey as string;
+                const nameKey = specialBusinessKeyMap[key] || key;
+                return row[nameKey] || row[key] || '-';
               }),
               resourceFieldId: field.resourceFieldId,
             };

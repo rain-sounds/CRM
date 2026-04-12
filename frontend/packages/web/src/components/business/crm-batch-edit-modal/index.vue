@@ -196,6 +196,7 @@
     batchUpdateProduct,
     batchUpdateProductPrice,
     batchUpdateQuotation,
+    batchUpdateSubmission,
   } from '@/api/modules';
   import { useUserStore } from '@/store';
 
@@ -218,7 +219,8 @@
       | FormDesignKeyEnum.PRICE
       | FormDesignKeyEnum.CONTRACT
       | FormDesignKeyEnum.OPPORTUNITY_QUOTATION
-      | FormDesignKeyEnum.ORDER;
+      | FormDesignKeyEnum.ORDER
+      | FormDesignKeyEnum.SUBMISSION;
   }>();
 
   const emit = defineEmits<{
@@ -244,6 +246,7 @@
     [FormDesignKeyEnum.CONTRACT]: batchUpdateContract,
     [FormDesignKeyEnum.OPPORTUNITY_QUOTATION]: batchUpdateQuotation,
     [FormDesignKeyEnum.ORDER]: batchUpdateOrder,
+    [FormDesignKeyEnum.SUBMISSION]: batchUpdateSubmission,
   };
 
   const initForm = {

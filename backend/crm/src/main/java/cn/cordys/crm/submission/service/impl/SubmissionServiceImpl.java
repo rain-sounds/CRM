@@ -65,7 +65,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     public PagerWithOption<List<SubmissionListResponse>> list(SubmissionPageRequest request, String orgId) {
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize());
         List<SubmissionListResponse> list = extSubmissionMapper.list(request, orgId);
-        List<SubmissionListResponse> buildList = buildListData(list);
+        List<SubmissionListResponse> buildList = buildListData(list, orgId);
 
         ModuleFormConfigDTO formConfig = moduleFormCacheService.getBusinessFormConfig("submission", orgId);
         List<BaseModuleFieldValue> moduleFieldValues = moduleFormService.getBaseModuleFieldValues(list, SubmissionListResponse::getModuleFields);
@@ -84,10 +84,11 @@ public class SubmissionServiceImpl implements SubmissionService {
         return PageUtils.setPageInfoWithOption(page, buildList, optionMap);
     }
 
-    private List<SubmissionListResponse> buildListData(List<SubmissionListResponse> list) {
+    private List<SubmissionListResponse> buildListData(List<SubmissionListResponse> list, String orgId) {
         List<String> ids = list.stream().map(SubmissionListResponse::getId).collect(Collectors.toList());
         Map<String, List<BaseModuleFieldValue>> filedMap = submissionFieldService.getResourceFieldMap(ids, true);
-        list.forEach(response -> response.setModuleFields(filedMap.get(response.getId())));
+        Map<String, List<BaseModuleFieldValue>> fvMap = submissionFieldService.setBusinessRefFieldValue(list, moduleFormService.getFlattenFormFields("submission", orgId), filedMap);
+        list.forEach(response -> response.setModuleFields(fvMap.get(response.getId())));
         return baseService.setCreateAndUpdateUserName(list);
     }
 
@@ -99,19 +100,24 @@ public class SubmissionServiceImpl implements SubmissionService {
         }
         SubmissionGetResponse response = BeanUtils.copyBean(new SubmissionGetResponse(), submission);
         List<BaseModuleFieldValue> fields = submissionFieldService.getModuleFieldValuesByResourceId(id);
-        response.setModuleFields(fields);
+        
+        Map<String, List<BaseModuleFieldValue>> fvMap = submissionFieldService.setBusinessRefFieldValue(List.of(response), moduleFormService.getFlattenFormFields("submission", submission.getOrganizationId()), new java.util.HashMap<>(Map.of(id, fields)));
+        response.setModuleFields(fvMap.get(id));
         
         // 补充标准字段的值，以便 optionMap 解析
+        if (response.getModuleFields() == null) {
+            response.setModuleFields(new java.util.ArrayList<>());
+        }
         if (StringUtils.isNotBlank(submission.getProductId())) {
-            fields.add(new BaseModuleFieldValue("productId", submission.getProductId()));
+            response.getModuleFields().add(new BaseModuleFieldValue("productId", submission.getProductId()));
         }
         if (StringUtils.isNotBlank(submission.getOpportunityId())) {
-            fields.add(new BaseModuleFieldValue("opportunityId", submission.getOpportunityId()));
+            response.getModuleFields().add(new BaseModuleFieldValue("opportunityId", submission.getOpportunityId()));
         }
 
         ModuleFormConfigDTO formConfig = moduleFormCacheService.getBusinessFormConfig("submission", submission.getOrganizationId());
-        response.setOptionMap(moduleFormService.getOptionMap(formConfig, fields));
-        response.setAttachmentMap(moduleFormService.getAttachmentMap(formConfig, fields));
+        response.setOptionMap(moduleFormService.getOptionMap(formConfig, response.getModuleFields()));
+        response.setAttachmentMap(moduleFormService.getAttachmentMap(formConfig, response.getModuleFields()));
         return baseService.setCreateAndUpdateUserName(response);
     }
 

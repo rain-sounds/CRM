@@ -46,7 +46,7 @@ public class SubmissionGetResponse {
     private String updateUserName;
 
     @Schema(description = "自定义字段")
-    private List<? extends BaseModuleFieldValue> moduleFields;
+    private List<BaseModuleFieldValue> moduleFields;
 
     @Schema(description = "选项集合")
     private Map<String, List<OptionDTO>> optionMap;
