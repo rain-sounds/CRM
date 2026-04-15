@@ -19,7 +19,7 @@ export default {
   message: {
     'menu.workbench': '首页',
     'menu.duplicateCheck': '查重',
-    'menu.opportunity': '商机',
+    'menu.opportunity': '项目',
     'menu.clue': '线索',
     'menu.cluePool': '线索池',
     'menu.customer': '客户',

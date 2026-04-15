@@ -369,7 +369,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
   function makeDescriptionItem(item: FormCreateField, form: FormDetail) {
     if (item.show === false || !item.readable) return;
     if (item.businessKey === 'expectedEndTime' && !item.resourceFieldId) {
-      // TODO:商机结束时间原位编辑
+      // TODO:项目结束时间原位编辑
       descriptions.value.push({
         label: item.name,
         value: parseFormDetailValue(item, form),
@@ -932,7 +932,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
    */
   function specialFormFieldInit(field: FormCreateField) {
     if (props.formKey.value === FormDesignKeyEnum.BUSINESS && props.sourceId?.value) {
-      // 客户详情下创建商机，自动带入客户信息
+      // 客户详情下创建项目，自动带入客户信息
       if (field.businessKey === 'customerId') {
         specialInitialOptions.value = [
           {
@@ -1022,7 +1022,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
       ) &&
       props.sourceId?.value
     ) {
-      // 商机跟进计划和记录，需要赋予默认跟进类型、商机、商机对应客户
+      // 项目跟进计划和记录，需要赋予默认跟进类型、项目、项目对应客户
       if (field.businessKey === 'type') {
         return {
           defaultValue: 'CUSTOMER',

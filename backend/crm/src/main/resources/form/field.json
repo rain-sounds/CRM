@@ -378,7 +378,7 @@
       ]
     },
     {
-      "name": "意向产品",
+      "name": "意向期刊",
       "internalKey": "clueProduct",
       "type": "DATA_SOURCE_MULTIPLE",
       "dataSourceType": "PRODUCT",
@@ -449,7 +449,7 @@
       "titleColor": "#323535"
     },
     {
-      "name": "商机名称",
+      "name": "项目名称",
       "internalKey": "opportunityName",
       "type": "INPUT",
       "showLabel": true,
@@ -500,7 +500,7 @@
       ]
     },
     {
-      "name": "商机来源",
+      "name": "项目来源",
       "internalKey": "opportunitySource",
       "type": "SELECT",
       "showLabel": true,
@@ -556,7 +556,7 @@
       "mobile": true
     },
     {
-      "name": "意向产品",
+      "name": "意向期刊",
       "internalKey": "opportunityProduct",
       "type": "DATA_SOURCE_MULTIPLE",
       "dataSourceType": "PRODUCT",
@@ -683,7 +683,7 @@
       "titleColor": "#323535"
     },
     {
-      "name": "产品名称",
+      "name": "期刊名称",
       "internalKey": "productName",
       "type": "INPUT",
       "showLabel": true,
@@ -700,7 +700,7 @@
       ]
     },
     {
-      "name": "产品价格",
+      "name": "期刊价格",
       "internalKey": "productPrice",
       "type": "INPUT_NUMBER",
       "showLabel": true,
@@ -757,7 +757,7 @@
       "titleColor": "#323535"
     },
     {
-      "name": "产品图片",
+      "name": "期刊图片",
       "internalKey": "productPic",
       "type": "PICTURE",
       "pictureShowType": "card",
@@ -921,7 +921,7 @@
       "mobile": true
     },
     {
-      "name": "商机",
+      "name": "项目",
       "internalKey": "recordOpportunity",
       "type": "DATA_SOURCE",
       "dataSourceType": "OPPORTUNITY",
@@ -1005,7 +1005,7 @@
       "mobile": true
     },
     {
-      "name": "意向产品",
+      "name": "意向期刊",
       "internalKey": "recordProduct",
       "type": "DATA_SOURCE_MULTIPLE",
       "dataSourceType": "PRODUCT",
@@ -1105,7 +1105,7 @@
       "mobile": true
     },
     {
-      "name": "商机",
+      "name": "项目",
       "internalKey": "planOpportunity",
       "type": "DATA_SOURCE",
       "dataSourceType": "OPPORTUNITY",
@@ -1188,7 +1188,7 @@
       ]
     },
     {
-      "name": "意向产品",
+      "name": "意向期刊",
       "internalKey": "planProduct",
       "type": "DATA_SOURCE_MULTIPLE",
       "dataSourceType": "PRODUCT",
@@ -1271,7 +1271,7 @@
       "mobile": true
     },
     {
-      "name": "产品信息",
+      "name": "期刊信息",
       "internalKey": "priceProducts",
       "type": "SUB_PRODUCT",
       "showLabel": true,
@@ -1282,7 +1282,7 @@
       "fixedColumn": 1,
       "subFields": [
         {
-          "name": "产品",
+          "name": "期刊",
           "internalKey": "priceProduct",
           "type": "DATA_SOURCE",
           "dataSourceType": "PRODUCT",
@@ -1298,7 +1298,7 @@
           "mobile": true
         },
         {
-          "name": "产品SKU",
+          "name": "期刊SKU",
           "internalKey": "priceProductSku",
           "type": "INPUT",
           "showLabel": true,
@@ -1307,7 +1307,7 @@
           "fieldWidth": 1
         },
         {
-          "name": "产品定价",
+          "name": "期刊定价",
           "internalKey": "priceProductAmount",
           "type": "INPUT_NUMBER",
           "showLabel": true,
@@ -1390,7 +1390,7 @@
       "mobile": true
     },
     {
-      "name": "商机",
+      "name": "项目",
       "internalKey": "quotationOpportunity",
       "type": "DATA_SOURCE",
       "dataSourceType": "OPPORTUNITY",
@@ -1444,7 +1444,7 @@
       ]
     },
     {
-      "name": "报价产品",
+      "name": "报价期刊",
       "internalKey": "quotationProducts",
       "type": "SUB_PRICE",
       "showLabel": true,
@@ -1458,7 +1458,7 @@
       "mobile": true,
       "subFields": [
         {
-          "name": "产品",
+          "name": "期刊",
           "internalKey": "quotationProduct",
           "type": "DATA_SOURCE",
           "dataSourceType": "PRODUCT",
@@ -1492,7 +1492,7 @@
           ]
         },
         {
-          "name": "产品定价",
+          "name": "期刊定价",
           "internalKey": "quotationProductAmount",
           "type": "INPUT_NUMBER",
           "showLabel": true,
@@ -1727,7 +1727,7 @@
       ],
       "subFields": [
         {
-          "name": "产品",
+          "name": "期刊",
           "internalKey": "contractProduct",
           "type": "DATA_SOURCE",
           "dataSourceType": "PRODUCT",
@@ -1743,7 +1743,7 @@
           "mobile": true
         },
         {
-          "name": "产品单价",
+          "name": "期刊单价",
           "internalKey": "contractProductAmount",
           "type": "INPUT_NUMBER",
           "showLabel": true,
@@ -1962,15 +1962,15 @@
       "fieldWidth": 1,
       "options": [
         {
-          "label": "产品1",
+          "label": "期刊1",
           "value": "1"
         },
         {
-          "label": "产品2",
+          "label": "期刊2",
           "value": "2"
         },
         {
-          "label": "产品3",
+          "label": "期刊3",
           "value": "3"
         }
       ],
@@ -2338,7 +2338,7 @@
       "titleColor": "#323535"
     },
     {
-      "name": "订单编号",
+      "name": "投稿编号",
       "internalKey": "orderNo",
       "type": "SERIAL_NUMBER",
       "placeholder": "无需录入, 自动生成",
@@ -2386,7 +2386,7 @@
       "mobile": true
     },
     {
-      "name": "订单名称",
+      "name": "投稿名称",
       "internalKey": "orderName",
       "type": "INPUT",
       "showLabel": true,
@@ -2420,7 +2420,7 @@
       ]
     },
     {
-      "name": "销售产品信息",
+      "name": "销售期刊信息",
       "internalKey": "orderProductInfo",
       "type": "DIVIDER",
       "showLabel": true,
@@ -2431,7 +2431,7 @@
       "titleColor": "#323535"
     },
     {
-      "name": "产品明细",
+      "name": "期刊明细",
       "internalKey": "orderProducts",
       "type": "SUB_PRODUCT",
       "showLabel": true,
@@ -2443,7 +2443,7 @@
       "sumColumns": [],
       "subFields": [
         {
-          "name": "产品名称",
+          "name": "期刊名称",
           "internalKey": "orderProduct",
           "type": "DATA_SOURCE",
           "dataSourceType": "PRODUCT",
@@ -2454,7 +2454,7 @@
           "mobile": true
         },
         {
-          "name": "产品单价",
+          "name": "期刊单价",
           "internalKey": "orderProductPrice",
           "type": "INPUT_NUMBER",
           "showLabel": true,
@@ -2492,7 +2492,7 @@
       ]
     },
     {
-      "name": "订单金额",
+      "name": "投稿金额",
       "internalKey": "orderAmount",
       "type": "FORMULA",
       "showLabel": true,
@@ -2508,7 +2508,7 @@
       "showThousandsSeparator": true
     },
     {
-      "name": "订单收货信息",
+      "name": "投稿收货信息",
       "internalKey": "orderReceivedInfo",
       "type": "DIVIDER",
       "showLabel": true,

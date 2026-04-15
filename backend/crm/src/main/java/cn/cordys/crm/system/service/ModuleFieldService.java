@@ -376,6 +376,69 @@ public class ModuleFieldService {
                  }""", orderProductPriceId, orderProductNumberId, orderProductPriceId, orderProductNumberId, orderProductPriceId, orderProductNumberId);
     }
 
+    public void updateOrderToSubmissionText() {
+        // Update ModuleField name
+        LambdaQueryWrapper<ModuleField> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.like(ModuleField::getName, "订单");
+        List<ModuleField> fields = moduleFieldMapper.selectListByLambda(queryWrapper);
+        for (ModuleField field : fields) {
+            field.setName(field.getName().replace("订单", "投稿"));
+            moduleFieldMapper.updateById(field);
+        }
+
+        // Update ModuleFieldBlob prop (which contains JSON)
+        LambdaQueryWrapper<ModuleFieldBlob> blobQueryWrapper = new LambdaQueryWrapper<>();
+        blobQueryWrapper.like(ModuleFieldBlob::getProp, "订单");
+        List<ModuleFieldBlob> blobs = moduleFieldBlobMapper.selectListByLambda(blobQueryWrapper);
+        for (ModuleFieldBlob blob : blobs) {
+            String newProp = blob.getProp().replace("订单", "投稿");
+            blob.setProp(newProp);
+            moduleFieldBlobMapper.updateById(blob);
+        }
+    }
+
+    public void updateOpportunityToProjectText() {
+        // Update ModuleField name
+        LambdaQueryWrapper<ModuleField> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.like(ModuleField::getName, "商机");
+        List<ModuleField> fields = moduleFieldMapper.selectListByLambda(queryWrapper);
+        for (ModuleField field : fields) {
+            field.setName(field.getName().replace("商机", "项目"));
+            moduleFieldMapper.updateById(field);
+        }
+
+        // Update ModuleFieldBlob prop (which contains JSON)
+        LambdaQueryWrapper<ModuleFieldBlob> blobQueryWrapper = new LambdaQueryWrapper<>();
+        blobQueryWrapper.like(ModuleFieldBlob::getProp, "商机");
+        List<ModuleFieldBlob> blobs = moduleFieldBlobMapper.selectListByLambda(blobQueryWrapper);
+        for (ModuleFieldBlob blob : blobs) {
+            String newProp = blob.getProp().replace("商机", "项目");
+            blob.setProp(newProp);
+            moduleFieldBlobMapper.updateById(blob);
+        }
+    }
+
+    public void updateProductToJournalText() {
+        // Update ModuleField name
+        LambdaQueryWrapper<ModuleField> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.like(ModuleField::getName, "产品");
+        List<ModuleField> fields = moduleFieldMapper.selectListByLambda(queryWrapper);
+        for (ModuleField field : fields) {
+            field.setName(field.getName().replace("产品", "期刊"));
+            moduleFieldMapper.updateById(field);
+        }
+
+        // Update ModuleFieldBlob prop (which contains JSON)
+        LambdaQueryWrapper<ModuleFieldBlob> blobQueryWrapper = new LambdaQueryWrapper<>();
+        blobQueryWrapper.like(ModuleFieldBlob::getProp, "产品");
+        List<ModuleFieldBlob> blobs = moduleFieldBlobMapper.selectListByLambda(blobQueryWrapper);
+        for (ModuleFieldBlob blob : blobs) {
+            String newProp = blob.getProp().replace("产品", "期刊");
+            blob.setProp(newProp);
+            moduleFieldBlobMapper.updateById(blob);
+        }
+    }
+
     /**
      * 订单合同字段增加订单客户过滤条件
      */

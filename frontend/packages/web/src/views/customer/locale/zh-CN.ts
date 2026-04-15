@@ -17,7 +17,7 @@ export default {
   'customer.moveToOpenSeaFailedContent2': '去配置',
   'customer.moveSuccess': '移入成功',
   'customer.contact.deleteContentTip': '删除后，将无法查询到该联系人且不可恢复，请谨慎操作！',
-  'customer.contact.deleteTitle': '存在绑定的商机，请更换商机绑定联系人后再删除！',
+  'customer.contact.deleteTitle': '存在绑定的项目，请更换项目绑定联系人后再删除！',
   'customer.recycleOpenSea': '回收公海',
   'customer.collectionTime': '领取时间',
   'customer.remainingVesting': '剩余归属',
@@ -33,7 +33,7 @@ export default {
   'customer.subsidiary': '子公司',
   'customer.collaborator': '协作成员',
   'customer.readOnly': '只读',
-  'customer.opportunityInfo': '商机信息',
+  'customer.opportunityInfo': '项目信息',
   'customer.cooperation': '协作',
   'customer.cooperationTip': '只读:支持查看客户基础信息与负责人的相关数据;协作:支持查看客户基础信息，并跟进客户',
   'customer.deleteMemberTip': '删除后，成员将不再拥有该客户权限',
@@ -57,7 +57,7 @@ export default {
   'customer.selectedAccountMergeTip': '1.将所选客户合并后，可选择合并后主客户及要保留的数据',
   'customer.afterMergeDeleteAccountBaseInfoTip': '2.合并后，系统仅保留主客户的基本信息，被合并客户的基本信息将会被删除',
   'customer.afterMergeInfoTip':
-    '3.客户合并后，被合并客户的联系人，跟进计划，跟进记录，商机信息，协作成员等会合并至主客户下',
+    '3.客户合并后，被合并客户的联系人，跟进计划，跟进记录，项目信息，协作成员等会合并至主客户下',
   'customer.selectedMergeAccountTooltip':
     '已选客户：从列表中选定的客户；其他客户：数据可见负责的客户。负责人选择：已选客户：仅可选择已选客户的负责人；其他客户：负责人保持不变',
   'customer.selectedMergeAccountNumber': '已选{number}个客户',

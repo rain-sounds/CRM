@@ -112,7 +112,7 @@ const useViewStore = defineStore('view', {
       optionItem: Record<string, any>;
     }): FilterFormItem[] {
       const { type, tabName, optionItem } = params;
-      // 商机成功阶段
+      // 项目成功阶段
       if (tabName === OpportunitySearchTypeEnum.OPPORTUNITY_SUCCESS) {
         return optionItem.opportunitySuccessOptions ?? [];
       }

@@ -13,7 +13,7 @@ export default function useSearchFormConfig() {
   const customerContactConfig = [FormDesignKeyEnum.SEARCH_ADVANCED_CONTACT];
   // 线索线索池共用表单
   const clueConfig = [FormDesignKeyEnum.SEARCH_ADVANCED_CLUE_POOL, FormDesignKeyEnum.SEARCH_ADVANCED_CLUE];
-  // 商机表单
+  // 项目表单
   const opportunityConfig = [FormDesignKeyEnum.SEARCH_ADVANCED_OPPORTUNITY];
 
   const formScopedConfig = [

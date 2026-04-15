@@ -35,7 +35,7 @@ export default {
   'system.message.openSeaMessage': '公海',
   'system.message.clueMessage': '线索',
   'system.message.cluePoolMessage': '线索池',
-  'system.message.opportunityMessage': '商机',
+  'system.message.opportunityMessage': '项目',
   'system.message.system': '系统',
   'system.message.systemNotification': '系统通知',
   'system.message.setRead': '标为已读',

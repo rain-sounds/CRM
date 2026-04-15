@@ -13,7 +13,7 @@ export const OrderInContractPageUrl = '/contract/order/page';
 export const DownloadOrderUrl = '/order/download';
 export const OrderStatisticUrl = '/order/statistic';
 
-// 订单视图
+// 投稿视图
 export const AddOrderViewUrl = '/order/view/add';
 export const UpdateOrderViewUrl = '/order/view/update';
 export const DeleteOrderViewUrl = '/order/view/delete';
@@ -23,10 +23,10 @@ export const FixedOrderViewUrl = '/order/view/fixed';
 export const EnableOrderViewUrl = '/order/view/enable';
 export const DragOrderViewUrl = '/order/view/edit/pos';
 
-// 订单状态
-export const UpdateOrderStatusUrl = '/order/stage/update'; // 更新订单状态配置
-export const UpdateOrderStatusRollbackUrl = '/order/stage/update-rollback'; // 订单状态回退配置
-export const SortOrderStatusUrl = '/order/stage/sort'; // 订单状态排序
-export const AddOrderStatusUrl = '/order/stage/add'; // 订单状态添加
-export const GetOrderStatusConfigUrl = '/order/stage/get'; // 获取订单状态配置
-export const DeleteOrderStatusUrl = '/order/stage/delete'; // 删除订单状态
+// 投稿状态
+export const UpdateOrderStatusUrl = '/order/stage/update'; // 更新投稿状态配置
+export const UpdateOrderStatusRollbackUrl = '/order/stage/update-rollback'; // 投稿状态回退配置
+export const SortOrderStatusUrl = '/order/stage/sort'; // 投稿状态排序
+export const AddOrderStatusUrl = '/order/stage/add'; // 投稿状态添加
+export const GetOrderStatusConfigUrl = '/order/stage/get'; // 获取投稿状态配置
+export const DeleteOrderStatusUrl = '/order/stage/delete'; // 删除投稿状态

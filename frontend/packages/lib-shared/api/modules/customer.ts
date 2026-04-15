@@ -363,7 +363,7 @@ export default function useProductApi(CDR: CordysAxios) {
     return CDR.get<CustomerInvoiceStatistic[]>({ url: `${GetAccountInvoiceStatisticUrl}/${id}` });
   }
 
-  // 获取客户的订单
+  // 获取客户的投稿
   function getCustomerOrderList(data: TableQueryParams) {
     return CDR.post<CommonList<OrderItem>>({ url: GetAccountOrderListUrl, data });
   }
@@ -383,7 +383,7 @@ export default function useProductApi(CDR: CordysAxios) {
     return CDR.post<ChartResponseDataItem[]>({ url: generateCustomerContactChartUrl, data });
   }
 
-  // 是否绑定商机
+  // 是否绑定项目
   function checkOpportunity(id: string) {
     return CDR.get({ url: `${CheckOpportunityContactUrl}/${id}` });
   }
@@ -563,7 +563,7 @@ export default function useProductApi(CDR: CordysAxios) {
     return CDR.post({ url: UpdateCustomerFollowPlanStatusUrl, data });
   }
 
-  // 获取客户商机列表
+  // 获取客户项目列表
   function getCustomerOpportunityPage(data: CustomerOpportunityTableParams) {
     return CDR.post<CommonList<OpportunityItem>>({ url: GetCustomerOpportunityListUrl, data });
   }

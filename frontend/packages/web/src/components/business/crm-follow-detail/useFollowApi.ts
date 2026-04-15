@@ -128,8 +128,8 @@ const followFormKeyMap: Partial<
     followPlan: FormDesignKeyEnum.FOLLOW_PLAN_CUSTOMER, // 客户跟进计划
   },
   [FormDesignKeyEnum.BUSINESS]: {
-    followRecord: FormDesignKeyEnum.FOLLOW_RECORD_BUSINESS, // 商机跟进记录
-    followPlan: FormDesignKeyEnum.FOLLOW_PLAN_BUSINESS, // 商机跟进计划
+    followRecord: FormDesignKeyEnum.FOLLOW_RECORD_BUSINESS, // 项目跟进记录
+    followPlan: FormDesignKeyEnum.FOLLOW_PLAN_BUSINESS, // 项目跟进计划
   },
   [FormDesignKeyEnum.CLUE]: {
     followRecord: FormDesignKeyEnum.FOLLOW_RECORD_CLUE, // 线索跟进记录

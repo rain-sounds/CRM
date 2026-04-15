@@ -121,57 +121,57 @@ import { ValidateInfo } from '@lib/shared/models/system/org';
 import type { ViewItem, ViewParams } from '@lib/shared/models/view';
 
 export default function useProductApi(CDR: CordysAxios) {
-  // 商机列表
+  // 项目列表
   function getOpportunityList(data: OpportunityPageQueryParams) {
     return CDR.post<CommonList<OpportunityItem>>({ url: OptPageUrl, data }, { ignoreCancelToken: true });
   }
 
-  // 添加商机
+  // 添加项目
   function addOpportunity(data: SaveOpportunityParams) {
     return CDR.post({ url: OptAddUrl, data });
   }
 
-  // 更新商机
+  // 更新项目
   function updateOpportunity(data: UpdateOpportunityParams) {
     return CDR.post({ url: OptUpdateUrl, data });
   }
 
-  // 商机详情
+  // 项目详情
   function getOpportunityDetail(id: string) {
     return CDR.get<OpportunityDetail>({ url: `${GetOptDetailUrl}/${id}` });
   }
 
-  // 商机看板拖拽排序
+  // 项目看板拖拽排序
   function sortOpportunity(data: OpportunityBillboardDraggedParams) {
     return CDR.post({ url: SortOpportunityUrl, data });
   }
 
-  // 获取商机表单配置
+  // 获取项目表单配置
   function getOptFormConfig() {
     return CDR.get<FormDesignConfigDetailParams>({ url: GetOptFormConfigUrl });
   }
 
-  // 商机跟进记录列表
+  // 项目跟进记录列表
   function getOptFollowRecordList(data: CustomerFollowRecordTableParams) {
     return CDR.post<CommonList<FollowDetailItem>>({ url: OptFollowRecordListUrl, data });
   }
 
-  // 删除商机跟进记录
+  // 删除项目跟进记录
   function deleteOptFollowRecord(id: string) {
     return CDR.get({ url: `${DeleteOptFollowRecordUrl}/${id}` });
   }
 
-  // 添加商机跟进记录
+  // 添加项目跟进记录
   function addOptFollowRecord(data: SaveCustomerFollowRecordParams) {
     return CDR.post({ url: AddOptFollowRecordUrl, data });
   }
 
-  // 更新商机跟进记录
+  // 更新项目跟进记录
   function updateOptFollowRecord(data: UpdateCustomerFollowRecordParams) {
     return CDR.post({ url: UpdateOptFollowRecordUrl, data });
   }
 
-  // 获取商机跟进记录详情
+  // 获取项目跟进记录详情
   function getOptFollowRecord(id: string) {
     return CDR.get<FollowDetailItem>({ url: `${GetOptFollowRecordUrl}/${id}` });
   }
@@ -181,117 +181,117 @@ export default function useProductApi(CDR: CordysAxios) {
     return CDR.post<CommonList<FollowDetailItem>>({ url: OptFollowPlanPageUrl, data });
   }
 
-  // 添加商机跟进计划
+  // 添加项目跟进计划
   function addOptFollowPlan(data: SaveCustomerFollowPlanParams) {
     return CDR.post({ url: AddOptFollowPlanUrl, data });
   }
 
-  // 更新商机跟进计划
+  // 更新项目跟进计划
   function updateOptFollowPlan(data: UpdateCustomerFollowPlanParams) {
     return CDR.post({ url: UpdateOptFollowPlanUrl, data });
   }
 
-  // 删除商机跟进计划
+  // 删除项目跟进计划
   function deleteOptFollowPlan(id: string) {
     return CDR.get({ url: `${DeleteOptFollowPlanUrl}/${id}` });
   }
 
-  // 获取商机跟进计划详情
+  // 获取项目跟进计划详情
   function getOptFollowPlan(id: string) {
     return CDR.get<FollowDetailItem>({ url: `${GetOptFollowPlanUrl}/${id}` });
   }
 
-  // 取消商机跟进计划
+  // 取消项目跟进计划
   function cancelOptFollowPlan(id: string) {
     return CDR.get({ url: `${CancelOptFollowPlanUrl}/${id}` });
   }
 
-  // 批量转移商机
+  // 批量转移项目
   function transferOpt(data: TransferParams) {
     return CDR.post({ url: OptBatchTransferUrl, data });
   }
 
-  // 批量删除商机
+  // 批量删除项目
   function batchDeleteOpt(data: (string | number)[]) {
     return CDR.post({ url: OptBatchDeleteUrl, data });
   }
 
-  // 删除商机
+  // 删除项目
   function deleteOpt(id: string) {
     return CDR.get({ url: `${OptDeleteUrl}/${id}` });
   }
 
-  // 更新商机阶段
+  // 更新项目阶段
   function updateOptStage(data: { id: string; stage: string; failureReason?: string | null }) {
     return CDR.post({ url: OptUpdateStageUrl, data });
   }
 
-  // 获取商机tab显隐藏
+  // 获取项目tab显隐藏
   function getOptTab() {
     return CDR.get<CustomerTabHidden>({ url: GetOptTabUrl });
   }
 
-  // 获取商机联系人列表
+  // 获取项目联系人列表
   function getOpportunityContactList(data: CustomerContractTableParams) {
     return CDR.get({ url: `${GetOpportunityContactListUrl}/${data.id}` });
   }
 
-  // 更新商机跟进计划状态
+  // 更新项目跟进计划状态
   function updateOptFollowPlanStatus(data: UpdateFollowPlanStatusParams) {
     return CDR.post({ url: UpdateOptFollowPlanStatusUrl, data });
   }
 
-  // 导出全量商机列表
+  // 导出全量项目列表
   function exportOpportunityAll(data: TableExportParams) {
     return CDR.post({ url: ExportOpportunityAllUrl, data });
   }
 
-  // 导出选中商机列表
+  // 导出选中项目列表
   function exportOpportunitySelected(data: TableExportSelectedParams) {
     return CDR.post({ url: ExportOpportunitySelectedUrl, data });
   }
 
-  // 商机列表的金额数据
+  // 项目列表的金额数据
   function getOptStatistic(data: TableQueryParams) {
     return CDR.post({ url: GetOptStatisticUrl, data }, { ignoreCancelToken: true });
   }
 
-  // 更新商机阶段配置
+  // 更新项目阶段配置
   function updateOpportunityStage(data: UpdateOpportunityStageParams) {
     return CDR.post({ url: UpdateOpportunityStageUrl, data });
   }
 
-  // 商机阶段回退配置
+  // 项目阶段回退配置
   function updateOpportunityStageRollback(data: UpdateOpportunityStageRollbackParams) {
     return CDR.post({ url: UpdateOpportunityStageRollbackUrl, data });
   }
 
-  // 商机阶段排序
+  // 项目阶段排序
   function sortOpportunityStage(data: string[]) {
     return CDR.post({ url: SortOpportunityStageUrl, data });
   }
 
-  // 添加商机阶段
+  // 添加项目阶段
   function addOpportunityStage(data: AddOpportunityStageParams) {
     return CDR.post({ url: AddOpportunityStageUrl, data });
   }
 
-  // 获取商机阶段配置
+  // 获取项目阶段配置
   function getOpportunityStageConfig() {
     return CDR.get<OpportunityStageConfig>({ url: GetOpportunityStageConfigUrl }, { ignoreCancelToken: true });
   }
 
-  // 删除商机阶段
+  // 删除项目阶段
   function deleteOpportunityStage(id: string) {
     return CDR.get({ url: `${DeleteOpportunityStageUrl}/${id}` });
   }
 
-  // 生成商机图表
+  // 生成项目图表
   function generateOpportunityChart(data: GenerateChartParams) {
     return CDR.post<ChartResponseDataItem[]>({ url: GenerateOpportunityChartUrl, data });
   }
 
-  // 商机视图
+  // 项目视图
   function addBusinessView(data: ViewParams) {
     return CDR.post({ url: AddBusinessViewUrl, data });
   }
@@ -354,12 +354,12 @@ export default function useProductApi(CDR: CordysAxios) {
     return CDR.uploadFile({ url: ImportOpportunityUrl }, { fileList: [file] }, 'file');
   }
 
-  // 批量更新商机
+  // 批量更新项目
   function batchUpdateOpportunity(data: BatchUpdatePoolAccountParams) {
     return CDR.post({ url: BatchUpdateOpportunityUrl, data });
   }
 
-  // 获取商机报价单tab显隐藏
+  // 获取项目报价单tab显隐藏
   function getQuotationTab() {
     return CDR.get<CustomerTabHidden>({ url: GetQuotationTabUrl });
   }

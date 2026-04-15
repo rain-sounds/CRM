@@ -28,7 +28,7 @@ export const GetCustomerContactFormConfigUrl = '/account/contact/module/form'; /
 export const GetCustomerContactUrl = '/account/contact/get'; // 获取客户联系人详情
 export const EnableCustomerContactUrl = '/account/contact/enable'; // 启用客户联系人
 export const DeleteCustomerContactUrl = '/account/contact/delete'; // 删除客户联系人
-export const CheckOpportunityContactUrl = '/account/contact/opportunity/check'; // 是否绑定商机
+export const CheckOpportunityContactUrl = '/account/contact/opportunity/check'; // 是否绑定项目
 export const ContactListUnderCustomerUrl = '/account/contact/list'; // 客户下的联系人列表
 export const UpdateCustomerOpenSeaUrl = '/account-pool/update'; // 编辑公海
 export const GetCustomerOpenSeaListUrl = '/account-pool/page'; // 公海列表
@@ -72,7 +72,7 @@ export const GetCustomerOpenSeaFollowRecordListUrl = '/account/follow/record/poo
 export const GetCustomerTabUrl = '/account/tab'; // 客户tab显隐
 export const GetCustomerContactTabUrl = '/account/contact/tab'; // 客户联系人tab显隐
 export const UpdateCustomerFollowPlanStatusUrl = '/account/follow/plan/status/update'; // 更新客户跟进计划状态
-export const GetCustomerOpportunityListUrl = '/account/opportunity/page'; // 客户商机列表
+export const GetCustomerOpportunityListUrl = '/account/opportunity/page'; // 客户项目列表
 export const ExportCustomerAllUrl = '/account/export-all'; // 导出所有客户
 export const ExportCustomerSelectedUrl = '/account/export-select'; // 导出选中客户
 export const GetAdvancedCustomerListUrl = '/advanced/search/account'; // 全局搜索分页查询客户
@@ -94,7 +94,7 @@ export const GetAccountPaymentRecordListUrl = '/account/contract/payment-record/
 export const GetAccountPaymentRecordStatisticUrl = '/account/contract/payment-record/statistic'; // 客户详情-回款列表统计
 export const GetAccountInvoiceListUrl = '/account/invoice/page'; // 客户详情-发票列表
 export const GetAccountInvoiceStatisticUrl = '/account/invoice/statistic'; // 客户详情-发票列表统计
-export const GetAccountOrderListUrl = '/account/order/page'; // 客户详情-订单列表
+export const GetAccountOrderListUrl = '/account/order/page'; // 客户详情-投稿列表
 
 // 视图
 export const GetCustomerViewDetailUrl = '/account/view/detail';

@@ -9,7 +9,7 @@ export default function useHomeApi(CDR: CordysAxios) {
     return CDR.get<CrmTreeNodeData[]>({ url: HomeDepartmentTree });
   }
 
-  // 跟进商机统计
+  // 跟进项目统计
   function getHomeFollowOpportunity(data: GetHomeStatisticParams) {
     return CDR.post<FollowOptStatisticDetail>({ url: HomeFollowOpportunity, data });
   }

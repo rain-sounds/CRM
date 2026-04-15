@@ -60,7 +60,7 @@
     failureReason?: string;
     afootRollBack?: boolean; // 是否允许从跟进中回退
     endRollBack?: boolean; // 是否允许从成功或失败回退
-    isOrder?: boolean; // 是否是订单
+    isOrder?: boolean; // 是否是投稿
   }>();
 
   const emit = defineEmits<{
@@ -78,7 +78,7 @@
     () => props.stageConfigList.find((e) => e.type === 'END' && e.rate === '100')?.id || ''
   );
   const failureStage = computed(() => props.stageConfigList.find((e) => e.type === 'END' && e.rate === '0')?.id || '');
-  // 订单没有rate 只判断type
+  // 投稿没有rate 只判断type
   const endStages = computed(() => props.stageConfigList.filter((e) => e.type === 'END').map((i) => i.id));
 
   const isDisabledStage = (stage: string) => {
@@ -102,7 +102,7 @@
           return isSameStage || readonly.value || !props.endRollBack;
         }
       } else if (isCurrentEndStage) {
-        // 订单没有反签
+        // 投稿没有反签
         return isSameStage || readonly.value || !props.endRollBack;
       }
 

@@ -8,7 +8,7 @@ export enum ModuleConfigEnum {
   /** 线索管理 */
   CLUE_MANAGEMENT = 'clue',
 
-  /** 商机管理 */
+  /** 项目管理 */
   BUSINESS_MANAGEMENT = 'business',
 
   /** 数据管理 TODO 先不做 */
@@ -29,7 +29,7 @@ export enum ModuleConfigEnum {
   /** 合同 */
   CONTRACT = 'contract',
 
-  /** 订单 */
+  /** 投稿 */
   ORDER = 'order',
 
   /** 招标 */
@@ -54,7 +54,7 @@ export enum MemberSelectTypeEnum {
 
 // 原因类型
 export enum ReasonTypeEnum {
-  OPPORTUNITY_FAIL_RS = 'OPPORTUNITY_FAIL_RS', // 商机失败原因
+  OPPORTUNITY_FAIL_RS = 'OPPORTUNITY_FAIL_RS', // 项目失败原因
   CUSTOMER_POOL_RS = 'CUSTOMER_POOL_RS', //  公海原因
   CLUE_POOL_RS = 'CLUE_POOL_RS', // 线索移入原因
   CONTRACT_APPROVAL = 'CONTRACT_APPROVAL', // 合同审批

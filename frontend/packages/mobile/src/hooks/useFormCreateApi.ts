@@ -401,7 +401,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
       [FormDesignKeyEnum.FOLLOW_PLAN_BUSINESS, FormDesignKeyEnum.FOLLOW_RECORD_BUSINESS].includes(props.formKey) &&
       props.sourceId?.value
     ) {
-      // 商机跟进计划和记录，需要赋予默认跟进类型、商机、商机对应客户
+      // 项目跟进计划和记录，需要赋予默认跟进类型、项目、项目对应客户
       if (field.businessKey === 'type') {
         return {
           defaultValue: 'CUSTOMER',

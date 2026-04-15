@@ -54,7 +54,7 @@ export default function useOrderApi(CDR: CordysAxios) {
     return CDR.post<CommonList<OrderItem>>({ url: OrderInContractPageUrl, data });
   }
 
-  // 订单详情
+  // 投稿详情
   function getOrderDetail(id: string) {
     return CDR.get<OrderItem>({ url: `${GetOrderDetailUrl}/${id}` });
   }
@@ -64,22 +64,22 @@ export default function useOrderApi(CDR: CordysAxios) {
     return CDR.get<OrderItem>({ url: `${OrderDetailSnapshotUrl}/${id}` });
   }
 
-  // 新增订单
+  // 新增投稿
   function addOrder(data: UpdateOrderParams) {
     return CDR.post({ url: AddOrderUrl, data });
   }
 
-  // 更新订单
+  // 更新投稿
   function updateOrder(data: UpdateOrderParams) {
     return CDR.post({ url: UpdateOrderUrl, data });
   }
 
-  // 批量更新订单
+  // 批量更新投稿
   function batchUpdateOrder(data: BatchUpdatePoolAccountParams) {
     return CDR.post({ url: BatchUpdateOrderUrl, data });
   }
 
-  // 删除订单
+  // 删除投稿
   function deleteOrder(id: string) {
     return CDR.get({ url: `${DeleteOrderUrl}/${id}` });
   }
@@ -102,7 +102,7 @@ export default function useOrderApi(CDR: CordysAxios) {
     return CDR.get({ url: `${DownloadOrderUrl}/${id}` });
   }
 
-  // 获取订单tab显隐配置
+  // 获取投稿tab显隐配置
   function getOrderTab() {
     return CDR.get<CustomerTabHidden>({ url: GetOrderTabUrl });
   }
@@ -140,32 +140,32 @@ export default function useOrderApi(CDR: CordysAxios) {
     return CDR.post({ url: DragOrderViewUrl, data });
   }
 
-  // 更新订单状态配置
+  // 更新投稿状态配置
   function updateOrderStatus(data: UpdateStageBaseParams) {
     return CDR.post({ url: UpdateOrderStatusUrl, data });
   }
 
-  // 订单状态回退配置
+  // 投稿状态回退配置
   function updateOrderStatusRollback(data: UpdateOpportunityStageRollbackParams) {
     return CDR.post({ url: UpdateOrderStatusRollbackUrl, data });
   }
 
-  // 订单状态排序
+  // 投稿状态排序
   function sortOrderStatus(data: string[]) {
     return CDR.post({ url: SortOrderStatusUrl, data });
   }
 
-  // 添加订单状态
+  // 添加投稿状态
   function addOrderStatus(data: StageBaseParams) {
     return CDR.post({ url: AddOrderStatusUrl, data });
   }
 
-  // 获取订单状态配置
+  // 获取投稿状态配置
   function getOrderStatusConfig() {
     return CDR.get<OpportunityStageConfig>({ url: GetOrderStatusConfigUrl }, { ignoreCancelToken: true });
   }
 
-  // 删除订单状态
+  // 删除投稿状态
   function deleteOrderStatus(id: string) {
     return CDR.get({ url: `${DeleteOrderStatusUrl}/${id}` });
   }
@@ -175,7 +175,7 @@ export default function useOrderApi(CDR: CordysAxios) {
     return CDR.post({ url: UpdateOrderStageUrl, data });
   }
 
-  // 订单统计
+  // 投稿统计
   function getOrderStatistic(data: TableQueryParams) {
     return CDR.post({ url: OrderStatisticUrl, data }, { ignoreCancelToken: true });
   }

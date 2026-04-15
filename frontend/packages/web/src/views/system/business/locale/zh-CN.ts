@@ -118,7 +118,7 @@ export default {
   'system.config.page.loginBgTip':
     '背景图建议使用 SVG 格式；矢量图建议尺寸 1440*900，位图建议尺寸1920*1080；图片大小仅支持 800kb 以内',
   'system.config.page.slogan': 'Slogan',
-  'system.config.page.sloganTip': '产品 Logo 下的 Slogan',
+  'system.config.page.sloganTip': '期刊 Logo 下的 Slogan',
   'system.config.page.title': '网站名称',
   'system.config.page.titleTip': '显示在网页 Tab 的平台名称',
   'system.config.page.platformConfig': '设置',
@@ -126,7 +126,7 @@ export default {
   'system.config.page.platformLogoTip':
     '主题栏显示的 logo；建议使用 SVG 或 PNG 格式透明背景图片，高度小于 32px；图片大小仅支持 200kb 以内',
   'system.config.page.platformName': '系统名称',
-  'system.config.page.platformNameTip': '全站通用产品名称，建议字数 8',
+  'system.config.page.platformNameTip': '全站通用期刊名称，建议字数 8',
   'system.config.page.helpDocTip': '可设置帮助文档跳转链接，默认为官方帮助文档',
   'system.config.page.cancel': '恢复默认',
   'system.config.page.save': '保存并应用',

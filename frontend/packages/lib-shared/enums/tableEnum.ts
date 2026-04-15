@@ -31,15 +31,15 @@ export enum TableKeyEnum {
   PRICE = 'price',
   INVOICE = 'invoice',
   CONTRACT_INVOICE = 'contractInvoice',
-  ORDER = 'order', // 订单
-  CONTRACT_ORDER = 'contractOrder', // 合同下的订单
+  ORDER = 'order', // 投稿
+  CONTRACT_ORDER = 'contractOrder', // 合同下的投稿
   // 全局搜索
   SEARCH_ADVANCED_CLUE = 'searchAdvancedClue', // 线索
   SEARCH_ADVANCED_CUSTOMER = 'searchAdvancedCustomer', // 客户
   SEARCH_ADVANCED_CONTACT = 'searchAdvancedContact', // 联系人
   SEARCH_ADVANCED_PUBLIC = 'searchAdvancedPublic', // 公海
   SEARCH_ADVANCED_CLUE_POOL = 'searchAdvancedCluePool', // 线索池
-  SEARCH_ADVANCED_OPPORTUNITY = 'searchAdvancedOpportunity', // 商机
+  SEARCH_ADVANCED_OPPORTUNITY = 'searchAdvancedOpportunity', // 项目
   CONTRACT_BUSINESS_NAME = 'contractBusinessName', // 工商抬头
 }
 

@@ -73,6 +73,9 @@ public class DataInitService {
             initOneTime(moduleFormService::initOrderFormScenarioProp, "init.order.form.scenario");
 			initOneTime(moduleFieldExtService::modifyInternalSubSumColumn, "modify.internal.sum.column");
 			initOneTime(moduleFieldExtService::modifyInternalSubCalcFormula, "modify.internal.calc.formula");
+            initOneTime(moduleFieldService::updateProductToJournalText, "update.product.to.journal.text");
+            initOneTime(moduleFieldService::updateOpportunityToProjectText, "update.opportunity.to.project.text");
+            initOneTime(moduleFieldService::updateOrderToSubmissionText, "update.order.to.submission.text");
 		} finally {
             lock.unlock();
         }

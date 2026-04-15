@@ -320,9 +320,9 @@
   ) {
     if (detail) {
       const { customerName, customerId, name, stage, failureReason } = detail;
-      // 商机阶段
+      // 项目阶段
       currentStatus.value = stage;
-      // 用于回显跟进类型、商机、商机对应客户
+      // 用于回显跟进类型、项目、项目对应客户
       titleName.value = _sourceName || '';
       subTitleName.value = customerName;
       lastFailureReason.value = failureReason;

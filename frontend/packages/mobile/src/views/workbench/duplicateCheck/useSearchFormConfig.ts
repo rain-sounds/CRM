@@ -38,7 +38,7 @@ export const fixedFieldKeyListMap: Record<SearchTableKey, string[]> = {
   [FormDesignKeyEnum.SEARCH_ADVANCED_CUSTOMER]: ['name', 'owner', 'departmentId'], // 客户名称、负责人、部门
   [FormDesignKeyEnum.SEARCH_ADVANCED_CONTACT]: ['customerId', 'name', 'phone', 'owner', 'departmentId'], // 客户名称、姓名、手机号、负责人、部门
   [FormDesignKeyEnum.SEARCH_ADVANCED_PUBLIC]: ['name', 'poolName'], // 客户名称、公海名称
-  [FormDesignKeyEnum.SEARCH_ADVANCED_OPPORTUNITY]: ['name', 'customerId', 'owner', 'departmentId', 'products', 'stage'], // 商机名称、客户名称、负责人、部门、意向产品、商机阶段
+  [FormDesignKeyEnum.SEARCH_ADVANCED_OPPORTUNITY]: ['name', 'customerId', 'owner', 'departmentId', 'products', 'stage'], // 项目名称、客户名称、负责人、部门、意向产品、项目阶段
 };
 
 export default function useSearchFormConfig() {
@@ -50,7 +50,7 @@ export default function useSearchFormConfig() {
   const customerContactConfig = [FormDesignKeyEnum.SEARCH_ADVANCED_CONTACT];
   // 线索线索池共用表单
   const clueConfig = [FormDesignKeyEnum.SEARCH_ADVANCED_CLUE_POOL, FormDesignKeyEnum.SEARCH_ADVANCED_CLUE];
-  // 商机表单
+  // 项目表单
   const opportunityConfig = [FormDesignKeyEnum.SEARCH_ADVANCED_OPPORTUNITY];
 
   const formScopedConfig = [
