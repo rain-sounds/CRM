@@ -79,6 +79,4 @@ qywx.json
 # Claude Code
 .claude
 
-backend\app\src\main\resources\logback-spring.xml
-backend\app\src\main\resources\commons.properties
-config\cordys-crm.properties
+config/cordys-crm.properties
