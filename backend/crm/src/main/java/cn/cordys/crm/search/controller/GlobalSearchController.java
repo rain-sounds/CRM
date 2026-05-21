@@ -27,7 +27,7 @@ public class GlobalSearchController {
     private GlobalSearchCountService globalSearchCountService;
 
     @PostMapping("/opportunity")
-    @Operation(summary = "全局搜索-商机")
+    @Operation(summary = "全局搜索-项目")
     public Pager<List<GlobalOpportunityResponse>> globalSearchOpportunity(@Validated @RequestBody BasePageRequest request) {
         BaseSearchService<BasePageRequest, GlobalOpportunityResponse> searchService = GlobalSearchServiceFactory.getSearchService(GlobalSearchModule.OPPORTUNITY);
         return searchService.startSearchNoOption(request, OrganizationContext.getOrganizationId(), SessionUtils.getUserId());

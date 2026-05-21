@@ -91,12 +91,12 @@ public class LogModule {
      */
     public static final String FOLLOW_UP_PLAN = "FOLLOW_UP_PLAN";
     /**
-     * 商机
+     * 项目
      */
     public static final String OPPORTUNITY_INDEX = "OPPORTUNITY_INDEX";
 
     /**
-     * 商机报价
+     * 项目报价
      */
     public static final String OPPORTUNITY_QUOTATION = "OPPORTUNITY_QUOTATION";
 

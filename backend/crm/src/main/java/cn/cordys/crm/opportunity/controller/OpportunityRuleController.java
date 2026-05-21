@@ -23,14 +23,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/opportunity-rule")
-@Tag(name = "商机规则")
+@Tag(name = "项目规则")
 public class OpportunityRuleController {
 
     @Resource
     private OpportunityRuleService opportunityRuleService;
 
     @PostMapping("/page")
-    @Operation(summary = "分页获取商机规则")
+    @Operation(summary = "分页获取项目规则")
     @RequiresPermissions(value = {PermissionConstants.MODULE_SETTING_UPDATE})
     public Pager<List<OpportunityRuleDTO>> page(@Validated @RequestBody BasePageRequest request) {
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize());
@@ -38,28 +38,28 @@ public class OpportunityRuleController {
     }
 
     @PostMapping("/add")
-    @Operation(summary = "添加商机规则")
+    @Operation(summary = "添加项目规则")
     @RequiresPermissions(value = {PermissionConstants.MODULE_SETTING_UPDATE})
     public void save(@Validated @RequestBody OpportunityRuleAddRequest request) {
         opportunityRuleService.add(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
     @PostMapping("/update")
-    @Operation(summary = "修改商机规则")
+    @Operation(summary = "修改项目规则")
     @RequiresPermissions(value = {PermissionConstants.MODULE_SETTING_UPDATE})
     public void update(@Validated @RequestBody OpportunityRuleUpdateRequest request) {
         opportunityRuleService.update(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
     @GetMapping("/delete/{id}")
-    @Operation(summary = "删除商机规则")
+    @Operation(summary = "删除项目规则")
     @RequiresPermissions(value = {PermissionConstants.MODULE_SETTING_UPDATE})
     public void delete(@PathVariable String id) {
         opportunityRuleService.delete(id);
     }
 
     @GetMapping("/switch/{id}")
-    @Operation(summary = "启用/禁用商机规则")
+    @Operation(summary = "启用/禁用项目规则")
     @RequiresPermissions(value = {PermissionConstants.MODULE_SETTING_UPDATE})
     public void switchStatus(@PathVariable String id) {
         opportunityRuleService.switchStatus(id, SessionUtils.getUserId());

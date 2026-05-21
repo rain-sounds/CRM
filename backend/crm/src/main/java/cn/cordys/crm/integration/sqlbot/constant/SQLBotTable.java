@@ -18,7 +18,7 @@ public enum SQLBotTable {
 
     CUSTOMER("customer", "客户表", PermissionConstants.CUSTOMER_MANAGEMENT_READ, true),
     CLUE("clue", "线索表", PermissionConstants.CLUE_MANAGEMENT_READ, true),
-    OPPORTUNITY("opportunity", "商机表", PermissionConstants.OPPORTUNITY_MANAGEMENT_READ, true),
+    OPPORTUNITY("opportunity", "项目表", PermissionConstants.OPPORTUNITY_MANAGEMENT_READ, true),
     CONTACT("customer_contact", "联系人表", PermissionConstants.CUSTOMER_MANAGEMENT_CONTACT_READ, true),
 
     POOL_CUSTOMER("pool_customer", "公海中的客户表", PermissionConstants.CUSTOMER_MANAGEMENT_POOL_READ, true, CUSTOMER.getTableName()),

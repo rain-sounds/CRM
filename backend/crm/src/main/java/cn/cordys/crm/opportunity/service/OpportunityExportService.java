@@ -51,7 +51,7 @@ public class OpportunityExportService extends BaseExportService {
 
 
     /**
-     * 商机导出（条件导出）
+     * 项目导出（条件导出）
      *
      * @param userId             用户ID
      * @param request            导出请求参数
@@ -86,7 +86,7 @@ public class OpportunityExportService extends BaseExportService {
     }
 
     /**
-     * 执行商机条件导出数据写入
+     * 执行项目条件导出数据写入
      *
      * @param fileId             文件ID
      * @param exportTask         导出任务
@@ -116,7 +116,7 @@ public class OpportunityExportService extends BaseExportService {
     }
 
     /**
-     * 构建商机条件导出数据
+     * 构建项目条件导出数据
      *
      * @param headList           表头列表
      * @param request            导出请求
@@ -142,7 +142,7 @@ public class OpportunityExportService extends BaseExportService {
     }
 
     /**
-     * 商机导出（选中数据）
+     * 项目导出（选中数据）
      *
      * @param userId  用户ID
      * @param request 选中导出请求
@@ -173,7 +173,7 @@ public class OpportunityExportService extends BaseExportService {
     }
 
     /**
-     * 执行商机选中数据导出
+     * 执行项目选中数据导出
      *
      * @param fileId     文件ID
      * @param exportTask 导出任务
@@ -220,10 +220,10 @@ public class OpportunityExportService extends BaseExportService {
     }
 
     /**
-     * 构建选中商机导出数据
+     * 构建选中项目导出数据
      *
      * @param headList 表头列表
-     * @param ids      商机ID列表
+     * @param ids      项目ID列表
      * @param orgId    组织ID
      * @param taskId   任务ID
      *
@@ -240,10 +240,10 @@ public class OpportunityExportService extends BaseExportService {
     }
 
     /**
-     * 构建商机导出核心数据
+     * 构建项目导出核心数据
      *
      * @param headList 表头列表
-     * @param rawList  原始商机数据
+     * @param rawList  原始项目数据
      * @param orgId    组织ID
      * @param taskId   任务ID
      *
@@ -281,10 +281,10 @@ public class OpportunityExportService extends BaseExportService {
     }
 
     /**
-     * 构建单行商机导出数据
+     * 构建单行项目导出数据
      *
      * @param headList       表头列表
-     * @param data           商机数据
+     * @param data           项目数据
      * @param optionMap      选项映射
      * @param fieldConfigMap 字段配置
      * @param stageConfigMap 阶段配置

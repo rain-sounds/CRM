@@ -16,7 +16,7 @@ public class FollowUpPlanAddRequest {
     private String customerId;
 
     @Size(max = 32)
-    @Schema(description = "商机id")
+    @Schema(description = "项目id")
     private String opportunityId;
 
     @Size(max = 32)

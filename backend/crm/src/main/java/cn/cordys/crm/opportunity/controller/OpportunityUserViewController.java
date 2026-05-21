@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "商机视图")
+@Tag(name = "项目视图")
 @RestController
 @RequestMapping("/opportunity/view")
 public class OpportunityUserViewController {
@@ -33,7 +33,7 @@ public class OpportunityUserViewController {
 
     @PostMapping("/add")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
-    @Operation(summary = "添加商机视图")
+    @Operation(summary = "添加项目视图")
     public UserView add(@Validated @RequestBody UserViewAddRequest request) {
         return userViewService.add(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId(), UserViewResourceType.OPPORTUNITY.name());
     }
@@ -41,7 +41,7 @@ public class OpportunityUserViewController {
 
     @PostMapping("/update")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
-    @Operation(summary = "编辑商机视图")
+    @Operation(summary = "编辑项目视图")
     public UserView update(@Validated @RequestBody UserViewUpdateRequest request) {
         return userViewService.update(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
@@ -49,14 +49,14 @@ public class OpportunityUserViewController {
 
     @GetMapping("/delete/{id}")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
-    @Operation(summary = "删除商机视图")
+    @Operation(summary = "删除项目视图")
     public void delete(@PathVariable String id) {
         userViewService.delete(id, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
     @GetMapping("/detail/{id}")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
-    @Operation(summary = "商机视图详情")
+    @Operation(summary = "项目视图详情")
     public UserViewResponse viewDetail(@PathVariable String id) {
         return userViewService.getViewDetail(id, SessionUtils.getUserId(), OrganizationContext.getOrganizationId(), FormKey.OPPORTUNITY.getKey());
     }
@@ -64,7 +64,7 @@ public class OpportunityUserViewController {
 
     @GetMapping("/list")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
-    @Operation(summary = "商机视图列表")
+    @Operation(summary = "项目视图列表")
     public List<UserViewListResponse> queryList() {
         return userViewService.list(UserViewResourceType.OPPORTUNITY.name(), SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
@@ -72,13 +72,13 @@ public class OpportunityUserViewController {
 
     @GetMapping("/fixed/{id}")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
-    @Operation(summary = "商机视图固定/取消固定")
+    @Operation(summary = "项目视图固定/取消固定")
     public void fixed(@PathVariable String id) {
         userViewService.fixed(id, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
     @PostMapping("/edit/pos")
-    @Operation(summary = "商机视图-拖拽排序")
+    @Operation(summary = "项目视图-拖拽排序")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
     public void editPos(@Validated @RequestBody PosRequest request) {
         userViewService.editPos(request, SessionUtils.getUserId(),  UserViewResourceType.OPPORTUNITY.name());
@@ -87,7 +87,7 @@ public class OpportunityUserViewController {
 
     @GetMapping("/enable/{id}")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
-    @Operation(summary = "商机视图-启用/禁用")
+    @Operation(summary = "项目视图-启用/禁用")
     public void enable(@PathVariable String id) {
         userViewService.enable(id, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }

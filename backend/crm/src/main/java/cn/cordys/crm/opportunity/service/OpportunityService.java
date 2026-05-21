@@ -272,7 +272,7 @@ public class OpportunityService {
 
 
     /**
-     * 新建商机
+     * 新建项目
      *
      * @param request
      * @param operatorId
@@ -328,7 +328,7 @@ public class OpportunityService {
 
 
     /**
-     * 更新商机
+     * 更新项目
      *
      * @param request
      * @param userId
@@ -340,7 +340,7 @@ public class OpportunityService {
         Optional.ofNullable(oldOpportunity).ifPresentOrElse(item -> {
             Opportunity newOpportunity = BeanUtils.copyBean(new Opportunity(), item);
             productService.checkProductList(request.getProducts());
-            //更新商机
+            //更新项目
             Opportunity updateOpportunity = newOpportunity(newOpportunity, request, userId);
             // 获取模块字段
             List<BaseModuleFieldValue> originCustomerFields = opportunityFieldService.getModuleFieldValuesByResourceId(request.getId());
@@ -387,7 +387,7 @@ public class OpportunityService {
 
 
     /**
-     * 删除商机
+     * 删除项目
      *
      * @param id
      */
@@ -410,7 +410,7 @@ public class OpportunityService {
 
 
     /**
-     * 商机转移
+     * 项目转移
      */
     public void transfer(OpportunityTransferRequest request, String userId, String orgId) {
         List<StageConfigResponse> stageConfigList = extOpportunityStageConfigMapper.getStageConfigList(orgId);
@@ -463,7 +463,7 @@ public class OpportunityService {
     }
 
     /**
-     * 批量删除商机
+     * 批量删除项目
      *
      * @param ids
      * @param userId
@@ -507,8 +507,8 @@ public class OpportunityService {
 
 
 	/**
-	 * @param id 商机ID
-	 * @return 商机详情
+	 * @param id 项目ID
+	 * @return 项目详情
 	 */
     public OpportunityDetailResponse get(String id) {
         OpportunityDetailResponse response = extOpportunityMapper.getDetail(id);
@@ -588,9 +588,9 @@ public class OpportunityService {
     }
 
 	/**
-	 * 获取商机详情 (⚠️反射调用; 勿修改入参, 返回, 方法名!)
-	 * @param id 商机ID
-	 * @return 商机详情
+	 * 获取项目详情 (⚠️反射调用; 勿修改入参, 返回, 方法名!)
+	 * @param id 项目ID
+	 * @return 项目详情
 	 */
 	public OpportunityDetailResponse getSimple(String id) {
 		OpportunityDetailResponse response = extOpportunityMapper.getDetail(id);
@@ -603,9 +603,9 @@ public class OpportunityService {
 	}
 
 	/**
-	 * 批量获取商机详情 (用于数据源批量查询优化)
-	 * @param ids 商机ID集合
-	 * @return 商机详情列表
+	 * 批量获取项目详情 (用于数据源批量查询优化)
+	 * @param ids 项目ID集合
+	 * @return 项目详情列表
 	 */
 	public List<OpportunityDetailResponse> batchGetSimpleByIds(List<String> ids) {
 		if (CollectionUtils.isEmpty(ids)) {
@@ -629,7 +629,7 @@ public class OpportunityService {
 
 
     /**
-     * 标记商机阶段
+     * 标记项目阶段
      *
      * @param request
      * @param orgId
@@ -750,7 +750,7 @@ public class OpportunityService {
     }
 
     /**
-     * 商机导入
+     * 项目导入
      *
      * @param file        导入文件
      * @param currentOrg  当前组织

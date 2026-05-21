@@ -60,7 +60,7 @@ public class GlobalCustomerSearchService extends BaseSearchService<BasePageReque
         }
         // 查询当前组织下已启用的模块列表
         List<String> enabledModules = getEnabledModules();
-        // 检查：如果有商机读取权限但商机模块未启用，抛出异常
+        // 检查：如果有项目读取权限但项目模块未启用，抛出异常
         if (!enabledModules.contains(ModuleKey.CUSTOMER.getKey())) {
             throw new GenericException(SystemResultCode.MODULE_ENABLE);
         }

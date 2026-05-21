@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "商机报价单视图")
+@Tag(name = "项目报价单视图")
 @RestController
 @RequestMapping("/opportunity/quotation/view")
 public class OpportunityQuotationUserViewController {

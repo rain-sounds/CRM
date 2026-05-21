@@ -64,7 +64,7 @@ export interface UpdateCustomerFollowRecordParams extends SaveCustomerFollowReco
 }
 
 export interface CustomerFollowRecordTableParams extends TableQueryParams {
-  sourceId: string; // 客户ID/商机ID/线索ID
+  sourceId: string; // 客户ID/项目ID/线索ID
 }
 
 export interface CustomerOpportunityTableParams extends TableQueryParams {
@@ -110,7 +110,7 @@ export interface UpdateCustomerFollowPlanParams extends SaveCustomerFollowPlanPa
 export type StatusTagKey = Exclude<CustomerFollowPlanStatusEnum, CustomerFollowPlanStatusEnum.ALL>;
 
 export interface CustomerFollowPlanTableParams extends TableQueryParams {
-  sourceId: string; // 客户ID/商机ID/线索ID
+  sourceId: string; // 客户ID/项目ID/线索ID
   status: StatusTagKey; // 状态: ALL/PREPARED/UNDERWAY/COMPLETED/CANCELLED
   myPlan?: boolean; // 个人中心查询时传入true
 }

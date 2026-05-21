@@ -8,7 +8,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 /**
- * 商机报价单;
+ * 项目报价单;
  */
 @Data
 @Table(name = "opportunity_quotation")
@@ -16,7 +16,7 @@ public class OpportunityQuotation extends BaseModel {
     @Schema(description = "名称")
     private String name;
 
-    @Schema(description = "商机id")
+    @Schema(description = "项目id")
     private String opportunityId;
 
     @Schema(description = "有效期至")

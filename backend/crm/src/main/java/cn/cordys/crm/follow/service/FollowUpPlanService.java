@@ -302,7 +302,7 @@ public class FollowUpPlanService extends BaseFollowUpService {
                 FollowUpPlanListResponse::getCustomerId, FollowUpPlanListResponse::getCustomerName);
         optionMap.put(BusinessModuleField.FOLLOW_PLAN_CUSTOMER.getBusinessKey(), customerOption);
 
-        //商机
+        //项目
         List<OptionDTO> opportunityOption = moduleFormService.getBusinessFieldOption(buildList,
                 FollowUpPlanListResponse::getOpportunityId, FollowUpPlanListResponse::getOpportunityName);
         optionMap.put(BusinessModuleField.FOLLOW_PLAN_OPPORTUNITY.getBusinessKey(), opportunityOption);

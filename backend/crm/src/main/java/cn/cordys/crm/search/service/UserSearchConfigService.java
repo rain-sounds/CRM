@@ -143,7 +143,7 @@ public class UserSearchConfigService {
         buildCustomerFields(FormKey.CUSTOMER.name(), userId, orgId, defaultSearchConfigs);
         //线索&线索池
         buildClueFields(FormKey.CLUE.name(), userId, orgId, defaultSearchConfigs);
-        //商机
+        //项目
         buildOpportunityFields(FormKey.OPPORTUNITY.name(), userId, orgId, defaultSearchConfigs);
         //联系人
         buildContactFields(FormKey.CONTACT.name(), userId, orgId, defaultSearchConfigs);
@@ -217,7 +217,7 @@ public class UserSearchConfigService {
 
 
     /**
-     * 商机默认字段
+     * 项目默认字段
      *
      * @param formKey
      * @param userId

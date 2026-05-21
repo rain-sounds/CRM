@@ -318,7 +318,7 @@ public abstract class BaseModuleLogService {
 
 
     /**
-     * 商机名称
+     * 项目名称
      *
      * @param differ
      */

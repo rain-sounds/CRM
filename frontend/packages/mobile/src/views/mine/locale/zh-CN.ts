@@ -16,7 +16,7 @@ export default {
   'mine.allMessage': '全部',
   'mine.systemMessage': '系统消息',
   'mine.announcementMessage': '公告',
-  'mine.opportunityMessage': '商机',
+  'mine.opportunityMessage': '项目',
   'mine.userPhoneErrTip': '请输入 11 位手机号',
   'mine.emailErrTip': '邮箱格式错误，请重新输入',
   'mine.messageSearchPlaceholder': '请输入关键词',

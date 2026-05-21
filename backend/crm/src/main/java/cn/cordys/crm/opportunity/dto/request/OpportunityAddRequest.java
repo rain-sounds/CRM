@@ -14,7 +14,7 @@ public class OpportunityAddRequest {
 
     @NotBlank
     @Size(max = 255)
-    @Schema(description = "商机名称", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "项目名称", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
     @Size(max = 32)
@@ -46,10 +46,10 @@ public class OpportunityAddRequest {
     @Schema(description = "自定义字段")
     private List<BaseModuleFieldValue> moduleFields;
 
-    @Schema(description = "最新跟进人(转商机时需录入)")
+    @Schema(description = "最新跟进人(转项目时需录入)")
     private String follower;
 
-    @Schema(description = "最新跟进时间(转商机时需录入)")
+    @Schema(description = "最新跟进时间(转项目时需录入)")
     private Long followTime;
 
 }

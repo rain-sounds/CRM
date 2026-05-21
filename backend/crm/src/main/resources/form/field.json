@@ -449,7 +449,7 @@
       "titleColor": "#323535"
     },
     {
-      "name": "商机名称",
+      "name": "项目名称",
       "internalKey": "opportunityName",
       "type": "INPUT",
       "showLabel": true,
@@ -500,7 +500,7 @@
       ]
     },
     {
-      "name": "商机来源",
+      "name": "项目来源",
       "internalKey": "opportunitySource",
       "type": "SELECT",
       "showLabel": true,
@@ -921,7 +921,7 @@
       "mobile": true
     },
     {
-      "name": "商机",
+      "name": "项目",
       "internalKey": "recordOpportunity",
       "type": "DATA_SOURCE",
       "dataSourceType": "OPPORTUNITY",
@@ -1105,7 +1105,7 @@
       "mobile": true
     },
     {
-      "name": "商机",
+      "name": "项目",
       "internalKey": "planOpportunity",
       "type": "DATA_SOURCE",
       "dataSourceType": "OPPORTUNITY",
@@ -1390,7 +1390,7 @@
       "mobile": true
     },
     {
-      "name": "商机",
+      "name": "项目",
       "internalKey": "quotationOpportunity",
       "type": "DATA_SOURCE",
       "dataSourceType": "OPPORTUNITY",

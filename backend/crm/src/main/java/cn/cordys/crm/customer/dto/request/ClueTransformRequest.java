@@ -10,8 +10,8 @@ public class ClueTransformRequest {
     @NotBlank
     @Schema(description = "线索ID", requiredMode = Schema.RequiredMode.REQUIRED)
     private String clueId;
-    @Schema(description = "是否创建商机")
+    @Schema(description = "是否创建项目")
     private Boolean oppCreated;
-    @Schema(description = "商机名称")
+    @Schema(description = "项目名称")
     private String oppName;
 }

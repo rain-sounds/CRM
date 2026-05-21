@@ -11,7 +11,7 @@ public class OpportunityRepeatResponse {
     @Schema(description = "ID")
     private String id;
 
-    @Schema(description = "商机名称")
+    @Schema(description = "项目名称")
     private String name;
 
     @Schema(description = "客户id")
@@ -20,7 +20,7 @@ public class OpportunityRepeatResponse {
     @Schema(description = "客户名称")
     private String customerName;
 
-    @Schema(description = "商机阶段")
+    @Schema(description = "项目阶段")
     private String stage;
 
     @Schema(description = "意向产品Ids")

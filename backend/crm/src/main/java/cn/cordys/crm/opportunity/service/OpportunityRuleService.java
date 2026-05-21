@@ -49,11 +49,11 @@ public class OpportunityRuleService {
     private UserExtendService userExtendService;
 
     /**
-     * 分页获取商机规则
+     * 分页获取项目规则
      *
      * @param request 分页参数
      *
-     * @return 商机规则列表
+     * @return 项目规则列表
      */
     public List<OpportunityRuleDTO> page(BasePageRequest request, String organizationId) {
         List<OpportunityRuleDTO> rules = extOpportunityRuleMapper.list(request, organizationId);
@@ -97,7 +97,7 @@ public class OpportunityRuleService {
     }
 
     /**
-     * 新增商机规则
+     * 新增项目规则
      *
      * @param request        请求参数
      * @param currentUserId  当前用户ID
@@ -128,7 +128,7 @@ public class OpportunityRuleService {
     }
 
     /**
-     * 修改商机规则
+     * 修改项目规则
      *
      * @param request        请求参数
      * @param currentUserId  当前用户ID
@@ -158,7 +158,7 @@ public class OpportunityRuleService {
     }
 
     /**
-     * 删除商机规则
+     * 删除项目规则
      *
      * @param id 规则ID
      */
@@ -171,7 +171,7 @@ public class OpportunityRuleService {
     }
 
     /**
-     * 启用/禁用商机规则
+     * 启用/禁用项目规则
      *
      * @param id            规则ID
      * @param currentUserId 当前用户ID
@@ -217,7 +217,7 @@ public class OpportunityRuleService {
     }
 
     /**
-     * 匹配多个范围的商机关闭规则
+     * 匹配多个范围的项目关闭规则
      *
      * @param scopeIds 范围ID集合
      * @param rules    规则列表
@@ -243,8 +243,8 @@ public class OpportunityRuleService {
     /**
      * 计算剩余归属天数
      *
-     * @param rule       商机规则
-     * @param createTime 商机创建时间
+     * @param rule       项目规则
+     * @param createTime 项目创建时间
      *
      * @return 剩余归属天数
      */
@@ -253,7 +253,7 @@ public class OpportunityRuleService {
             return null;
         }
 
-        // 判断商机是否存在创建时间
+        // 判断项目是否存在创建时间
         List<RuleConditionDTO> conditions = JSON.parseArray(rule.getCondition(), RuleConditionDTO.class);
         return RecycleConditionUtils.calcRecycleDays(conditions, createTime);
     }
@@ -300,7 +300,7 @@ public class OpportunityRuleService {
      * 是否条件匹配
      *
      * @param condition   条件
-     * @param opportunity 商机
+     * @param opportunity 项目
      *
      * @return 是否匹配
      */
@@ -320,11 +320,11 @@ public class OpportunityRuleService {
     }
 
     /**
-     * 校验商机规则是否存在
+     * 校验项目规则是否存在
      *
      * @param id 规则ID
      *
-     * @return 商机规则
+     * @return 项目规则
      */
     private OpportunityRule checkRuleExit(String id) {
         OpportunityRule rule = opportunityRuleMapper.selectByPrimaryKey(id);

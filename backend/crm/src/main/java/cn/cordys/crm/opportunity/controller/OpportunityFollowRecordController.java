@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "商机跟进记录")
+@Tag(name = "项目跟进记录")
 @RestController
 @RequestMapping("/opportunity/follow/record")
 public class OpportunityFollowRecordController {
@@ -33,21 +33,21 @@ public class OpportunityFollowRecordController {
 
     @PostMapping("/add")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_UPDATE)
-    @Operation(summary = "添加商机跟进记录")
+    @Operation(summary = "添加项目跟进记录")
     public FollowUpRecord add(@Validated @RequestBody FollowUpRecordAddRequest request) {
         return followUpRecordService.add(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
     @PostMapping("/update")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_UPDATE)
-    @Operation(summary = "更新商机跟进记录")
+    @Operation(summary = "更新项目跟进记录")
     public FollowUpRecord update(@Validated @RequestBody FollowUpRecordUpdateRequest request) {
         return followUpRecordService.update(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
     @PostMapping("/page")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
-    @Operation(summary = "商机跟进记录列表")
+    @Operation(summary = "项目跟进记录列表")
     public PagerWithOption<List<FollowUpRecordListResponse>> list(@Validated @RequestBody FollowUpRecordPageRequest request) {
         ConditionFilterUtils.parseCondition(request, FormKey.FOLLOW_RECORD.getKey());
         CustomerDataDTO customerData = followUpRecordService.getOpportunityPermission(SessionUtils.getUserId(), PermissionConstants.OPPORTUNITY_MANAGEMENT_READ);
@@ -56,7 +56,7 @@ public class OpportunityFollowRecordController {
 
     @GetMapping("/get/{id}")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
-    @Operation(summary = "商机跟进记录详情")
+    @Operation(summary = "项目跟进记录详情")
     public FollowUpRecordDetailResponse get(@PathVariable String id) {
         return followUpRecordService.get(id, OrganizationContext.getOrganizationId());
     }

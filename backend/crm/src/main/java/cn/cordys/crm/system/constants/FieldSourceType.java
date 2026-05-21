@@ -15,7 +15,7 @@ public enum FieldSourceType {
      */
     CONTACT("customer_contact"),
     /**
-     * 商机来源
+     * 项目来源
      */
     OPPORTUNITY("opportunity"),
     /**

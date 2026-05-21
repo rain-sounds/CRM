@@ -42,7 +42,7 @@ public class HomeStatisticController {
 
     @PostMapping("/opportunity")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
-    @Operation(summary = "商机统计")
+    @Operation(summary = "项目统计")
     public HomeOpportunityStatistic getOpportunityStatistic(@RequestBody @Validated HomeStatisticBaseSearchRequest request) {
         DeptDataPermissionDTO deptDataPermission = homeStatisticService.getDeptDataPermissionDTO(request, PermissionConstants.OPPORTUNITY_MANAGEMENT_READ);
         return homeStatisticService.isEmptyDeptData(request.getSearchType(), deptDataPermission) ?
@@ -51,7 +51,7 @@ public class HomeStatisticController {
 
     @PostMapping("/opportunity/underway")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
-    @Operation(summary = "进行中商机统计")
+    @Operation(summary = "进行中项目统计")
     public HomeOpportunityStatistic getUnderwayOpportunityStatistic(@RequestBody @Validated HomeStatisticBaseSearchRequest request) {
         DeptDataPermissionDTO deptDataPermission = homeStatisticService.getDeptDataPermissionDTO(request, PermissionConstants.OPPORTUNITY_MANAGEMENT_READ);
         return homeStatisticService.isEmptyDeptData(request.getSearchType(), deptDataPermission) ?

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "商机阶段设置")
+@Tag(name = "项目阶段设置")
 @RestController
 @RequestMapping("/opportunity/stage")
 public class OpportunityStageController {
@@ -26,14 +26,14 @@ public class OpportunityStageController {
 
 
     @GetMapping("/get")
-    @Operation(summary = "商机阶段配置列表")
+    @Operation(summary = "项目阶段配置列表")
     public StageConfigListResponse getStageConfigList() {
         return opportunityStageService.getStageConfigList(OrganizationContext.getOrganizationId());
     }
 
 
     @PostMapping("/add")
-    @Operation(summary = "添加商机阶段")
+    @Operation(summary = "添加项目阶段")
     @RequiresPermissions(value = {PermissionConstants.MODULE_SETTING_UPDATE})
     public String add(@RequestBody OpportunityStageAddRequest request) {
         return opportunityStageService.addStageConfig(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
@@ -41,7 +41,7 @@ public class OpportunityStageController {
 
 
     @GetMapping("/delete/{id}")
-    @Operation(summary = "删除商机阶段")
+    @Operation(summary = "删除项目阶段")
     @RequiresPermissions(value = {PermissionConstants.MODULE_SETTING_UPDATE})
     public void delete(@PathVariable("id") @Validated String id) {
         opportunityStageService.delete(id, OrganizationContext.getOrganizationId());
@@ -49,7 +49,7 @@ public class OpportunityStageController {
 
 
     @PostMapping("/update-rollback")
-    @Operation(summary = "商机阶段回退设置")
+    @Operation(summary = "项目阶段回退设置")
     @RequiresPermissions(value = {PermissionConstants.MODULE_SETTING_UPDATE})
     public void update(@Validated @RequestBody StageRollBackRequest request) {
         opportunityStageService.updateRollBack(request, OrganizationContext.getOrganizationId());
@@ -57,7 +57,7 @@ public class OpportunityStageController {
 
 
     @PostMapping("/update")
-    @Operation(summary = "更新商机阶段配置")
+    @Operation(summary = "更新项目阶段配置")
     @RequiresPermissions(value = {PermissionConstants.MODULE_SETTING_UPDATE})
     public void update(@Validated @RequestBody StageUpdateRequest request) {
         opportunityStageService.update(request, SessionUtils.getUserId());
@@ -65,7 +65,7 @@ public class OpportunityStageController {
 
 
     @PostMapping("/sort")
-    @Operation(summary = "商机阶段排序")
+    @Operation(summary = "项目阶段排序")
     @RequiresPermissions(PermissionConstants.MODULE_SETTING_UPDATE)
     public void sort(@RequestBody List<String> ids) {
         opportunityStageService.sort(ids, OrganizationContext.getOrganizationId());

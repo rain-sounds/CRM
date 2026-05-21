@@ -584,7 +584,7 @@ public class BaseService {
     }
 
     /**
-     * 商机id与名称映射
+     * 项目id与名称映射
      *
      * @param opportunityIds
      * @return

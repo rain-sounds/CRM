@@ -5,7 +5,7 @@ import jakarta.persistence.Table;
 import lombok.Data;
 
 /**
- * 商机报价单自定义属性;
+ * 项目报价单自定义属性;
  */
 @Data
 @Table(name = "opportunity_quotation_field")

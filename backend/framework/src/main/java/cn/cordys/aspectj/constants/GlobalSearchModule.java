@@ -26,7 +26,7 @@ public class GlobalSearchModule {
     public static final String CUSTOMER_CONTACT = "CUSTOMER_CONTACT";
 
     /**
-     * 商机
+     * 项目
      */
     public static final String OPPORTUNITY = "OPPORTUNITY";
 

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 商机报价单响应类;
+ * 项目报价单响应类;
  *
  * @author guoyuqi
  */

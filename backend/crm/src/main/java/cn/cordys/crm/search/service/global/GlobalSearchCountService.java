@@ -112,7 +112,7 @@ public class GlobalSearchCountService extends BaseSearchService<BasePageRequest,
     }
 
     /**
-     * 获取商机数量
+     * 获取项目数量
      *
      * @param keyword           关键字
      * @param orgId             组织ID
@@ -136,7 +136,7 @@ public class GlobalSearchCountService extends BaseSearchService<BasePageRequest,
                 }
             }
         } else {
-            //设置商机默认查询属性
+            //设置项目默认查询属性
             //查询客户源数据
             FilterCondition nameCondition = getFilterCondition("name", keyword, FilterCondition.CombineConditionOperator.CONTAINS.toString(), FieldType.INPUT.toString());
             conditions.add(nameCondition);

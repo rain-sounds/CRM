@@ -19,7 +19,7 @@ public class OpportunityQuotationAddRequest {
     private String name;
 
     @NotBlank(message = "{opportunity.required}")
-    @Schema(description = "商机id", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "项目id", requiredMode = Schema.RequiredMode.REQUIRED)
     private String opportunityId;
 
     @Schema(description = "有效期至", requiredMode = Schema.RequiredMode.REQUIRED)

@@ -73,7 +73,7 @@ public class AdvancedSearchController {
     }
 
     @PostMapping("/opportunity/detail")
-    @Operation(summary = "全局搜索商机详情")
+    @Operation(summary = "全局搜索项目详情")
     @RequiresPermissions(value = {PermissionConstants.OPPORTUNITY_MANAGEMENT_READ})
     public Pager<List<OpportunityRepeatResponse>> getRepeatOpportunityDetail(@Validated @RequestBody RepeatCustomerDetailPageRequest request) {
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize());
@@ -82,7 +82,7 @@ public class AdvancedSearchController {
 
 
     @PostMapping("/opportunity")
-    @Operation(summary = "全局搜索-商机")
+    @Operation(summary = "全局搜索-项目")
     public PagerWithOption<List<AdvancedOpportunityResponse>> advancedSearchOpportunity(@Validated @RequestBody OpportunityPageRequest request) {
         BaseSearchService<OpportunityPageRequest, AdvancedOpportunityResponse> searchService = AdvancedSearchServiceFactory.getSearchService(GlobalSearchModule.OPPORTUNITY);
         return searchService.startSearch(request, OrganizationContext.getOrganizationId(), SessionUtils.getUserId());

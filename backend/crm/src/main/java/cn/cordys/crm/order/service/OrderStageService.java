@@ -124,9 +124,6 @@ public class OrderStageService {
      * @param orgId
      */
     private void checkConfigCount(String orgId) {
-        if (extOrderStageConfigMapper.countStageConfig(orgId) > 10) {
-            throw new GenericException(Translator.get("order_stage_config_list"));
-        }
     }
 
 

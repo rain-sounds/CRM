@@ -141,7 +141,7 @@ public class CustomerContactController {
     @GetMapping("/opportunity/check/{id}")
     @RequiresPermissions(value = {PermissionConstants.CUSTOMER_MANAGEMENT_DELETE,
             PermissionConstants.CUSTOMER_MANAGEMENT_CONTACT_DELETE}, logical = Logical.OR)
-    @Operation(summary = "检查客户联系人是否有关联商机")
+    @Operation(summary = "检查客户联系人是否有关联项目")
     public boolean checkOpportunity(@PathVariable String id) {
         return customerContactService.checkOpportunity(id);
     }

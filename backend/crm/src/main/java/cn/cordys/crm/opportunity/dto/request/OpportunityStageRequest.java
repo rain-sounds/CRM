@@ -13,7 +13,7 @@ public class OpportunityStageRequest {
     private String id;
 
     @NotBlank
-    @Schema(description = "商机阶段", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "项目阶段", requiredMode = Schema.RequiredMode.REQUIRED)
     private String stage;
 
     @Schema(description = "失败原因")

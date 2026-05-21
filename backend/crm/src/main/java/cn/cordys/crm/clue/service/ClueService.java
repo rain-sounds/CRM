@@ -851,7 +851,7 @@ public class ClueService {
         commonNoticeSendService.sendNotice(NotificationConstants.Module.CLUE, NotificationConstants.Event.CLUE_CONVERT_CUSTOMER,
                 paramMap, currentUser, orgId, List.of(clue.getOwner()), true);
 
-        // 是否转换商机
+        // 是否转换项目
         if (request.getOppCreated()) {
             transformCustomer.setName(request.getOppName());
             Opportunity transformOpportunity = generateOpportunityByLinkForm(clue, transformCsAssociateDTO.getContactId(), transformCustomer, currentUser, orgId);
@@ -874,7 +874,7 @@ public class ClueService {
      *
      * @param clueId        线索ID
      * @param customerId    客户ID
-     * @param opportunityId 商机ID
+     * @param opportunityId 项目ID
      */
     public void batchCopyCluePlanAndRecord(String clueId, String customerId, String opportunityId, String contactId) {
         // 记录
@@ -948,7 +948,7 @@ public class ClueService {
     /**
      * 检查转换权限
      *
-     * @param checkOpportunityPermission 是否检查商机权限
+     * @param checkOpportunityPermission 是否检查项目权限
      */
     public void checkTransformPermission(boolean checkOpportunityPermission) {
         if (!PermissionUtils.hasPermission(PermissionConstants.CUSTOMER_MANAGEMENT_ADD)) {
@@ -1008,14 +1008,14 @@ public class ClueService {
     }
 
     /**
-     * 通过表单联动来创建商机
+     * 通过表单联动来创建项目
      *
      * @param clue        线索
      * @param contactId   联系人ID
      * @param currentUser 当前用户
      * @param orgId       组织ID
      *
-     * @return 商机
+     * @return 项目
      */
     public Opportunity generateOpportunityByLinkForm(Clue clue, String contactId, Customer transformCustomer, String currentUser, String orgId) {
         ModuleFormConfigDTO opportunityFormConfig = moduleFormService.getBusinessFormConfig(FormKey.OPPORTUNITY.getKey(), orgId);

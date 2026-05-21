@@ -20,7 +20,7 @@ public class UserViewResponse {
     @Schema(description = "视图名称")
     private String name;
 
-    @Schema(description = "资源类型(客户/线索/商机)")
+    @Schema(description = "资源类型(客户/线索/项目)")
     private String resourceType;
 
     @Schema(description = "组织id")

@@ -113,11 +113,11 @@ public class OpportunityQuotationService {
 
 
     /**
-     * 新增商机报价单
+     * 新增项目报价单
      * 新增报价单会自动将报价单状态设置为“提审”，此时需要保存报价单值快照，报价单表单设置快照
      *
      * @param request 新增请求参数
-     * @return 商机报价单实体
+     * @return 项目报价单实体
      */
     @OperationLog(module = LogModule.OPPORTUNITY_QUOTATION, type = LogType.ADD, resourceName = "{#request.name}", operator = "{#userId}")
     public OpportunityQuotation add(OpportunityQuotationAddRequest request, String orgId, String userId) {
@@ -184,7 +184,7 @@ public class OpportunityQuotationService {
     }
 
     /**
-     * 保存商机报价单快照
+     * 保存项目报价单快照
      *
      * @param opportunityQuotation 报价单实体
      * @param moduleFormConfigDTO  报价单表单配置
@@ -202,7 +202,7 @@ public class OpportunityQuotationService {
     }
 
     /**
-     * 新增商机报价单详情
+     * 新增项目报价单详情
      *
      * @param opportunityQuotation 报价单实体
      * @param moduleFields         报价单字段值
@@ -228,7 +228,7 @@ public class OpportunityQuotationService {
     }
 
     /**
-     * 查询商机报价单快照详情
+     * 查询项目报价单快照详情
      *
      * @param id 报价单ID
      * @return 报价单详情
@@ -367,7 +367,7 @@ public class OpportunityQuotationService {
     }
 
     /**
-     * 作废商机报价单
+     * 作废项目报价单
      *
      * @param id     报价单ID
      * @param userId 用户ID
@@ -413,7 +413,7 @@ public class OpportunityQuotationService {
     }
 
     /**
-     * 审批商机报价单
+     * 审批项目报价单
      *
      * @param request 新增请求参数
      * @param userId  用户ID
@@ -521,7 +521,7 @@ public class OpportunityQuotationService {
     }
 
     /**
-     * 删除商机报价单
+     * 删除项目报价单
      *
      * @param id             报价单ID
      * @param userId         用户ID
@@ -554,11 +554,11 @@ public class OpportunityQuotationService {
     }
 
     /**
-     * 商机报价单列表
+     * 项目报价单列表
      *
      * @param request        列表请求参数
      * @param organizationId 组织ID
-     * @return 商机报价单列表
+     * @return 项目报价单列表
      */
     public PagerWithOption<List<OpportunityQuotationListResponse>> list(OpportunityQuotationPageRequest request, String organizationId, String userId, DeptDataPermissionDTO deptDataPermission, Boolean source) {
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize());
@@ -599,7 +599,7 @@ public class OpportunityQuotationService {
     }
 
     /**
-     * 更新商机报价单
+     * 更新项目报价单
      *
      * @param request 更新请求参数
      * @param userId  更新用户ID
@@ -735,7 +735,7 @@ public class OpportunityQuotationService {
     }
 
     /**
-     * 获取商机报价单模块标签页启用配置
+     * 获取项目报价单模块标签页启用配置
      *
      * @param userId 用户ID
      * @param orgId  组织ID
@@ -748,7 +748,7 @@ public class OpportunityQuotationService {
 
 
     /**
-     * 批量审批商机报价单
+     * 批量审批项目报价单
      *
      * @param request 批量审批请求参数
      * @param userId  用户ID
@@ -889,7 +889,7 @@ public class OpportunityQuotationService {
 
 
     /**
-     * 批量作废商机报价单
+     * 批量作废项目报价单
      *
      * @param request        批量作废请求参数
      * @param userId         用户ID
@@ -906,7 +906,7 @@ public class OpportunityQuotationService {
         }
 
 
-        // 校验商机报价单是否可以作废
+        // 校验项目报价单是否可以作废
         List<OpportunityQuotation> validateList = validateVoidQuotation(list);
         if (CollectionUtils.isEmpty(validateList)) {
             return BatchAffectReasonResponse.builder().success(0).fail(list.size()).skip(0).errorMessages(Translator.get("opportunity.quotation.batch.no.voided")).build();

@@ -180,7 +180,7 @@ public class CustomerController {
 
     @PostMapping("/opportunity/page")
     @RequiresPermissions({PermissionConstants.CUSTOMER_MANAGEMENT_READ, PermissionConstants.OPPORTUNITY_MANAGEMENT_READ})
-    @Operation(summary = "客户详情-商机列表")
+    @Operation(summary = "客户详情-项目列表")
     public PagerWithOption<List<OpportunityListResponse>> list(@Validated @RequestBody CustomerOpportunityPageRequest request) {
         ConditionFilterUtils.parseCondition(request, FormKey.OPPORTUNITY.getKey());
         request.setViewId("ALL");

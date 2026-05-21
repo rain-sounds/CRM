@@ -7,12 +7,12 @@ export const ModuleRoleTreeUrl = '/module/role/tree'; // 模块-获取角色树
 export const GetAdvancedSwitchUrl = '/module/advanced-search/settings'; // 高级筛选开关
 export const SetDisplayAdvancedUrl = '/module/advanced-search/switch'; // 设置高级筛选开关
 
-// 模块--商机
-export const getOpportunityListUrl = '/opportunity-rule/page'; // 模块-商机-商机规则列表
-export const addOpportunityRuleUrl = '/opportunity-rule/add'; // 模块-商机-添加商机规则
-export const updateOpportunityRuleUrl = '/opportunity-rule/update'; // 模块-商机-更新商机规则
-export const switchOpportunityStatusUrl = '/opportunity-rule/switch'; // 模块-商机-更新商机规则状态
-export const deleteOpportunityUrl = '/opportunity-rule/delete'; // 模块-商机-删除商机规则
+// 模块--项目
+export const getOpportunityListUrl = '/opportunity-rule/page'; // 模块-项目-项目规则列表
+export const addOpportunityRuleUrl = '/opportunity-rule/add'; // 模块-项目-添加项目规则
+export const updateOpportunityRuleUrl = '/opportunity-rule/update'; // 模块-项目-更新项目规则
+export const switchOpportunityStatusUrl = '/opportunity-rule/switch'; // 模块-项目-更新项目规则状态
+export const deleteOpportunityUrl = '/opportunity-rule/delete'; // 模块-项目-删除项目规则
 
 // 模块-线索池
 export const GetCluePoolPageUrl = '/lead-pool/page'; // 分页获取线索池
@@ -50,7 +50,7 @@ export const SaveFormDesignConfigUrl = '/module/form/save'; // 保存表单设�
 export const GetFieldDeptUerTreeUrl = '/field/user/dept/tree'; // 获取部门成员树
 export const GetFieldDeptTreeUrl = '/field/dept/tree'; // 获取部门树
 export const GetFieldProductListUrl = '/field/source/product'; // 获取产品列表
-export const GetFieldOpportunityListUrl = '/field/source/opportunity'; // 获取商机列表
+export const GetFieldOpportunityListUrl = '/field/source/opportunity'; // 获取项目列表
 export const GetFieldCustomerListUrl = '/field/source/account'; // 获取客户列表
 export const GetFieldContactListUrl = '/field/source/contact'; // 获取联系人列表
 export const GetFieldClueListUrl = '/field/source/lead'; // 获取线索列表

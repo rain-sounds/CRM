@@ -41,7 +41,7 @@ public class OpportunityStageService {
     private ExtOpportunityMapper extOpportunityMapper;
 
     /**
-     * 商机阶段配置列表
+     * 项目阶段配置列表
      *
      * @param orgId
      * @return
@@ -64,7 +64,7 @@ public class OpportunityStageService {
     }
 
     /**
-     * 添加商机配置
+     * 添加项目配置
      *
      * @param request
      * @param userId
@@ -117,14 +117,11 @@ public class OpportunityStageService {
 
 
     /**
-     * 商机阶段配置校验
+     * 项目阶段配置校验
      *
      * @param orgId
      */
     private void checkConfigCount(String orgId) {
-        if (extOpportunityStageConfigMapper.countStageConfig(orgId) >= 10) {
-            throw new GenericException(Translator.get("opportunity_stage_config_list"));
-        }
     }
 
 
@@ -155,7 +152,7 @@ public class OpportunityStageService {
 
 
     /**
-     * 更新商机阶段回退设置
+     * 更新项目阶段回退设置
      *
      * @param request
      * @param orgId

@@ -146,27 +146,27 @@ export default function useProductApi(CDR: CordysAxios) {
     return CDR.get<DeptUserTreeNode[]>({ url: ModuleRoleTreeUrl });
   }
 
-  // 模块-商机-商机规则列表
+  // 模块-项目-项目规则列表
   function getOpportunityRuleList(data: TableQueryParams) {
     return CDR.post<CommonList<OpportunityItem>>({ url: getOpportunityListUrl, data });
   }
 
-  // 模块-商机-添加商机规则
+  // 模块-项目-添加项目规则
   function addOpportunityRule(data: OpportunityParams) {
     return CDR.post({ url: addOpportunityRuleUrl, data });
   }
 
-  // 模块-商机-更新商机规则
+  // 模块-项目-更新项目规则
   function updateOpportunityRule(data: OpportunityParams) {
     return CDR.post({ url: updateOpportunityRuleUrl, data });
   }
 
-  // 模块-商机-更新商机规则状态
+  // 模块-项目-更新项目规则状态
   function switchOpportunityStatus(ruleId: string) {
     return CDR.get({ url: `${switchOpportunityStatusUrl}/${ruleId}` });
   }
 
-  // 模块-商机-删除商机规则
+  // 模块-项目-删除项目规则
   function deleteOpportunity(ruleId: string) {
     return CDR.get({ url: `${deleteOpportunityUrl}/${ruleId}` });
   }

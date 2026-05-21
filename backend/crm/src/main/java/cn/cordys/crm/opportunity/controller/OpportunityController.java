@@ -38,7 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-@Tag(name = "商机")
+@Tag(name = "项目")
 @RestController
 @RequestMapping("/opportunity")
 public class OpportunityController {
@@ -63,7 +63,7 @@ public class OpportunityController {
 
     @PostMapping("/page")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
-    @Operation(summary = "商机列表")
+    @Operation(summary = "项目列表")
     public PagerWithOption<List<OpportunityListResponse>> list(@Validated @RequestBody OpportunityPageRequest request) {
         ConditionFilterUtils.parseCondition(request, FormKey.OPPORTUNITY.getKey());
         DeptDataPermissionDTO deptDataPermission = dataScopeService.getDeptDataPermission(SessionUtils.getUserId(),
@@ -73,7 +73,7 @@ public class OpportunityController {
 
     @PostMapping("/statistic")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
-    @Operation(summary = "商机统计")
+    @Operation(summary = "项目统计")
     public OpportunitySearchStatisticResponse searchStatistic(@Validated @RequestBody OpportunitySearchStatisticRequest request) {
         ConditionFilterUtils.parseCondition(request, FormKey.OPPORTUNITY.getKey());
         DeptDataPermissionDTO deptDataPermission = dataScopeService.getDeptDataPermission(SessionUtils.getUserId(),
@@ -84,7 +84,7 @@ public class OpportunityController {
 
     @PostMapping("/add")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_ADD)
-    @Operation(summary = "添加商机")
+    @Operation(summary = "添加项目")
     public Opportunity add(@Validated @RequestBody OpportunityAddRequest request) {
         return opportunityService.add(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
@@ -92,14 +92,14 @@ public class OpportunityController {
 
     @PostMapping("/update")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_UPDATE)
-    @Operation(summary = "更新商机")
+    @Operation(summary = "更新项目")
     public Opportunity update(@Validated @RequestBody OpportunityUpdateRequest request) {
         return opportunityService.update(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
 
     @GetMapping("/delete/{id}")
-    @Operation(summary = "删除商机")
+    @Operation(summary = "删除项目")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_DELETE)
     public void deleteOpportunity(@PathVariable String id) {
         opportunityService.delete(id, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
@@ -108,7 +108,7 @@ public class OpportunityController {
 
     @PostMapping("/batch/transfer")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_TRANSFER)
-    @Operation(summary = "批量转移商机")
+    @Operation(summary = "批量转移项目")
     public void batchTransfer(@RequestBody OpportunityTransferRequest request) {
         opportunityService.transfer(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
@@ -116,41 +116,41 @@ public class OpportunityController {
 
     @PostMapping("/batch/delete")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_DELETE)
-    @Operation(summary = "批量删除商机")
+    @Operation(summary = "批量删除项目")
     public void delete(@RequestBody @NotEmpty List<String> ids) {
         opportunityService.batchDelete(ids, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
     @GetMapping("/get/{id}")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
-    @Operation(summary = "商机详情")
+    @Operation(summary = "项目详情")
     public OpportunityDetailResponse get(@PathVariable String id) {
         return opportunityService.getWithDataPermissionCheck(id, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
     @PostMapping("/update/stage")
     @RequiresPermissions(value = {PermissionConstants.OPPORTUNITY_MANAGEMENT_UPDATE, PermissionConstants.OPPORTUNITY_MANAGEMENT_RESIGN}, logical = Logical.OR)
-    @Operation(summary = "更新商机阶段")
+    @Operation(summary = "更新项目阶段")
     public void updateStage(@RequestBody OpportunityStageRequest request) {
         opportunityService.updateStage(request, OrganizationContext.getOrganizationId());
     }
 
     @PostMapping("/batch/update")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_UPDATE)
-    @Operation(summary = "批量更新商机")
+    @Operation(summary = "批量更新项目")
     public void batchUpdate(@Validated @RequestBody ResourceBatchEditRequest request) {
         opportunityService.batchUpdate(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
     @GetMapping("/tab")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
-    @Operation(summary = "所有商机和部门商机tab是否显示")
+    @Operation(summary = "所有项目和部门项目tab是否显示")
     public ResourceTabEnableDTO getTabEnableConfig() {
         return opportunityService.getTabEnableConfig(SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
     @GetMapping("/contact/list/{opportunityId}")
-    @Operation(summary = "商机下的联系人列表")
+    @Operation(summary = "项目下的联系人列表")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
     public CustomerContactListAllResponse list(@Validated @PathVariable String opportunityId) {
         return opportunityService.getContactList(opportunityId, OrganizationContext.getOrganizationId());
@@ -158,7 +158,7 @@ public class OpportunityController {
 
 
     @PostMapping("/export-all")
-    @Operation(summary = "商机导出全部")
+    @Operation(summary = "项目导出全部")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_EXPORT)
     public String opportunityExportAll(@Validated @RequestBody OpportunityExportRequest request) {
         ConditionFilterUtils.parseCondition(request, FormKey.OPPORTUNITY.getKey());
@@ -169,7 +169,7 @@ public class OpportunityController {
 
 
     @PostMapping("/export-select")
-    @Operation(summary = "导出选中商机")
+    @Operation(summary = "导出选中项目")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_EXPORT)
     public String opportunityExportSelect(@Validated @RequestBody ExportSelectRequest request) {
         return opportunityExportService.exportSelect(SessionUtils.getUserId(), request, OrganizationContext.getOrganizationId(), LocaleContextHolder.getLocale());
@@ -198,7 +198,7 @@ public class OpportunityController {
 
 
     @PostMapping("/sort")
-    @Operation(summary = "商机阶段看板拖拽排序")
+    @Operation(summary = "项目阶段看板拖拽排序")
     public void sortModule(@Validated @RequestBody OpportunitySortRequest request) {
         opportunityService.sort(request, SessionUtils.getUserId());
     }

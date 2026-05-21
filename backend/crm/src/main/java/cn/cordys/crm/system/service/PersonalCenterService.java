@@ -249,7 +249,7 @@ public class PersonalCenterService {
             resourceTypes.add(NotificationConstants.Module.CUSTOMER);
         }
 
-        // 检查商机模块权限
+        // 检查项目模块权限
         if ((permissions.contains(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ) || isAdmin)
                 && enabledModules.contains(ModuleKey.BUSINESS.getKey())) {
             resourceTypes.add(NotificationConstants.Module.OPPORTUNITY);

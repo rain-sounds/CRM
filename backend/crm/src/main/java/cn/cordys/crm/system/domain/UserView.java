@@ -22,7 +22,7 @@ public class UserView extends BaseModel {
     @Schema(description = "状态")
     private Boolean enable;
 
-    @Schema(description = "资源类型(客户/线索/商机)")
+    @Schema(description = "资源类型(客户/线索/项目)")
     private String resourceType;
 
     @Schema(description = "组织id")

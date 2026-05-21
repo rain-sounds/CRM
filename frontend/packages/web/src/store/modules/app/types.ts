@@ -78,5 +78,5 @@ export interface AppState {
   versionInfo: SystemVersion; // 版本信息
   navTopConfigList: ModuleNavTopItem[]; // 顶导配置
   activePlatformResource: ThirdPartyResource; // 当前激活的平台资源
-  stageConfigList: Option[]; // 商机阶段配置
+  stageConfigList: Option[]; // 项目阶段配置
 }

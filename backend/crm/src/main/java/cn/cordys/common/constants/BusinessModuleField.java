@@ -74,7 +74,7 @@ public enum BusinessModuleField {
 
     /*------ start: OPPORTUNITY ------*/
     /**
-     * 商机名称
+     * 项目名称
      */
     OPPORTUNITY_NAME("opportunityName", "name", Set.of("rules.required", "mobile", "readable"), FormKey.OPPORTUNITY.getKey()),
     /**
@@ -82,7 +82,7 @@ public enum BusinessModuleField {
      */
     OPPORTUNITY_CUSTOMER_NAME("opportunityCustomer", "customerId", Set.of(), FormKey.OPPORTUNITY.getKey()),
     /**
-     * 商机金额
+     * 项目金额
      */
     OPPORTUNITY_AMOUNT("opportunityPrice", "amount", Set.of(), FormKey.OPPORTUNITY.getKey()),
     /**
@@ -120,7 +120,7 @@ public enum BusinessModuleField {
      */
     FOLLOW_RECORD_CUSTOMER("recordCustomer", "customerId", Set.of("rules.required", "mobile", "readable"), FormKey.FOLLOW_RECORD.getKey()),
     /**
-     * 商机id
+     * 项目id
      */
     FOLLOW_RECORD_OPPORTUNITY("recordOpportunity", "opportunityId", Set.of(), FormKey.FOLLOW_RECORD.getKey()),
     /**
@@ -160,7 +160,7 @@ public enum BusinessModuleField {
      */
     FOLLOW_PLAN_CUSTOMER("planCustomer", "customerId", Set.of("rules.required", "mobile", "readable"), FormKey.FOLLOW_PLAN.getKey()),
     /**
-     * 商机id
+     * 项目id
      */
     FOLLOW_PLAN_OPPORTUNITY("planOpportunity", "opportunityId", Set.of(), FormKey.FOLLOW_PLAN.getKey()),
     /**

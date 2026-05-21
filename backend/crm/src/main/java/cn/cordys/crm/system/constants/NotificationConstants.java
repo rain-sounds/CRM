@@ -24,7 +24,7 @@ public class NotificationConstants {
         //线索管理
         @Schema(description = "message.clue")
         String CLUE = "CLUE";
-        //商机管理
+        //项目管理
         @Schema(description = "message.business")
         String OPPORTUNITY = "OPPORTUNITY";
         //公告
@@ -79,7 +79,7 @@ public class NotificationConstants {
         //转为客户
         @Schema(description = "message.clue_convert_customer")
         String CLUE_CONVERT_CUSTOMER = "CLUE_CONVERT_CUSTOMER";
-        /// 转为商机
+        /// 转为项目
         @Schema(description = "message.clue_convert_business")
         String CLUE_CONVERT_BUSINESS = "CLUE_CONVERT_BUSINESS";
         //转移线索
@@ -94,14 +94,14 @@ public class NotificationConstants {
         //跟进计划到期
         @Schema(description = "message.clue_follow_up_plan_due")
         String CLUE_FOLLOW_UP_PLAN_DUE = "CLUE_FOLLOW_UP_PLAN_DUE";
-        //-------商机管理----
-		//新建商机
+        //-------项目管理----
+		//新建项目
 		@Schema(description = "message.business_add")
 		String BUSINESS_ADD = "BUSINESS_ADD";
-        //商机删除
+        //项目删除
         @Schema(description = "message.business_deleted")
         String BUSINESS_DELETED = "BUSINESS_DELETED";
-        //商机转移
+        //项目转移
         @Schema(description = "message.business_transfer")
         String BUSINESS_TRANSFER = "BUSINESS_TRANSFER";
         //跟进计划提醒
@@ -206,7 +206,7 @@ public class NotificationConstants {
         @Schema(description = "message.clue_convert_customer_text")
         String CLUE_CONVERT_CUSTOMER_TEXT = "CLUE_CONVERT_CUSTOMER_TEXT";
 
-        //请注意！您负责的${clueName}的销售线索，已成功转为商机！请知悉！
+        //请注意！您负责的${clueName}的销售线索，已成功转为项目！请知悉！
         @Schema(description = "message.clue_convert_business_text")
         String CLUE_CONVERT_BUSINESS_TEXT = "CLUE_CONVERT_BUSINESS_TEXT";
 
@@ -230,15 +230,15 @@ public class NotificationConstants {
 		@Schema(description = "message.business_add_text")
 		String BUSINESS_ADD_TEXT = "BUSINESS_ADD_TEXT";
 
-        //请注意！您负责的${businessName}商机，已被${OPERATOR}删除！
+        //请注意！您负责的${businessName}项目，已被${OPERATOR}删除！
         @Schema(description = "message.business_deleted_text")
         String BUSINESS_DELETED_TEXT = "BUSINESS_DELETED_TEXT";
 
-        //请注意！${OPERATOR}将${businessName}商机转移给您，请知悉！
+        //请注意！${OPERATOR}将${businessName}项目转移给您，请知悉！
         @Schema(description = "message.business_transfer_text")
         String BUSINESS_TRANSFER_TEXT = "BUSINESS_TRANSFER_TEXT";
 
-        //请注意！您创建的${businessName}商机跟进计划，已到预定时间，请及时跟进！
+        //请注意！您创建的${businessName}项目跟进计划，已到预定时间，请及时跟进！
         @Schema(description = "message.business_follow_up_plan_due_text")
         String BUSINESS_FOLLOW_UP_PLAN_DUE_TEXT = "BUSINESS_FOLLOW_UP_PLAN_DUE_TEXT";
 

@@ -329,7 +329,7 @@ public class FollowUpRecordService extends BaseFollowUpService {
                 FollowUpRecordDetailResponse::getCustomerId, FollowUpRecordDetailResponse::getCustomerName);
         optionMap.put(BusinessModuleField.FOLLOW_RECORD_CUSTOMER.getBusinessKey(), customerOption);
 
-        //商机
+        //项目
         List<OptionDTO> opportunityOption = moduleFormService.getBusinessFieldOption(response,
                 FollowUpRecordDetailResponse::getOpportunityId, FollowUpRecordDetailResponse::getOpportunityName);
         optionMap.put(BusinessModuleField.FOLLOW_RECORD_OPPORTUNITY.getBusinessKey(), opportunityOption);
@@ -434,7 +434,7 @@ public class FollowUpRecordService extends BaseFollowUpService {
     }
 
     /**
-     * 删除跟进记录，更新客户/商机/线索的最新跟进时间和跟进人
+     * 删除跟进记录，更新客户/项目/线索的最新跟进时间和跟进人
      *
      * @param followUpRecord
      */
@@ -467,7 +467,7 @@ public class FollowUpRecordService extends BaseFollowUpService {
 
 
     /**
-     * 更新客户&商机 最近跟进时间&最近跟进人
+     * 更新客户&项目 最近跟进时间&最近跟进人
      *
      * @param followUpRecord
      */

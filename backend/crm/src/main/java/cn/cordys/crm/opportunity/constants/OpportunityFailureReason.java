@@ -1,7 +1,7 @@
 package cn.cordys.crm.opportunity.constants;
 
 /**
- * 商机失败原因枚举
+ * 项目失败原因枚举
  */
 public enum OpportunityFailureReason {
     /**

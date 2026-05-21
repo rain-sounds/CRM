@@ -34,9 +34,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 商机报价单即将到期和到期提醒监听器
+ * 项目报价单即将到期和到期提醒监听器
  * <p>
- * 该监听器负责监听执行事件，当触发时检查并提醒到期的商机报价单。
+ * 该监听器负责监听执行事件，当触发时检查并提醒到期的项目报价单。
  * </p>
  */
 @Component
@@ -70,7 +70,7 @@ public class NoticeExpireJob {
     /**
      * 定时检查到期或即将到期的消息通知任务
      * <p>
-     * 该方法每天8点执行一次，检查商机报价单，回款计划以及合同的到期情况，并发送相应的通知提醒。
+     * 该方法每天8点执行一次，检查项目报价单，回款计划以及合同的到期情况，并发送相应的通知提醒。
      * </p>
      */
     @QuartzScheduled(cron = "0 0 8 * * ?")
@@ -200,31 +200,31 @@ public class NoticeExpireJob {
 
 
     /**
-     * 商机报价单即将到期自动通知
+     * 项目报价单即将到期自动通知
      * <p>
-     * 查询即将到期的商机报价单，并向相关负责人发送通知提醒。
+     * 查询即将到期的项目报价单，并向相关负责人发送通知提醒。
      * </p>
      */
     private void quotationExpiringRemind() {
-        log.info("商机报价单即将到期提醒");
+        log.info("项目报价单即将到期提醒");
         //查询所有组织
         Set<String> organizationIds = extOrganizationMapper.selectAllOrganizationIds();
         for (String organizationId : organizationIds) {
-            //查询商机报价单即将到期和到期的消息通知是否开启
+            //查询项目报价单即将到期和到期的消息通知是否开启
             MessageTask expiringEvent = extMessageTaskMapper.getMessageByModuleAndEvent(NotificationConstants.Module.OPPORTUNITY, NotificationConstants.Event.BUSINESS_QUOTATION_EXPIRING, organizationId);
             //判断是否开启
             if (expiringEvent == null || (!expiringEvent.getDingTalkEnable() && !expiringEvent.getEmailEnable() && !expiringEvent.getSysEnable() && !expiringEvent.getWeComEnable() && !expiringEvent.getLarkEnable())) {
-                log.info("组织{}商机报价单即将到期提醒未开启", organizationId);
+                log.info("组织{}项目报价单即将到期提醒未开启", organizationId);
                 return;
             }
             MessageTaskConfig expiringConfig = extMessageTaskConfigMapper.getConfigByModuleAndEvent(NotificationConstants.Module.OPPORTUNITY, NotificationConstants.Event.BUSINESS_QUOTATION_EXPIRING, organizationId);
             if (expiringConfig == null || expiringConfig.getValue() == null) {
-                log.info("组织{}商机报价单即将到期提醒配置不存在", organizationId);
+                log.info("组织{}项目报价单即将到期提醒配置不存在", organizationId);
                 return;
             }
             MessageTaskConfigDTO expiringConfigDTO = JSON.parseObject(expiringConfig.getValue(), MessageTaskConfigDTO.class);
             if (CollectionUtils.isEmpty(expiringConfigDTO.getTimeList())) {
-                log.info("组织{}商机报价单即将到期提醒时间配置不存在", organizationId);
+                log.info("组织{}项目报价单即将到期提醒时间配置不存在", organizationId);
                 return;
             }
             for (TimeDTO timeDTO : expiringConfigDTO.getTimeList()) {
@@ -237,19 +237,19 @@ public class NoticeExpireJob {
                             .toEpochSecond() * 1000;
                     List<OpportunityQuotation> quotationList = getOpportunityQuotationList(organizationId, startTime, endTime);
                     if (CollectionUtils.isEmpty(quotationList)) {
-                        log.info("组织{}无即将到期商机报价单，时间范围{}-{}", organizationId, startTime, endTime);
+                        log.info("组织{}无即将到期项目报价单，时间范围{}-{}", organizationId, startTime, endTime);
                         continue;
                     }
                     for (OpportunityQuotation opportunityQuotation : quotationList) {
                         //发送通知
                         Opportunity opportunity = opportunityBaseMapper.selectByPrimaryKey(opportunityQuotation.getOpportunityId());
                         if (opportunity == null) {
-                            log.info("组织{}商机报价单{}关联的商机不存在", organizationId, opportunityQuotation.getId());
+                            log.info("组织{}项目报价单{}关联的项目不存在", organizationId, opportunityQuotation.getId());
                             continue;
                         }
                         Customer customer = customerBaseMapper.selectByPrimaryKey(opportunity.getCustomerId());
                         if (customer == null) {
-                            log.info("组织{}商机报价单{}关联的客户不存在", organizationId, opportunityQuotation.getId());
+                            log.info("组织{}项目报价单{}关联的客户不存在", organizationId, opportunityQuotation.getId());
                             continue;
                         }
                         sendNotice(expiringConfigDTO, NotificationConstants.Module.OPPORTUNITY, opportunityQuotation.getCreateUser(), opportunityQuotation.getOrganizationId(), NotificationConstants.Event.BUSINESS_QUOTATION_EXPIRING, customer.getName(), opportunityQuotation.getCreateUser(), opportunityQuotation.getCreateUser(), timeDTO.getTimeValue(), opportunityQuotation.getId());
@@ -257,30 +257,30 @@ public class NoticeExpireJob {
                 }
             }
 
-            log.info("组织{}商机报价单即将到期提醒发送通知成功", organizationId);
+            log.info("组织{}项目报价单即将到期提醒发送通知成功", organizationId);
         }
 
 
     }
 
     /**
-     * 商机报价单到期自动通知
+     * 项目报价单到期自动通知
      * <p>
-     * 查询已到期的商机报价单，并向相关负责人发送通知提醒。
+     * 查询已到期的项目报价单，并向相关负责人发送通知提醒。
      * </p>
      */
     private void quotationExpiredRemind() {
-        log.info("商机报价单到期提醒");
+        log.info("项目报价单到期提醒");
         Set<String> organizationIds = extOrganizationMapper.selectAllOrganizationIds();
         for (String organizationId : organizationIds) {
             MessageTask expiredEvent = extMessageTaskMapper.getMessageByModuleAndEvent(NotificationConstants.Module.OPPORTUNITY, NotificationConstants.Event.BUSINESS_QUOTATION_EXPIRED, organizationId);
             if (expiredEvent == null || (!expiredEvent.getDingTalkEnable() && !expiredEvent.getEmailEnable() && !expiredEvent.getSysEnable() && !expiredEvent.getWeComEnable() && !expiredEvent.getLarkEnable())) {
-                log.info("商机报价单到期提醒未开启");
+                log.info("项目报价单到期提醒未开启");
                 continue;
             }
             MessageTaskConfig expiredConfig = extMessageTaskConfigMapper.getConfigByModuleAndEvent(NotificationConstants.Module.OPPORTUNITY, NotificationConstants.Event.BUSINESS_QUOTATION_EXPIRED, organizationId);
             if (expiredConfig == null || expiredConfig.getValue() == null) {
-                log.info("组织{}商机报价单到期提醒配置不存在", organizationId);
+                log.info("组织{}项目报价单到期提醒配置不存在", organizationId);
                 continue;
             }
             MessageTaskConfigDTO expiredConfigDTO = JSON.parseObject(expiredConfig.getValue(), MessageTaskConfigDTO.class);
@@ -293,24 +293,24 @@ public class NoticeExpireJob {
                     .toEpochSecond() * 1000;
             List<OpportunityQuotation> quotationList = getOpportunityQuotationList(organizationId, timestamp, timestampOld);
             if (CollectionUtils.isEmpty(quotationList)) {
-                log.info("组织{}无到期商机报价单", organizationId);
+                log.info("组织{}无到期项目报价单", organizationId);
                 continue;
             }
             for (OpportunityQuotation opportunityQuotation : quotationList) {
                 //发送通知
                 Opportunity opportunity = opportunityBaseMapper.selectByPrimaryKey(opportunityQuotation.getOpportunityId());
                 if (opportunity == null) {
-                    log.info("组织{}商机报价单{}关联的商机不存在", organizationId, opportunityQuotation.getId());
+                    log.info("组织{}项目报价单{}关联的项目不存在", organizationId, opportunityQuotation.getId());
                     continue;
                 }
                 Customer customer = customerBaseMapper.selectByPrimaryKey(opportunity.getCustomerId());
                 if (customer == null) {
-                    log.info("组织{}商机报价单{}关联的客户不存在", organizationId, opportunityQuotation.getId());
+                    log.info("组织{}项目报价单{}关联的客户不存在", organizationId, opportunityQuotation.getId());
                     continue;
                 }
                 sendNotice(expiredConfigDTO, NotificationConstants.Module.OPPORTUNITY, opportunityQuotation.getCreateUser(), opportunityQuotation.getOrganizationId(), NotificationConstants.Event.BUSINESS_QUOTATION_EXPIRED, customer.getName(), opportunityQuotation.getCreateUser(), opportunityQuotation.getCreateUser(), null, opportunityQuotation.getId());
             }
-            log.info("组织{}商机报价单到期提醒发送通知成功", organizationId);
+            log.info("组织{}项目报价单到期提醒发送通知成功", organizationId);
         }
     }
 

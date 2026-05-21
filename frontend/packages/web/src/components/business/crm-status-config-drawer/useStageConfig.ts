@@ -58,18 +58,6 @@ export default function useStageConfig(type: StatusBizType): UseStatusConfigRetu
       ];
     }
 
-    if (form.value.list.length === 10) {
-      return [
-        {
-          label: t('common.delete'),
-          key: 'delete',
-          danger: true,
-          disabled: element.stageHasData,
-          tooltipContent: element.stageHasData ? textConfig.value.stageHasDataTip : '',
-        },
-      ];
-    }
-
     return [
       { label: t('module.businessManage.insetBefore'), key: 'before' },
       { label: t('module.businessManage.insetAfter'), key: 'after' },

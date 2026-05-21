@@ -8,7 +8,7 @@ import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 商机报价单快照;
+ * 项目报价单快照;
  */
 @Data
 @Table(name = "opportunity_quotation_snapshot")

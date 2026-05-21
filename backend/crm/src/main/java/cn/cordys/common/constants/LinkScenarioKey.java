@@ -16,11 +16,11 @@ public enum LinkScenarioKey {
 	 */
 	CLUE_TO_CONTACT,
     /**
-     * 线索转商机
+     * 线索转项目
      */
     CLUE_TO_OPPORTUNITY,
     /**
-     * 客户转商机
+     * 客户转项目
      */
     CUSTOMER_TO_OPPORTUNITY,
     /**
@@ -32,7 +32,7 @@ public enum LinkScenarioKey {
      */
     CUSTOMER_TO_RECORD,
     /**
-     * 商机转记录
+     * 项目转记录
      */
     OPPORTUNITY_TO_RECORD,
     /**

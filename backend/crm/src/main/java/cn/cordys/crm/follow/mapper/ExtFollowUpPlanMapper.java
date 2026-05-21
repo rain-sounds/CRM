@@ -38,7 +38,7 @@ public interface ExtFollowUpPlanMapper {
     Long getNewFollowUpPlan(@Param("request") HomeStatisticSearchWrapperRequest request);
 
     /**
-     * 批量合并客户(商机)记录
+     * 批量合并客户(项目)记录
      *
      * @param request 请求参数
      * @param userId  用户ID

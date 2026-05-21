@@ -57,7 +57,7 @@ public class GlobalCluePoolSearchService extends BaseSearchService<BasePageReque
         }
         // 查询当前组织下已启用的模块列表
         List<String> enabledModules = getEnabledModules();
-        // 检查：如果有商机读取权限但商机模块未启用，抛出异常
+        // 检查：如果有项目读取权限但项目模块未启用，抛出异常
         if (!enabledModules.contains(ModuleKey.CLUE.getKey())) {
             throw new GenericException(SystemResultCode.MODULE_ENABLE);
         }
@@ -114,7 +114,7 @@ public class GlobalCluePoolSearchService extends BaseSearchService<BasePageReque
         }
         //构造查询参数
         buildCombineSearch(conditions, request);
-        // 查询重复商机列表
+        // 查询重复项目列表
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize());
         ConditionFilterUtils.parseCondition(request, FormKey.CLUE.getKey());
         List<GlobalCluePoolResponse> globalCluePoolResponses = extClueMapper.globalPoolSearchList(request, orgId);

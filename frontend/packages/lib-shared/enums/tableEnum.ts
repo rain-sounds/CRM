@@ -39,7 +39,7 @@ export enum TableKeyEnum {
   SEARCH_ADVANCED_CONTACT = 'searchAdvancedContact', // 联系人
   SEARCH_ADVANCED_PUBLIC = 'searchAdvancedPublic', // 公海
   SEARCH_ADVANCED_CLUE_POOL = 'searchAdvancedCluePool', // 线索池
-  SEARCH_ADVANCED_OPPORTUNITY = 'searchAdvancedOpportunity', // 商机
+  SEARCH_ADVANCED_OPPORTUNITY = 'searchAdvancedOpportunity', // 项目
   CONTRACT_BUSINESS_NAME = 'contractBusinessName', // 工商抬头
 }
 

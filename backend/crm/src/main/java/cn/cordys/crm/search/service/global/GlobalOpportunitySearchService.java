@@ -63,7 +63,7 @@ public class GlobalOpportunitySearchService extends BaseSearchService<BasePageRe
         }
         // 查询当前组织下已启用的模块列表
         List<String> enabledModules = getEnabledModules();
-        // 检查：如果有商机读取权限但商机模块未启用，抛出异常
+        // 检查：如果有项目读取权限但项目模块未启用，抛出异常
         if (!enabledModules.contains(ModuleKey.BUSINESS.getKey())) {
             throw new GenericException(SystemResultCode.MODULE_ENABLE);
         }
@@ -103,7 +103,7 @@ public class GlobalOpportunitySearchService extends BaseSearchService<BasePageRe
                 buildOtherFilterCondition(orgId, userSearchConfig, keyword, conditions);
             }
         } else {
-            //设置商机默认查询属性
+            //设置项目默认查询属性
             //查询客户源数据
             List<String> list = getCustomerIds(keyword, orgId);
             FilterCondition nameCondition = getFilterCondition("name", keyword, FilterCondition.CombineConditionOperator.CONTAINS.toString(), FieldType.INPUT.toString());
@@ -119,7 +119,7 @@ public class GlobalOpportunitySearchService extends BaseSearchService<BasePageRe
         }
         //构造查询参数
         buildCombineSearch(conditions, request);
-        // 查询重复商机列表
+        // 查询重复项目列表
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize());
         ConditionFilterUtils.parseCondition(request, FormKey.OPPORTUNITY.getKey());
         List<GlobalOpportunityResponse> globalOpportunityResponses = extOpportunityMapper.globalSearchList(request, orgId);

@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "商机跟进计划")
+@Tag(name = "项目跟进计划")
 @RestController
 @RequestMapping("/opportunity/follow/plan")
 public class OpportunityFollowPlanController {
@@ -33,7 +33,7 @@ public class OpportunityFollowPlanController {
 
     @PostMapping("/add")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_UPDATE)
-    @Operation(summary = "添加商机跟进计划")
+    @Operation(summary = "添加项目跟进计划")
     public FollowUpPlan add(@Validated @RequestBody FollowUpPlanAddRequest request) {
         return followUpPlanService.add(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
@@ -41,7 +41,7 @@ public class OpportunityFollowPlanController {
 
     @PostMapping("/update")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_UPDATE)
-    @Operation(summary = "更新商机跟进计划")
+    @Operation(summary = "更新项目跟进计划")
     public FollowUpPlan update(@Validated @RequestBody FollowUpPlanUpdateRequest request) {
         return followUpPlanService.update(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
@@ -49,7 +49,7 @@ public class OpportunityFollowPlanController {
 
     @PostMapping("/page")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
-    @Operation(summary = "商机跟进计划列表")
+    @Operation(summary = "项目跟进计划列表")
     public PagerWithOption<List<FollowUpPlanListResponse>> list(@Validated @RequestBody FollowUpPlanPageRequest request) {
         ConditionFilterUtils.parseCondition(request, FormKey.FOLLOW_PLAN.getKey());
         return followUpPlanService.list(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId(), "OPPORTUNITY", "CUSTOMER", null);
@@ -58,7 +58,7 @@ public class OpportunityFollowPlanController {
 
     @GetMapping("/get/{id}")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ)
-    @Operation(summary = "商机跟进计划详情")
+    @Operation(summary = "项目跟进计划详情")
     public FollowUpPlanDetailResponse get(@PathVariable String id) {
         return followUpPlanService.get(id, OrganizationContext.getOrganizationId());
     }
@@ -66,14 +66,14 @@ public class OpportunityFollowPlanController {
 
     @GetMapping("/cancel/{id}")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_UPDATE)
-    @Operation(summary = "取消商机跟进计划")
+    @Operation(summary = "取消项目跟进计划")
     public void cancelPlan(@PathVariable String id) {
         followUpPlanService.cancelPlan(id, SessionUtils.getUserId());
     }
 
 
     @GetMapping("/delete/{id}")
-    @Operation(summary = "商机删除跟进计划")
+    @Operation(summary = "项目删除跟进计划")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_UPDATE)
     public void deletePlan(@PathVariable String id) {
         followUpPlanService.delete(id);
@@ -81,7 +81,7 @@ public class OpportunityFollowPlanController {
 
     @PostMapping("/status/update")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_MANAGEMENT_UPDATE)
-    @Operation(summary = "商机更新跟进计划状态")
+    @Operation(summary = "项目更新跟进计划状态")
     public void updateStatus(@Validated @RequestBody FollowUpPlanStatusRequest request) {
         followUpPlanService.updateStatus(request, SessionUtils.getUserId());
     }

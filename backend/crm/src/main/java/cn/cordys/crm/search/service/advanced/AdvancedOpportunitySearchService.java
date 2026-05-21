@@ -75,7 +75,7 @@ public class AdvancedOpportunitySearchService extends BaseSearchService<Opportun
     private ExtOpportunityStageConfigMapper extOpportunityStageConfigMapper;
 
     /**
-     * 全局搜索商机
+     * 全局搜索项目
      *
      * @param request
      * @param orgId
@@ -87,13 +87,13 @@ public class AdvancedOpportunitySearchService extends BaseSearchService<Opportun
     public PagerWithOption<List<AdvancedOpportunityResponse>> startSearch(OpportunityPageRequest request, String orgId, String userId) {
         // 查询当前组织下已启用的模块列表
         List<String> enabledModules = getEnabledModules();
-        // 检查：如果有商机读取权限但商机模块未启用，抛出异常
+        // 检查：如果有项目读取权限但项目模块未启用，抛出异常
         if (!enabledModules.contains(ModuleKey.BUSINESS.getKey())) {
             throw new GenericException(SystemResultCode.MODULE_ENABLE);
         }
 
         ConditionFilterUtils.parseCondition(request, FormKey.OPPORTUNITY.getKey());
-        // 查询重复商机列表
+        // 查询重复项目列表
         Page<Object> page = PageHelper.startPage(request.getCurrent(), request.getPageSize());
         List<AdvancedOpportunityResponse> list = extOpportunityMapper.advancedSearchList(request, orgId);
         if (CollectionUtils.isEmpty(list)) {

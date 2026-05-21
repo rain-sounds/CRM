@@ -13,7 +13,7 @@ public class OpportunityListResponse {
     @Schema(description = "ID")
     private String id;
 
-    @Schema(description = "商机名称")
+    @Schema(description = "项目名称")
     private String name;
 
     @Schema(description = "客户id")
@@ -49,13 +49,13 @@ public class OpportunityListResponse {
     @Schema(description = "联系人名称")
     private String contactName;
 
-    @Schema(description = "上次修改前的商机阶段")
+    @Schema(description = "上次修改前的项目阶段")
     private String lastStage;
 
-    @Schema(description = "商机阶段")
+    @Schema(description = "项目阶段")
     private String stage;
 
-    @Schema(description = "商机阶段")
+    @Schema(description = "项目阶段")
     private String stageName;
 
     @Schema(description = "创建人")

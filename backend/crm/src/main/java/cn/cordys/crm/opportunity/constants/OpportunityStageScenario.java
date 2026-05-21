@@ -1,7 +1,7 @@
 package cn.cordys.crm.opportunity.constants;
 
 /**
- * 商机阶段场景
+ * 项目阶段场景
  */
 public enum OpportunityStageScenario {
     /**

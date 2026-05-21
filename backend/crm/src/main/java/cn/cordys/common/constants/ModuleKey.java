@@ -18,7 +18,7 @@ public enum ModuleKey {
      */
     CUSTOMER("customer"),
     /**
-     * 商机管理
+     * 项目管理
      */
     BUSINESS("business"),
     /**

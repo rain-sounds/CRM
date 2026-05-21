@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * 商机报价单列表响应类;
+ * 项目报价单列表响应类;
  *
  * @author guoyuqi
  */
@@ -21,10 +21,10 @@ public class OpportunityQuotationListResponse {
     @Schema(description = "名称")
     private String name;
 
-    @Schema(description = "商机id")
+    @Schema(description = "项目id")
     private String opportunityId;
 
-    @Schema(description = "商机名称")
+    @Schema(description = "项目名称")
     private String opportunityName;
 
     @Schema(description = "部门id")

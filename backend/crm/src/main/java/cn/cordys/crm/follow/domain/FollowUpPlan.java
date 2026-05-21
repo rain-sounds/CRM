@@ -13,7 +13,7 @@ public class FollowUpPlan extends BaseModel {
     @Schema(description = "客户id")
     private String customerId;
 
-    @Schema(description = "商机id")
+    @Schema(description = "项目id")
     private String opportunityId;
 
     @Schema(description = "类型")

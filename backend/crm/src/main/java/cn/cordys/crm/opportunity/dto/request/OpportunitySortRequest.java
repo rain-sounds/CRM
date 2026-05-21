@@ -9,7 +9,7 @@ import lombok.Data;
 public class OpportunitySortRequest extends NodeMoveRequest {
 
     @NotBlank
-    @Schema(description = "商机阶段", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "项目阶段", requiredMode = Schema.RequiredMode.REQUIRED)
     private String stage;
 
 }

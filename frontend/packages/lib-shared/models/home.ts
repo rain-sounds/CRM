@@ -11,7 +11,7 @@ export interface DimPeriodValue {
   value: number;
   priorPeriodCompareRate: number;
 }
-// 跟进商机
+// 跟进项目
 export interface FollowOptStatisticDetail {
   todayOpportunity: DimPeriodValue;
   thisWeekOpportunity: DimPeriodValue;

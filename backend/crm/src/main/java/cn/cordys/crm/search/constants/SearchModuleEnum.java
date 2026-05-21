@@ -9,7 +9,7 @@ public class SearchModuleEnum {
     public static final String SEARCH_ADVANCED_CONTACT = "searchAdvancedContact"; // 联系人
     public static final String SEARCH_ADVANCED_PUBLIC = "searchAdvancedPublic"; // 公海
     public static final String SEARCH_ADVANCED_CLUE_POOL = "searchAdvancedCluePool"; // 线索池
-    public static final String SEARCH_ADVANCED_OPPORTUNITY = "searchAdvancedOpportunity"; // 商机
+    public static final String SEARCH_ADVANCED_OPPORTUNITY = "searchAdvancedOpportunity"; // 项目
 
 
     public static final List<String> VALUES = List.of(

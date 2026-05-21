@@ -59,7 +59,7 @@ export interface OpportunityBaseInfoItem {
   auto: boolean; // 自动回收
 }
 
-// 模块商机列表
+// 模块项目列表
 export interface OpportunityItem extends OpportunityBaseInfoItem {
   id: string;
   organizationId: string;
@@ -76,7 +76,7 @@ export interface OpportunityItem extends OpportunityBaseInfoItem {
   updateUserName: string;
 }
 
-// 模块商机详情
+// 模块项目详情
 export interface OpportunityDetail extends OpportunityBaseInfoItem {
   id?: string;
   conditions: ModuleConditionsItem[]; // 规则条件集合

@@ -3,10 +3,10 @@ import type { ModuleField, TableQueryParams } from './common';
 import type { FormDesignConfigDetailParams } from '@lib/shared/models/system/module';
 
 export interface OpportunityItem {
-  id: string; // 商机ID
+  id: string; // 项目ID
   name: string;
   status: string;
-  opportunityName: string; // 商机名称
+  opportunityName: string; // 项目名称
   customerId: string;
   customerName: string; // 客户名称
   createUser: string; // 创建人ID

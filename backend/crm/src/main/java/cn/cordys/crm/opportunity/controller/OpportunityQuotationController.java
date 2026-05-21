@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "商机报价单")
+@Tag(name = "项目报价单")
 @RestController
 @RequestMapping("/opportunity/quotation")
 public class OpportunityQuotationController {
@@ -157,7 +157,7 @@ public class OpportunityQuotationController {
 
     @GetMapping("/tab")
     @RequiresPermissions(PermissionConstants.OPPORTUNITY_QUOTATION_READ)
-    @Operation(summary = "所有商机报价单和部门商机报价单tab是否显示")
+    @Operation(summary = "所有项目报价单和部门项目报价单tab是否显示")
     public ResourceTabEnableDTO getTabEnableConfig() {
         return opportunityQuotationService.getTabEnableConfig(SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }

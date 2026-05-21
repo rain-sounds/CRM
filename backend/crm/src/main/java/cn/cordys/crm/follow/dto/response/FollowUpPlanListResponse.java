@@ -18,10 +18,10 @@ public class FollowUpPlanListResponse {
     @Schema(description = "客户名称")
     private String customerName;
 
-    @Schema(description = "商机id")
+    @Schema(description = "项目id")
     private String opportunityId;
 
-    @Schema(description = "商机名称")
+    @Schema(description = "项目名称")
     private String opportunityName;
 
     @Schema(description = "类型")

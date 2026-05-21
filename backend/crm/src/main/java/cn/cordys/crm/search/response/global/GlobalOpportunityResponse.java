@@ -12,7 +12,7 @@ public class GlobalOpportunityResponse {
     @Schema(description = "ID")
     private String id;
 
-    @Schema(description = "商机名称")
+    @Schema(description = "项目名称")
     private String name;
 
     @Schema(description = "客户id")
@@ -42,10 +42,10 @@ public class GlobalOpportunityResponse {
     @Schema(description = "意向产品")
     private List<String> products;
 
-    @Schema(description = "商机阶段")
+    @Schema(description = "项目阶段")
     private String stage;
 
-    @Schema(description = "商机阶段")
+    @Schema(description = "项目阶段")
     private String stageName;
 
     @Schema(description = "负责人部门名称")

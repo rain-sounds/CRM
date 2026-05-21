@@ -60,9 +60,9 @@ public interface ExtOpportunityMapper {
     List<Opportunity> searchColumnsByIds(@Param("columns") List<String> columns, @Param("ids") List<String> opportunityIds);
 
     /**
-     * 全量更新商机
+     * 全量更新项目
      *
-     * @param opportunity 商机
+     * @param opportunity 项目
      */
     void updateIncludeNullById(@Param("opportunity") Opportunity opportunity);
 
@@ -83,7 +83,7 @@ public interface ExtOpportunityMapper {
     int countByStage(@Param("stageId") String stageId);
 
     /**
-     * 批量合并客户商机
+     * 批量合并客户项目
      *
      * @param request 请求参数
      * @param userId  用户ID
@@ -92,12 +92,12 @@ public interface ExtOpportunityMapper {
     void batchMerge(@Param("request") CustomerMergeRequest request, @Param("userId") String userId, @Param("orgId") String orgId);
 
     /**
-     * 获取待合并的客户商机列表
+     * 获取待合并的客户项目列表
      *
      * @param request 请求参数
      * @param orgId   组织ID
      *
-     * @return 客户商机列表
+     * @return 客户项目列表
      */
     List<Opportunity> getMergeOpportunityList(@Param("request") CustomerMergeRequest request, @Param("orgId") String orgId);
 

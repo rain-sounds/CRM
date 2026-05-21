@@ -1,7 +1,7 @@
 package cn.cordys.common.constants;
 
 /**
- * 客户,线索,商机等业务数据的搜索类型
+ * 客户,线索,项目等业务数据的搜索类型
  *
  * @author jianxing
  */

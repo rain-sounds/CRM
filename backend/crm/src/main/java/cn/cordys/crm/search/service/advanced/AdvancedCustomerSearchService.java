@@ -106,7 +106,7 @@ public class AdvancedCustomerSearchService extends BaseSearchService<CustomerPag
     private List<AdvancedCustomerResponse> buildCustomerList(String organizationId, String userId, boolean isAdmin, List<AdvancedCustomerResponse> customers, List<String> enabledModules) {
         // 查询用户权限
         List<String> permissions = extUserRoleMapper.selectPermissionsByUserId(userId);
-        // 获取商机和线索的重复数量映射
+        // 获取项目和线索的重复数量映射
         Map<String, String> opportunityCounts = getOpportunityCounts(permissions, isAdmin, customers, enabledModules);
         Map<String, String> clueCounts = getClueCounts(permissions, isAdmin, customers, enabledModules);
 
@@ -166,7 +166,7 @@ public class AdvancedCustomerSearchService extends BaseSearchService<CustomerPag
         return customers.stream()
                 .peek(customer -> {
                     boolean hasPermission = dataScopeService.hasDataPermission(userId, organizationId, customer.getOwner(), PermissionConstants.CUSTOMER_MANAGEMENT_READ);
-                    // 设置商机数量
+                    // 设置项目数量
                     CustomerPool reservePool = ownersDefaultPoolMap.get(customer.getOwner());
                     if (!hasPermission) {
                         customer.setOpportunityCount(null);
@@ -228,29 +228,29 @@ public class AdvancedCustomerSearchService extends BaseSearchService<CustomerPag
     }
 
     /**
-     * 获取客户关联的商机数量
+     * 获取客户关联的项目数量
      *
      * @param permissions    用户权限列表
      * @param isAdmin        是否是管理员
      * @param customers      客户列表
      * @param enabledModules 已启用模块列表
      *
-     * @return 商机数量映射(客户ID - > 数量)
+     * @return 项目数量映射(客户ID - > 数量)
      */
     private Map<String, String> getOpportunityCounts(List<String> permissions,
                                                      boolean isAdmin,
                                                      List<AdvancedCustomerResponse> customers,
                                                      List<String> enabledModules) {
-        // 没有商机读取权限且不是管理员返回空map
+        // 没有项目读取权限且不是管理员返回空map
         if (!permissions.contains(PermissionConstants.OPPORTUNITY_MANAGEMENT_READ) && !isAdmin) {
             return Collections.emptyMap();
         }
-        // 商机模块未启用返回空map
+        // 项目模块未启用返回空map
         if (!enabledModules.contains(ModuleKey.BUSINESS.getKey())) {
             return Collections.emptyMap();
         }
 
-        // 获取客户ID列表并查询商机数量
+        // 获取客户ID列表并查询项目数量
         List<String> customerIds = customers.stream()
                 .map(AdvancedCustomerResponse::getId)
                 .toList();
@@ -332,16 +332,16 @@ public class AdvancedCustomerSearchService extends BaseSearchService<CustomerPag
     }
 
     /**
-     * 获取重复商机详情列表
+     * 获取重复项目详情列表
      *
-     * @param request 包含商机ID的查询请求
+     * @param request 包含项目ID的查询请求
      *
-     * @return 重复商机响应列表(包含产品名称信息)
+     * @return 重复项目响应列表(包含产品名称信息)
      */
     public List<OpportunityRepeatResponse> getRepeatOpportunityDetail(
             RepeatCustomerDetailPageRequest request) {
 
-        // 1. 获取基础重复商机列表
+        // 1. 获取基础重复项目列表
         List<OpportunityRepeatResponse> responses = extOpportunityMapper.getRepeatList(request.getId());
 
         if (CollectionUtils.isEmpty(responses)) {
@@ -363,7 +363,7 @@ public class AdvancedCustomerSearchService extends BaseSearchService<CustomerPag
                         Product::getName,
                         (existing, replacement) -> existing)); // 处理可能的重复键
 
-        // 4. 填充每个商机的产品名称
+        // 4. 填充每个项目的产品名称
         responses.forEach(response -> {
             List<String> names = response.getProducts().stream()
                     .map(productNameMap::get)

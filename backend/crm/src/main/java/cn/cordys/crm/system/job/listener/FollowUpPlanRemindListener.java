@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  * 跟进计划提醒监听器
  * <p>
  * 该监听器负责监听执行事件，当触发时检查并提醒到期的跟进计划。
- * 支持客户、商机和线索三种类型的跟进计划提醒。
+ * 支持客户、项目和线索三种类型的跟进计划提醒。
  * </p>
  */
 @Component
@@ -78,7 +78,7 @@ public class FollowUpPlanRemindListener implements ApplicationListener<ExecuteEv
         List<FollowUpPlan> planList = extFollowUpPlanMapper.selectPlanByTimestamp(timestamp);
 
         if (CollectionUtils.isNotEmpty(planList)) {
-            // 提取客户、商机和线索的ID列表
+            // 提取客户、项目和线索的ID列表
             List<String> customerIds = planList.stream().map(FollowUpPlan::getCustomerId).toList();
             List<String> opportunityIds = planList.stream().map(FollowUpPlan::getOpportunityId).toList();
             List<String> clueIds = planList.stream().map(FollowUpPlan::getClueId).toList();
@@ -91,7 +91,7 @@ public class FollowUpPlanRemindListener implements ApplicationListener<ExecuteEv
                         .collect(Collectors.toMap(OptionDTO::getId, OptionDTO::getName));
             }
 
-            // 构建商机ID与名称的映射
+            // 构建项目ID与名称的映射
             Map<String, String> opportunityMap = new HashMap<>();
             if (CollectionUtils.isNotEmpty(opportunityIds)) {
                 opportunityMap = extOpportunityMapper.getOpportunityOptionsByIds(opportunityIds)
@@ -122,7 +122,7 @@ public class FollowUpPlanRemindListener implements ApplicationListener<ExecuteEv
                     );
                 }
 
-                // 发送商机跟进计划提醒
+                // 发送项目跟进计划提醒
                 if (StringUtils.isNotBlank(followUpPlan.getOpportunityId())) {
                     commonNoticeSendService.sendNotice(
                             NotificationConstants.Module.OPPORTUNITY,

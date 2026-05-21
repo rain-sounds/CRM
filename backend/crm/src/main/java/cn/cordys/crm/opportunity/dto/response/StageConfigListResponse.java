@@ -8,7 +8,7 @@ import java.util.List;
 @Data
 public class StageConfigListResponse {
 
-    @Schema(description = "商机阶段配置列表")
+    @Schema(description = "项目阶段配置列表")
     List<StageConfigResponse> stageConfigList;
 
     @Schema(description = "进行中回退设置")

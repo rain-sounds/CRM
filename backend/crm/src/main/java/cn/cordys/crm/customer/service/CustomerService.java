@@ -830,7 +830,7 @@ public class CustomerService {
     public void merge(CustomerMergeRequest request, String currentUser, String currentOrgId) {
         /*
          * 规则:
-         * 1. 合并客户联系人, 客户关联商机.
+         * 1. 合并客户联系人, 客户关联项目.
          * 3. 合并客户跟进记录/计划.
          * 4. 删除被合并的客户, 并添加对应的负责人为合并客户的协作人, 被合并客户的协作人也要.
          */
@@ -982,7 +982,7 @@ public class CustomerService {
             }
         }
 
-        // 商机日志
+        // 项目日志
         List<Opportunity> mergeOpportunities = extOpportunityMapper.getMergeOpportunityList(mergeRequest, currentOrgId);
         if (CollectionUtils.isNotEmpty(mergeOpportunities)) {
             for (Opportunity opportunity : mergeOpportunities) {

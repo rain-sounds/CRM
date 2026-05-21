@@ -1,7 +1,7 @@
 package cn.cordys.crm.opportunity.constants;
 
 /**
- * 商机阶段
+ * 项目阶段
  */
 public enum StageType {
 

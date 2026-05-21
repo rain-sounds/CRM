@@ -3,7 +3,7 @@ package cn.cordys.crm.system.constants;
 public enum DictModule {
 
     /**
-     * 商机失败
+     * 项目失败
      */
     OPPORTUNITY_FAIL_RS,
     /**

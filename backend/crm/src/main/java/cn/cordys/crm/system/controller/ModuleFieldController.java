@@ -152,7 +152,7 @@ public class ModuleFieldController {
     }
 
     @PostMapping("/source/opportunity")
-    @Operation(summary = "分页获取商机")
+    @Operation(summary = "分页获取项目")
     public Pager<List<OpportunityListResponse>> sourceOpportunityPage(@Valid @RequestBody OpportunityPageRequest request) {
         ConditionFilterUtils.parseCondition(request, FormKey.OPPORTUNITY.getKey());
         request.setCombineSearch(request.getCombineSearch().convert());

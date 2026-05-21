@@ -37,7 +37,7 @@ public class OrderListResponse extends Order {
     @Schema(description = "客户公海id")
     private String poolId;
 
-    @Schema(description = "商机阶段")
+    @Schema(description = "项目阶段")
     private String stageName;
 
     @Schema(description = "自定义字段")

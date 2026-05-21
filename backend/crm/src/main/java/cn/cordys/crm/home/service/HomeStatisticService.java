@@ -145,7 +145,7 @@ public class HomeStatisticService {
     }
 
     /**
-     * 获取商机数量
+     * 获取项目数量
      *
      * @param request
      *
@@ -156,7 +156,7 @@ public class HomeStatisticService {
     }
 
     /**
-     * 获取商机总额数量
+     * 获取项目总额数量
      *
      * @param request
      *
