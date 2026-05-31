@@ -1,7 +1,12 @@
 <template>
-  <n-scrollbar x-scrollable>
-    <div class="crm-workflow-step">
-      <div class="flex flex-1 gap-[16px]">
+  <div class="crm-workflow-step">
+    <n-button size="small" secondary class="crm-workflow-arrow" :disabled="!canScrollLeft" @click="scrollLeft">
+      <template #icon>
+        <CrmIcon type="iconicon_chevron_left" />
+      </template>
+    </n-button>
+    <div ref="scrollWrapperRef" class="crm-workflow-scroll-container">
+      <div class="crm-workflow-step-list" :style="scrollContentStyle">
         <div
           v-for="(item, index) of workflowData"
           :key="item.value"
@@ -33,21 +38,27 @@
           </div>
         </div>
       </div>
-      <slot
-        v-if="currentStatusIndex !== workflowData.length - 1"
-        name="action"
-        :current-status-index="currentStatusIndex"
-      >
-      </slot>
     </div>
-  </n-scrollbar>
+    <n-button size="small" secondary class="crm-workflow-arrow" :disabled="!canScrollRight" @click="scrollRight">
+      <template #icon>
+        <CrmIcon type="iconicon_chevron_right" />
+      </template>
+    </n-button>
+    <slot
+      v-if="currentStatusIndex !== workflowData.length - 1"
+      name="action"
+      :current-status-index="currentStatusIndex"
+    >
+    </slot>
+  </div>
 </template>
 
 <script setup lang="ts">
-  import { NScrollbar, SelectOption } from 'naive-ui';
+  import { NButton, SelectOption } from 'naive-ui';
 
   import { StageConfigItem } from '@lib/shared/models/opportunity';
 
+  import useHorizontalScrollArrows from '@/hooks/useHorizontalScrollArrows';
   import { hasAllPermission, hasAnyPermission } from '@/utils/permission';
 
   const props = defineProps<{
@@ -71,7 +82,13 @@
     required: true,
   });
 
+  const scrollWrapperRef = ref<HTMLElement | null>(null);
   const workflowData = computed(() => props.workflowList || []);
+  const scrollContentStyle = computed(() => ({
+    minWidth: `${Math.max(workflowData.value.length * 160, 960)}px`,
+  }));
+  const { canScrollLeft, canScrollRight, scrollLeft, scrollRight, updateScrollStatus } =
+    useHorizontalScrollArrows(scrollWrapperRef);
   const currentStatusIndex = computed(() => workflowData.value.findIndex((e) => e.value === currentStatus.value));
   const readonly = computed(() => props.readonly || !hasAnyPermission(props.operationPermission));
   const successStage = computed(
@@ -134,6 +151,16 @@
     if (isDisabledStage(stage)) return;
     emit('change', stage);
   }
+
+  watch(
+    () => workflowData.value.length,
+    () => {
+      nextTick(() => {
+        updateScrollStatus();
+      });
+    },
+    { immediate: true }
+  );
 </script>
 
 <style scoped lang="less">
@@ -141,10 +168,35 @@
     padding: 24px;
     border-radius: var(--border-radius-medium);
     background: var(--text-n9);
-    gap: 24px;
-    @apply flex;
+    @apply flex items-center;
+
+    gap: 12px;
+    .crm-workflow-arrow {
+      flex: 0 0 auto;
+    }
+    .crm-workflow-scroll-container {
+      flex: 1;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: thin;
+    }
+    .crm-workflow-scroll-container::-webkit-scrollbar {
+      height: 6px;
+    }
+    .crm-workflow-scroll-container::-webkit-scrollbar-thumb {
+      border-radius: 999px;
+      background: rgb(0 0 0 / 20%);
+    }
+    .crm-workflow-step-list {
+      min-width: max-content;
+      @apply flex;
+
+      gap: 16px;
+    }
     .crm-workflow-item {
       gap: 16px;
+      flex: 0 0 auto;
+      min-width: 130px;
       @apply flex flex-nowrap items-center;
       .crm-workflow-item-status {
         width: 24px;
@@ -171,6 +223,7 @@
       }
       .crm-workflow-item-name {
         font-size: 16px;
+        white-space: nowrap;
         color: var(--text-n4);
         @apply break-keep font-medium;
         &.current {
@@ -188,21 +241,19 @@
         }
       }
       .crm-workflow-item-line {
-        width: auto;
-        min-width: 18px;
+        width: 50px;
+        min-width: 50px;
         height: 2px;
         background: var(--text-n7);
-
-        @apply flex-1;
+        flex: 0 0 auto;
         &.in-progress {
           background: var(--primary-8);
         }
       }
-      &:first-child {
-        .crm-workflow-item-line {
-          width: 50px;
-        }
-      }
     }
+  }
+  :deep(.n-button.crm-workflow-arrow .n-button__border),
+  :deep(.n-button.crm-workflow-arrow .n-button__state-border) {
+    border-radius: 999px;
   }
 </style>

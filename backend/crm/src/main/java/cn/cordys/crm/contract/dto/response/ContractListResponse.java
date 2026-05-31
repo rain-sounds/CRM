@@ -14,6 +14,12 @@ public class ContractListResponse extends Contract {
     @Schema(description = "客户名称")
     private String customerName;
 
+    @Schema(description = "项目名称")
+    private String opportunityName;
+
+    @Schema(description = "项目阶段名称")
+    private String opportunityStageName;
+
     @Schema(description = "负责人名称")
     private String ownerName;
 

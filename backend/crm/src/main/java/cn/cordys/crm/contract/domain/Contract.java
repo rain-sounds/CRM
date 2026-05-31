@@ -17,6 +17,9 @@ public class Contract extends BaseModel {
     @Schema(description = "客户id")
     private String customerId;
 
+    @Schema(description = "项目id")
+    private String opportunityId;
+
     @Schema(description = "合同负责人")
     private String owner;
 

@@ -151,7 +151,6 @@ public class OpportunityService {
 
         Map<String, List<OptionDTO>> optionMap = buildOptionMap(orgId, list, buildList);
 
-
         return PageUtils.setPageInfoWithOption(page, buildList, optionMap);
     }
 

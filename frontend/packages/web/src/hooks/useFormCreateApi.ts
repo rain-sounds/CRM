@@ -1155,6 +1155,25 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
         initialOptions: field.initialOptions,
       };
     }
+    // 跟进记录/计划表单，跟进方式默认选择"到访"
+    if (
+      [
+        FormDesignKeyEnum.FOLLOW_RECORD,
+        FormDesignKeyEnum.FOLLOW_PLAN,
+        FormDesignKeyEnum.FOLLOW_RECORD_CUSTOMER,
+        FormDesignKeyEnum.FOLLOW_PLAN_CUSTOMER,
+        FormDesignKeyEnum.FOLLOW_RECORD_CLUE,
+        FormDesignKeyEnum.FOLLOW_PLAN_CLUE,
+        FormDesignKeyEnum.FOLLOW_RECORD_BUSINESS,
+        FormDesignKeyEnum.FOLLOW_PLAN_BUSINESS,
+      ].includes(props.formKey.value) &&
+      (field.businessKey === 'followMethod' || field.businessKey === 'method')
+    ) {
+      return {
+        defaultValue: '1',
+        initialOptions: field.initialOptions,
+      };
+    }
     return {
       defaultValue: field.defaultValue,
       initialOptions: field.initialOptions,
@@ -1198,6 +1217,58 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     });
   }
 
+  /**
+   * 跟进记录/计划表单自定义处理：隐藏特定字段，添加"跟进部门"下拉
+   */
+  function handleFollowFormCustomization() {
+    const followFormKeys = [
+      FormDesignKeyEnum.FOLLOW_RECORD,
+      FormDesignKeyEnum.FOLLOW_PLAN,
+      FormDesignKeyEnum.FOLLOW_RECORD_CUSTOMER,
+      FormDesignKeyEnum.FOLLOW_PLAN_CUSTOMER,
+      FormDesignKeyEnum.FOLLOW_RECORD_CLUE,
+      FormDesignKeyEnum.FOLLOW_PLAN_CLUE,
+      FormDesignKeyEnum.FOLLOW_RECORD_BUSINESS,
+      FormDesignKeyEnum.FOLLOW_PLAN_BUSINESS,
+    ];
+    if (!followFormKeys.includes(props.formKey.value)) {
+      return;
+    }
+
+    const hideBusinessKeys = ['type', 'followMethod', 'method'];
+    const hideInternalKeys = ['recordIntentionProduct', 'planIntentionProduct'];
+
+    fieldList.value.forEach((item) => {
+      if (hideBusinessKeys.includes(item.businessKey || '') || hideInternalKeys.includes(item.internalKey || '')) {
+        item.readable = false;
+      }
+    });
+
+    // 添加"跟进部门"下拉字段（置顶，必填）
+    const departmentField: FormCreateField = {
+      id: `follow_department_${Date.now()}`,
+      name: '跟进部门',
+      type: FieldTypeEnum.SELECT,
+      businessKey: 'followDepartment',
+      readable: true,
+      editable: true,
+      showLabel: true,
+      description: '',
+      icon: '',
+      fieldWidth: 1,
+      rules: [{ key: FieldRuleEnum.REQUIRED }],
+      options: [
+        { label: '销售', value: '销售' },
+        { label: '售前', value: '售前' },
+        { label: '分析', value: '分析' },
+        { label: '编辑', value: '编辑' },
+      ],
+      defaultValue: '',
+      initialOptions: [],
+    };
+    fieldList.value.unshift(departmentField);
+  }
+
   async function initFormConfig() {
     try {
       loading.value = true;
@@ -1205,6 +1276,8 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
       const res = await api(props.sourceId?.value ?? '');
       moduleFormConfig.value = cloneDeep(res);
       initFormFieldConfig(res.fields);
+      // 跟进记录/计划表单：隐藏特定字段并添加"跟进部门"下拉
+      handleFollowFormCustomization();
       formConfig.value = res.formProp;
       nextTick(() => {
         unsaved.value = false;

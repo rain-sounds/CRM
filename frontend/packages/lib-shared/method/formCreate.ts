@@ -239,6 +239,10 @@ export function parseFormDetailValue(item: FormCreateField, form: FormDetail, so
     if (item.businessKey === 'name' && sourceName) {
       sourceName.value = name || form[item.businessKey];
     }
+    // 合同详情-关联项目字段显示项目阶段
+    if (item.businessKey === 'opportunityId' && form.opportunityStageName) {
+      return form.opportunityStageName;
+    }
     return name || form[item.businessKey];
   }
   const options = form.optionMap?.[item.id];

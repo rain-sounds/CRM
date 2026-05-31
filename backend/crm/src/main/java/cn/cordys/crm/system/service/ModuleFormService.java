@@ -219,6 +219,8 @@ public class ModuleFormService {
         if (CollectionUtils.isEmpty(forms)) {
             throw new GenericException(Translator.get("module.form.not_exist"));
         }
+        // 自动补充缺失的业务字段（兼容新增业务字段但表单配置未同步的场景）
+        addMissingBusinessFields(saveParam);
         preCheckForFieldSave(saveParam);
         ModuleFormConfigDTO oldConfig = new ModuleFormConfigDTO();
         oldConfig.setFields(getAllFields(saveParam.getFormKey(), currentOrgId));
@@ -1493,6 +1495,171 @@ public class ModuleFormService {
         return headFields
                 .stream()
                 .anyMatch(field -> field instanceof SubField subField && CollectionUtils.isNotEmpty(subField.getSubFields()));
+    }
+
+    /**
+     * 自动补充缺失的业务字段
+     * 当新增业务字段后，已有表单配置中可能缺少该字段，需要自动补充
+     *
+     * @param saveParam 保存参数
+     */
+    private void addMissingBusinessFields(ModuleFormSaveRequest saveParam) {
+        List<BusinessModuleField> businessFields = Arrays.stream(BusinessModuleField.values())
+                .filter(field -> Strings.CS.equals(saveParam.getFormKey(), field.getFormKey()))
+                .toList();
+        if (CollectionUtils.isEmpty(businessFields)) {
+            return;
+        }
+        List<BaseField> fields = saveParam.getFields();
+        if (fields == null) {
+            fields = new ArrayList<>();
+            saveParam.setFields(fields);
+        }
+        for (BusinessModuleField businessField : businessFields) {
+            boolean existsInTopLevel = fields.stream()
+                    .anyMatch(field -> Strings.CS.equals(businessField.getKey(), field.getInternalKey()));
+            boolean existsInSubFields = fields.stream()
+                    .anyMatch(field -> field instanceof SubField subField
+                            && CollectionUtils.isNotEmpty(subField.getSubFields())
+                            && subField.getSubFields().stream()
+                            .anyMatch(sub -> Strings.CS.equals(businessField.getKey(), sub.getInternalKey())));
+            if (!existsInTopLevel && !existsInSubFields) {
+                BaseField newField = createDefaultBusinessField(businessField);
+                if (newField != null) {
+                    fields.add(newField);
+                }
+            }
+        }
+    }
+
+    /**
+     * 根据业务字段定义创建默认字段
+     *
+     * @param businessField 业务字段定义
+     * @return 默认字段
+     */
+    private BaseField createDefaultBusinessField(BusinessModuleField businessField) {
+        String businessKey = businessField.getBusinessKey();
+        String defaultName = businessField.getKey();
+        // 根据 businessKey 推断字段类型
+        if (Strings.CS.equalsAny(businessKey, "customerId", "opportunityId", "contractId", "clueId", "contactId", "paymentPlanId", "businessTitleId")) {
+            DatasourceField field = new DatasourceField();
+            field.setId(IDGenerator.nextStr());
+            field.setName(defaultName);
+            field.setInternalKey(businessField.getKey());
+            field.setBusinessKey(businessKey);
+            field.setType(FieldType.DATA_SOURCE.name());
+            field.setShowLabel(true);
+            field.setReadable(true);
+            field.setEditable(true);
+            field.setFieldWidth(1f);
+            // 设置 dataSourceType
+            if (Strings.CS.equals(businessKey, "customerId")) {
+                field.setDataSourceType(FieldSourceType.CUSTOMER.name());
+            } else if (Strings.CS.equals(businessKey, "opportunityId")) {
+                field.setDataSourceType(FieldSourceType.OPPORTUNITY.name());
+            } else if (Strings.CS.equals(businessKey, "contractId")) {
+                field.setDataSourceType(FieldSourceType.CONTRACT.name());
+            } else if (Strings.CS.equals(businessKey, "clueId")) {
+                field.setDataSourceType(FieldSourceType.CLUE.name());
+            } else if (Strings.CS.equals(businessKey, "contactId")) {
+                field.setDataSourceType(FieldSourceType.CONTACT.name());
+            } else if (Strings.CS.equals(businessKey, "paymentPlanId")) {
+                field.setDataSourceType(FieldSourceType.PAYMENT_PLAN.name());
+            } else if (Strings.CS.equals(businessKey, "businessTitleId")) {
+                field.setDataSourceType(FieldSourceType.BUSINESS_TITLE.name());
+            }
+            return field;
+        } else if (Strings.CS.equalsAny(businessKey, "owner")) {
+            MemberField field = new MemberField();
+            field.setId(IDGenerator.nextStr());
+            field.setName(defaultName);
+            field.setInternalKey(businessField.getKey());
+            field.setBusinessKey(businessKey);
+            field.setType(FieldType.MEMBER.name());
+            field.setShowLabel(true);
+            field.setReadable(true);
+            field.setEditable(true);
+            field.setFieldWidth(1f);
+            field.setHasCurrentUser(true);
+            return field;
+        } else if (Strings.CS.equalsAny(businessKey, "name", "number", "phone", "contact", "content")) {
+            InputField field = new InputField();
+            field.setId(IDGenerator.nextStr());
+            field.setName(defaultName);
+            field.setInternalKey(businessField.getKey());
+            field.setBusinessKey(businessKey);
+            field.setType(FieldType.INPUT.name());
+            field.setShowLabel(true);
+            field.setReadable(true);
+            field.setEditable(true);
+            field.setFieldWidth(1f);
+            return field;
+        } else if (Strings.CS.equalsAny(businessKey, "startTime", "endTime", "expectedEndTime", "followTime", "estimatedTime", "planEndTime", "recordEndTime", "untilTime")) {
+            DateTimeField field = new DateTimeField();
+            field.setId(IDGenerator.nextStr());
+            field.setName(defaultName);
+            field.setInternalKey(businessField.getKey());
+            field.setBusinessKey(businessKey);
+            field.setType(FieldType.DATE_TIME.name());
+            field.setShowLabel(true);
+            field.setReadable(true);
+            field.setEditable(true);
+            field.setFieldWidth(1f);
+            field.setDateType("date");
+            return field;
+        } else if (Strings.CS.equalsAny(businessKey, "amount", "possible", "price", "planAmount", "recordAmount", "taxRate")) {
+            InputNumberField field = new InputNumberField();
+            field.setId(IDGenerator.nextStr());
+            field.setName(defaultName);
+            field.setInternalKey(businessField.getKey());
+            field.setBusinessKey(businessKey);
+            field.setType(FieldType.INPUT_NUMBER.name());
+            field.setShowLabel(true);
+            field.setReadable(true);
+            field.setEditable(true);
+            field.setFieldWidth(1f);
+            return field;
+        } else if (Strings.CS.equalsAny(businessKey, "type", "status", "followMethod", "method", "invoiceType")) {
+            SelectField field = new SelectField();
+            field.setId(IDGenerator.nextStr());
+            field.setName(defaultName);
+            field.setInternalKey(businessField.getKey());
+            field.setBusinessKey(businessKey);
+            field.setType(FieldType.SELECT.name());
+            field.setShowLabel(true);
+            field.setReadable(true);
+            field.setEditable(true);
+            field.setFieldWidth(1f);
+            return field;
+        } else if (Strings.CS.equalsAny(businessKey, "products")) {
+            // 子表格字段不自动补充
+            return null;
+        } else if (Strings.CS.equalsAny(businessKey, "followDepartment")) {
+            DepartmentField field = new DepartmentField();
+            field.setId(IDGenerator.nextStr());
+            field.setName(defaultName);
+            field.setInternalKey(businessField.getKey());
+            field.setBusinessKey(businessKey);
+            field.setType(FieldType.DEPARTMENT.name());
+            field.setShowLabel(true);
+            field.setReadable(true);
+            field.setEditable(true);
+            field.setFieldWidth(1f);
+            return field;
+        }
+        // 默认使用文本字段
+        InputField field = new InputField();
+        field.setId(IDGenerator.nextStr());
+        field.setName(defaultName);
+        field.setInternalKey(businessField.getKey());
+        field.setBusinessKey(businessKey);
+        field.setType(FieldType.INPUT.name());
+        field.setShowLabel(true);
+        field.setReadable(true);
+        field.setEditable(true);
+        field.setFieldWidth(1f);
+        return field;
     }
 
     /**

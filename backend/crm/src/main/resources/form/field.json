@@ -1854,6 +1854,17 @@
       "mobile": true,
       "showThousandsSeparator": true,
       "ext_ver": "1.5.1"
+    },
+    {
+      "name": "项目",
+      "internalKey": "contractOpportunity",
+      "type": "DATA_SOURCE",
+      "dataSourceType": "OPPORTUNITY",
+      "showLabel": true,
+      "readable": true,
+      "editable": true,
+      "fieldWidth": 1,
+      "ext_ver": "1.6.0"
     }
   ],
   "invoice": [

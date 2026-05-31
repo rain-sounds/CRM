@@ -37,6 +37,11 @@ export const statusTabList = ref<TabPaneProps[]>([
 
 export const descriptionList: DescriptionItem[] = [
   {
+    key: 'followDepartment',
+    label: '跟进部门',
+    value: 'followDepartment',
+  },
+  {
     key: 'contactName',
     label: t('common.contact'),
     value: 'contactName',

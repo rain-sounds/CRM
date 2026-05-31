@@ -17,7 +17,8 @@
             create_time,
             update_time,
             create_user,
-            update_user
+            update_user,
+            follow_department
         FROM
             follow_up_record
         WHERE
@@ -61,7 +62,8 @@
         update_time,
         create_user,
         update_user,
-        follow_method
+        follow_method,
+        follow_department
         FROM
         follow_up_record
         <where>
@@ -122,6 +124,7 @@
         fur.create_user,
         fur.update_user,
         fur.follow_method,
+        fur.follow_department,
         fur.organization_id,
         if (fur.type = 'CLUE', c.pool_id, cu.pool_id) as poolId
         FROM follow_up_record fur

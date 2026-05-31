@@ -195,6 +195,7 @@ public class FollowUpRecordService extends BaseFollowUpService {
         record.setContactId(request.getContactId());
         record.setFollowTime(request.getFollowTime());
         record.setFollowMethod(request.getFollowMethod());
+        record.setFollowDepartment(request.getFollowDepartment());
         record.setContent(request.getContent());
         record.setUpdateTime(System.currentTimeMillis());
         record.setUpdateUser(userId);

@@ -10,6 +10,9 @@ export interface ContractItem {
   name: string;
   customerId: string;
   customerName: string;
+  opportunityId: string;
+  opportunityName: string;
+  opportunityStageName: string;
   amount: number;
   alreadyPayAmount: number;
   approvalStatus: QuotationStatusEnum;

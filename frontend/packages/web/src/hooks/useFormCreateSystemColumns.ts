@@ -719,6 +719,18 @@ export default async function useFormCreateSystemColumns(
     ],
     [FormDesignKeyEnum.CONTRACT]: [
       {
+        title: '项目',
+        width: 200,
+        key: 'opportunityId',
+        ellipsis: {
+          tooltip: true,
+        },
+        render: (row: any) => {
+          if (!row.opportunityName) return '-';
+          return row.opportunityStageName || row.opportunityName || '-';
+        },
+      },
+      {
         title: t('org.department'),
         width: 120,
         key: 'departmentId',

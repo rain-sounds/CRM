@@ -328,6 +328,30 @@ export default async function useFormCreateTable(props: FormCreateTableProps) {
             };
           }
 
+          if (
+            [FormDesignKeyEnum.CONTRACT].includes(props.formKey) &&
+            !field.resourceFieldId &&
+            field.businessKey === 'opportunityId'
+          ) {
+            return {
+              title: field.name,
+              width: 200,
+              key,
+              fieldId: field.id,
+              sortOrder: false,
+              sorter: sorter && !field.resourceFieldId,
+              filedType: field.type,
+              ellipsis: {
+                tooltip: true,
+              },
+              render: (row: any) => {
+                if (!row.opportunityName) return '-';
+                return row.opportunityStageName || row.opportunityName || '-';
+              },
+              resourceFieldId: field.resourceFieldId,
+            };
+          }
+
           if (isFollowModule && field.businessKey === 'opportunityId') {
             return {
               title: field.name,

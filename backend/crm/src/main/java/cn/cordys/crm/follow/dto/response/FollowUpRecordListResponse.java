@@ -84,6 +84,9 @@ public class FollowUpRecordListResponse {
     @Schema(description = "跟进方式")
     private String followMethod;
 
+    @Schema(description = "跟进部门")
+    private String followDepartment;
+
     @Schema(description = "属于公海或者线索池")
     private String poolId;
 

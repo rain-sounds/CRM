@@ -40,6 +40,8 @@ import cn.cordys.crm.contract.mapper.ExtContractMapper;
 import cn.cordys.crm.contract.mapper.ExtContractSnapshotMapper;
 import cn.cordys.crm.customer.domain.Customer;
 import cn.cordys.crm.opportunity.constants.ApprovalState;
+import cn.cordys.crm.opportunity.domain.Opportunity;
+import cn.cordys.crm.opportunity.domain.OpportunityStageConfig;
 import cn.cordys.crm.system.constants.DictModule;
 import cn.cordys.crm.system.constants.NotificationConstants;
 import cn.cordys.crm.system.domain.MessageTaskConfig;
@@ -95,6 +97,10 @@ public class ContractService {
     private PermissionCache permissionCache;
     @Resource
     private BaseMapper<Customer> customerBaseMapper;
+    @Resource
+    private BaseMapper<Opportunity> opportunityBaseMapper;
+    @Resource
+    private BaseMapper<OpportunityStageConfig> opportunityStageConfigBaseMapper;
     @Resource
     private LogService logService;
     @Resource
@@ -235,6 +241,24 @@ public class ContractService {
         if (customer != null) {
             contractGetResponse.setCustomerName(customer.getName());
             optionMap.put(BusinessModuleField.CONTRACT_CUSTOMER_NAME.getBusinessKey(), Collections.singletonList(new OptionDTO(customer.getId(), customer.getName())));
+        }
+
+        // 补充关联项目信息
+        // 合同的 opportunityId 存储在 contract_field 自定义字段表中（contract 表无 opportunity_id 列）
+        String opportunityId = getOpportunityIdFromFields(contract.getId(), contract.getOrganizationId());
+        if (StringUtils.isNotEmpty(opportunityId)) {
+            contractGetResponse.setOpportunityId(opportunityId);
+            Opportunity opportunity = opportunityBaseMapper.selectByPrimaryKey(opportunityId);
+            if (opportunity != null) {
+                contractGetResponse.setOpportunityName(opportunity.getName());
+                if (StringUtils.isNotEmpty(opportunity.getStage())) {
+                    OpportunityStageConfig stageConfig = opportunityStageConfigBaseMapper.selectByPrimaryKey(opportunity.getStage());
+                    if (stageConfig != null) {
+                        contractGetResponse.setOpportunityStageName(stageConfig.getName());
+                    }
+                }
+                optionMap.put(BusinessModuleField.CONTRACT_OPPORTUNITY.getBusinessKey(), Collections.singletonList(new OptionDTO(opportunity.getId(), opportunity.getName())));
+            }
         }
 
         contractGetResponse.setOptionMap(optionMap);
@@ -409,6 +433,27 @@ public class ContractService {
         contractFieldService.saveModuleField(contract, orgId, userId, moduleFields, true);
     }
 
+    /**
+     * 从 contract_field 表查询合同关联的项目ID
+     * （contract 表无 opportunity_id 列，项目ID 仅存储在自定义字段表中）
+     */
+    private String getOpportunityIdFromFields(String contractId, String orgId) {
+        List<BaseField> allFields = moduleFormService.getFlattenFormFields(FormKey.CONTRACT.getKey(), orgId);
+        Map<String, BaseField> fieldMap = allFields.stream()
+                .collect(Collectors.toMap(BaseField::getId, f -> f, (f1, f2) -> f1));
+        // 从 contract_field 表读取所有字段值，找到数据源类型为 OPPORTUNITY 的字段
+        List<BaseModuleFieldValue> fieldValues = contractFieldService.getModuleFieldValuesByResourceId(contractId);
+        for (BaseModuleFieldValue fv : fieldValues) {
+            BaseField fieldConfig = fieldMap.get(fv.getFieldId());
+            if (fieldConfig instanceof cn.cordys.crm.system.dto.field.DatasourceField ds
+                    && "OPPORTUNITY".equals(ds.getDataSourceType())
+                    && fv.getFieldValue() != null
+                    && StringUtils.isNotEmpty(fv.getFieldValue().toString())) {
+                return fv.getFieldValue().toString();
+            }
+        }
+        return null;
+    }
 
     /**
      * 删除合同
@@ -456,6 +501,23 @@ public class ContractService {
             if (customer != null) {
                 response.setInCustomerPool(customer.getInSharedPool());
                 response.setPoolId(customer.getPoolId());
+            }
+            // 从 contract_field 表直接查询 opportunityId（contract 表无 opportunity_id 列）
+            if (StringUtils.isEmpty(response.getOpportunityId())) {
+                response.setOpportunityId(getOpportunityIdFromFields(id, contract.getOrganizationId()));
+            }
+            // 补充关联项目信息
+            if (StringUtils.isNotEmpty(response.getOpportunityId())) {
+                Opportunity opportunity = opportunityBaseMapper.selectByPrimaryKey(response.getOpportunityId());
+                if (opportunity != null) {
+                    response.setOpportunityName(opportunity.getName());
+                    if (StringUtils.isNotEmpty(opportunity.getStage())) {
+                        OpportunityStageConfig stageConfig = opportunityStageConfigBaseMapper.selectByPrimaryKey(opportunity.getStage());
+                        if (stageConfig != null) {
+                            response.setOpportunityStageName(stageConfig.getName());
+                        }
+                    }
+                }
             }
             response.setAlreadyPayAmount(sumContractRecordAmount(id));
         }
