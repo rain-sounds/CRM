@@ -252,3 +252,41 @@ export interface ContractInvoiceDetail extends ContractInvoiceItem {
   optionMap?: Record<string, any[]>;
   attachmentMap?: Record<string, AttachmentInfo[]>; // 附件信息映射
 }
+
+// 开票资料列表项
+export interface InvoiceMaterialItem {
+  id: string;
+  sequence: number;
+  hospitalName: string;
+  invoice: string;
+  verificationProof: string;
+  sampleMailing: string;
+  samplePhoto: string;
+  report: string;
+  outboundOrder: string;
+  contract: string;
+  platform: string;
+  otherMaterials: string;
+  organizationId: string;
+  createUserName: string;
+  updateUserName: string;
+  createUser: string;
+  updateUser: string;
+  createTime: number;
+  updateTime: number;
+}
+
+// 添加/更新开票资料参数
+export interface SaveInvoiceMaterialParams {
+  id?: string;
+  hospitalName: string;
+  invoice?: string;
+  verificationProof?: string;
+  sampleMailing?: string;
+  samplePhoto?: string;
+  report?: string;
+  outboundOrder?: string;
+  contract?: string;
+  platform?: string;
+  otherMaterials?: string;
+}

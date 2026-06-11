@@ -523,6 +523,11 @@ export const {
   getInvoicedDetailSnapshot,
   getContractStatistic,
   getPaymentRecordStatistic,
+  getInvoiceMaterialList,
+  addInvoiceMaterial,
+  updateInvoiceMaterial,
+  deleteInvoiceMaterial,
+  getInvoiceMaterialDetail,
 } = contractApi;
 
 export const {

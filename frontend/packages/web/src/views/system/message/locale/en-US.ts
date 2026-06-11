@@ -19,6 +19,7 @@ export default {
   'system.message.notificationScenario': 'Notification scenario',
   'system.message.systemMessage': 'Sys',
   'system.message.emailReminder': 'Email reminder',
+  'system.message.smsReminder': 'SMS reminder',
   'system.message.confirmClose': 'Confirm close',
   'system.message.confirmCloseSystemNotify': 'Are you sure you want to close this system notification?',
   'system.message.confirmCloseSystemNotifyContent':

@@ -51,38 +51,13 @@ declare module 'vue' {
     SingleText: typeof import('./src/components/business/crm-form-create/components/basic/singleText.vue')['default'];
     Textarea: typeof import('./src/components/business/crm-form-create/components/basic/textarea.vue')['default'];
     Upload: typeof import('./src/components/business/crm-form-create/components/advanced/upload.vue')['default'];
-    VanBadge: typeof import('vant/es')['Badge'];
     VanButton: typeof import('vant/es')['Button'];
-    VanCell: typeof import('vant/es')['Cell'];
     VanCellGroup: typeof import('vant/es')['CellGroup'];
-    VanCheckbox: typeof import('vant/es')['Checkbox'];
-    VanCollapse: typeof import('vant/es')['Collapse'];
-    VanCollapseItem: typeof import('vant/es')['CollapseItem'];
-    VanCountDown: typeof import('vant/es')['CountDown'];
-    VanDialog: typeof import('vant/es')['Dialog'];
-    VanDivider: typeof import('vant/es')['Divider'];
-    VanDropdownItem: typeof import('vant/es')['DropdownItem'];
-    VanDropdownMenu: typeof import('vant/es')['DropdownMenu'];
-    VanEmpty: typeof import('vant/es')['Empty'];
     VanField: typeof import('vant/es')['Field'];
     VanForm: typeof import('vant/es')['Form'];
-    VanImage: typeof import('vant/es')['Image'];
-    VanList: typeof import('vant/es')['List'];
     VanLoading: typeof import('vant/es')['Loading'];
-    VanNavBar: typeof import('vant/es')['NavBar'];
-    VanNoticeBar: typeof import('vant/es')['NoticeBar'];
-    VanPicker: typeof import('vant/es')['Picker'];
-    VanPopover: typeof import('vant/es')['Popover'];
-    VanPopup: typeof import('vant/es')['Popup'];
-    VanPullRefresh: typeof import('vant/es')['PullRefresh'];
-    VanRadio: typeof import('vant/es')['Radio'];
-    VanRadioGroup: typeof import('vant/es')['RadioGroup'];
-    VanSearch: typeof import('vant/es')['Search'];
-    VanTab: typeof import('vant/es')['Tab'];
     VanTabbar: typeof import('vant/es')['Tabbar'];
     VanTabbarItem: typeof import('vant/es')['TabbarItem'];
-    VanTabs: typeof import('vant/es')['Tabs'];
-    VanTag: typeof import('vant/es')['Tag'];
     WorkflowStage: typeof import('./src/components/business/crm-workflow-card/workflowStage.vue')['default'];
   }
 }

@@ -645,6 +645,24 @@
             "id": "CONTRACT_INVOICE:APPROVAL"
            }
         ]
+      },
+      {
+        "id": "INVOICE_MATERIAL",
+        "name": "permission.invoice_material.name",
+        "permissions": [
+          {
+            "id": "CONTRACT_INVOICE_MATERIAL:READ"
+          },
+          {
+            "id": "CONTRACT_INVOICE_MATERIAL:ADD"
+          },
+          {
+            "id": "CONTRACT_INVOICE_MATERIAL:UPDATE"
+          },
+          {
+            "id": "CONTRACT_INVOICE_MATERIAL:DELETE"
+          }
+        ]
       }
     ]
   },
@@ -671,6 +689,34 @@
           },
           {
             "id": "ORDER:DOWNLOAD"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "OUTSOURCING_MANAGEMENT",
+    "name": "permission.outsourcing_management.name",
+    "license": false,
+    "children": [
+      {
+        "id": "OUTSOURCING",
+        "name": "permission.outsourcing.name",
+        "permissions": [
+          {
+            "id": "OUTSOURCING:READ"
+          },
+          {
+            "id": "OUTSOURCING:ADD"
+          },
+          {
+            "id": "OUTSOURCING:UPDATE"
+          },
+          {
+            "id": "OUTSOURCING:DELETE"
+          },
+          {
+            "id": "OUTSOURCING:EXPORT"
           }
         ]
       }

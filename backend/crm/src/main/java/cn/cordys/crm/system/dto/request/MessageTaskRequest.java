@@ -37,6 +37,9 @@ public class MessageTaskRequest {
     @Schema(description = "飞书启用")
     private boolean larkEnable;
 
+    @Schema(description = "短信启用")
+    private boolean smsEnable;
+
     @Schema(description = "消息配置")
     private MessageTaskConfigDTO config;
 }

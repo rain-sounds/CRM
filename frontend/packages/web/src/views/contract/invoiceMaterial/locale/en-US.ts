@@ -1,0 +1,17 @@
+export default {
+  'contract.invoiceMaterial.add': 'Create Invoice Material',
+  'contract.invoiceMaterial.update': 'Edit Invoice Material',
+  'contract.invoiceMaterial.hospitalName': 'Hospital Name',
+  'contract.invoiceMaterial.hospitalNamePlaceholder': 'Please enter hospital name',
+  'contract.invoiceMaterial.invoice': 'Invoice',
+  'contract.invoiceMaterial.verificationProof': 'Verification Proof',
+  'contract.invoiceMaterial.sampleMailing': 'Sample Mailing',
+  'contract.invoiceMaterial.samplePhoto': 'Sample Photo',
+  'contract.invoiceMaterial.report': 'Report',
+  'contract.invoiceMaterial.outboundOrder': 'Outbound Order',
+  'contract.invoiceMaterial.contract': 'Contract',
+  'contract.invoiceMaterial.platform': 'Platform',
+  'contract.invoiceMaterial.otherMaterials': 'Other Materials',
+  'contract.invoiceMaterial.sequence': 'Sequence',
+  'contract.invoiceMaterial.deleteContent': 'Deleted data cannot be recovered. Proceed with caution.',
+};

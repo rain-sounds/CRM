@@ -66,6 +66,16 @@ const contract: AppRouteRecordRaw = {
         permissions: ['CONTRACT_BUSINESS_TITLE:READ'],
       },
     },
+    {
+      path: 'contractInvoiceMaterial',
+      name: ContractRouteEnum.CONTRACT_INVOICE_MATERIAL,
+      component: () => import('@/views/contract/invoiceMaterial/index.vue'),
+      meta: {
+        locale: 'module.invoiceMaterial',
+        isTopMenu: true,
+        permissions: ['CONTRACT_INVOICE_MATERIAL:READ'],
+      },
+    },
   ],
 };
 

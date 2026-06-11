@@ -225,6 +225,13 @@ public class PermissionConstants {
 
     /*------ end: BUSINESS_TITLE ------*/
 
+    /*------ start: INVOICE_MATERIAL ------*/
+    public static final String CONTRACT_INVOICE_MATERIAL_READ = "CONTRACT_INVOICE_MATERIAL:READ";
+    public static final String CONTRACT_INVOICE_MATERIAL_ADD = "CONTRACT_INVOICE_MATERIAL:ADD";
+    public static final String CONTRACT_INVOICE_MATERIAL_UPDATE = "CONTRACT_INVOICE_MATERIAL:UPDATE";
+    public static final String CONTRACT_INVOICE_MATERIAL_DELETE = "CONTRACT_INVOICE_MATERIAL:DELETE";
+    /*------ end: INVOICE_MATERIAL ------*/
+
 	/**
 	 * Contract payment record permission
 	 */
@@ -242,5 +249,13 @@ public class PermissionConstants {
     public static final String ORDER_DELETE = "ORDER:DELETE";
     public static final String ORDER_DOWNLOAD = "ORDER:DOWNLOAD";
     /*------ end: ORDER_ROLE ------*/
+
+    /*------ start: OUTSOURCING ------*/
+    public static final String OUTSOURCING_READ = "OUTSOURCING:READ";
+    public static final String OUTSOURCING_ADD = "OUTSOURCING:ADD";
+    public static final String OUTSOURCING_UPDATE = "OUTSOURCING:UPDATE";
+    public static final String OUTSOURCING_DELETE = "OUTSOURCING:DELETE";
+    public static final String OUTSOURCING_EXPORT = "OUTSOURCING:EXPORT";
+    /*------ end: OUTSOURCING ------*/
 }
 

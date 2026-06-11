@@ -46,7 +46,7 @@ export function useStatusTextConfig(): Record<StatusBizType, StatusTextConfig> {
     [FormDesignKeyEnum.BUSINESS]: {
       title: t('module.businessManage.businessStepSet'),
       sectionTitle: t('module.businessManage.businessStepConfig'),
-      columnTitles: [t('opportunity.stage'), t('opportunity.win'), t('opportunity.stageType')],
+      columnTitles: [t('opportunity.stage'), t('opportunity.win'), t('opportunity.stageType'), t('module.businessManage.department')],
       rollbackTitle: t('module.businessManage.businessStepRollbackConfig'),
       switches: [
         {
@@ -185,8 +185,22 @@ export function useStatusStrategyConfig(): Record<StatusBizType, StatusStrategyC
   return {
     [FormDesignKeyEnum.BUSINESS]: {
       formItemModel: formItemModelMap[FormDesignKeyEnum.BUSINESS],
-      buildCreateParams: (row, { list, index }) => buildDefaultCreateParams(row, list, index, ['name', 'rate', 'type']),
-      buildUpdateParams: (row) => buildDefaultUpdateParams(row, ['id', 'name', 'rate']),
+      buildCreateParams: (row, { list, index }) => {
+        const params: Record<string, any> = buildDefaultCreateParams(row, list, index, ['name', 'rate', 'type', 'departmentId']);
+        // 将数组转为逗号分隔字符串
+        if (Array.isArray(params.departmentId)) {
+          params.departmentId = params.departmentId.join(',');
+        }
+        return params;
+      },
+      buildUpdateParams: (row) => {
+        const params: Record<string, any> = buildDefaultUpdateParams(row, ['id', 'name', 'rate', 'departmentId']);
+        // 将数组转为逗号分隔字符串
+        if (Array.isArray(params.departmentId)) {
+          params.departmentId = params.departmentId.join(',');
+        }
+        return params;
+      },
       normalizeItem: (item) => ({
         rate: Number(item.rate),
       }),

@@ -12,8 +12,23 @@
         c.`name` AS customerName,
         c.in_shared_pool AS inCustomerPool,
         c.pool_id,
-        opp.`name` AS opportunityName,
-        osc.`name` AS opportunityStageName,
+        (
+            SELECT opp2.name
+            FROM contract_field cf2
+            INNER JOIN sys_module_field smf2 ON cf2.field_id = smf2.id AND smf2.name = '项目'
+            INNER JOIN opportunity opp2 ON opp2.id = cf2.field_value
+            WHERE cf2.resource_id = ct.id
+            LIMIT 1
+        ) AS opportunityName,
+        (
+            SELECT osc2.name
+            FROM contract_field cf2
+            INNER JOIN sys_module_field smf2 ON cf2.field_id = smf2.id AND smf2.name = '项目'
+            INNER JOIN opportunity opp2 ON opp2.id = cf2.field_value
+            INNER JOIN opportunity_stage_config osc2 ON opp2.stage = osc2.id
+            WHERE cf2.resource_id = ct.id
+            LIMIT 1
+        ) AS opportunityStageName,
         ct.amount,
         ct.approval_status,
         ct.stage,
@@ -79,6 +94,14 @@
             or ct.number like concat('%', #{request.keyword},'%')
             or c.name like concat('%', #{request.keyword},'%')
             or opp.name like concat('%', #{request.keyword},'%')
+            or exists (
+                select 1
+                from contract_field cf
+                inner join opportunity_field opp_f on opp_f.resource_id = cf.field_value
+                inner join sys_module_field smf on cf.field_id = smf.id and smf.name = '项目'
+                inner join sys_module_field opp_mf on opp_f.field_id = opp_mf.id and opp_mf.name = '项目编号'
+                where cf.resource_id = ct.id and opp_f.field_value like concat('%', #{request.keyword},'%')
+            )
             )
         </if>
         <if test="source and request.keyword != null and request.keyword != ''">
@@ -111,8 +134,23 @@
         c.`name` AS customerName,
         c.in_shared_pool AS inCustomerPool,
         c.pool_id,
-        opp.`name` AS opportunityName,
-        osc.`name` AS opportunityStageName,
+        (
+            SELECT opp2.name
+            FROM contract_field cf2
+            INNER JOIN sys_module_field smf2 ON cf2.field_id = smf2.id AND smf2.name = '项目'
+            INNER JOIN opportunity opp2 ON opp2.id = cf2.field_value
+            WHERE cf2.resource_id = ct.id
+            LIMIT 1
+        ) AS opportunityName,
+        (
+            SELECT osc2.name
+            FROM contract_field cf2
+            INNER JOIN sys_module_field smf2 ON cf2.field_id = smf2.id AND smf2.name = '项目'
+            INNER JOIN opportunity opp2 ON opp2.id = cf2.field_value
+            INNER JOIN opportunity_stage_config osc2 ON opp2.stage = osc2.id
+            WHERE cf2.resource_id = ct.id
+            LIMIT 1
+        ) AS opportunityStageName,
         ct.amount,
         ct.number,
         ct.approval_status,
@@ -624,6 +662,14 @@
             and (
             ct.name like concat('%', #{request.keyword},'%')
             or ct.name like concat('%', #{request.keyword},'%')
+            or exists (
+                select 1
+                from contract_field cf
+                inner join opportunity_field opp_f on opp_f.resource_id = cf.field_value
+                inner join sys_module_field smf on cf.field_id = smf.id and smf.name = '项目'
+                inner join sys_module_field opp_mf on opp_f.field_id = opp_mf.id and opp_mf.name = '项目编号'
+                where cf.resource_id = ct.id and opp_f.field_value like concat('%', #{request.keyword},'%')
+            )
             )
         </if>
 

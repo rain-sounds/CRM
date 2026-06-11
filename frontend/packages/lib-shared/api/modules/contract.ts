@@ -110,6 +110,11 @@ import {
   ContractInvoicedDetailSnapshotUrl,
   ContractStatisticUrl,
   GetPaymentRecordStatisticUrl,
+  InvoiceMaterialPageUrl,
+  InvoiceMaterialAddUrl,
+  InvoiceMaterialUpdateUrl,
+  InvoiceMaterialDeleteUrl,
+  GetInvoiceMaterialDetailUrl,
 } from '@lib/shared/api/requrls/contract';
 import type { CustomerTabHidden } from '@lib/shared/models/customer';
 import type {
@@ -143,6 +148,8 @@ import type {
   SaveContractInvoiceParams,
   UpdateContractInvoiceParams,
   ContractInvoiceDetail,
+  InvoiceMaterialItem,
+  SaveInvoiceMaterialParams,
 } from '@lib/shared/models/contract';
 import type { BatchOperationResult, BatchUpdateQuotationStatusParams } from '@lib/shared/models/opportunity';
 import type { BatchUpdatePoolAccountParams } from '@lib/shared/models/customer';
@@ -696,6 +703,27 @@ export default function useContractApi(CDR: CordysAxios) {
     return CDR.post({ url: GetPaymentRecordStatisticUrl, data }, { ignoreCancelToken: true });
   }
 
+  // 开票资料
+  function getInvoiceMaterialList(data: TableQueryParams) {
+    return CDR.post<CommonList<InvoiceMaterialItem>>({ url: InvoiceMaterialPageUrl, data }, { ignoreCancelToken: true });
+  }
+
+  function addInvoiceMaterial(data: SaveInvoiceMaterialParams) {
+    return CDR.post({ url: InvoiceMaterialAddUrl, data });
+  }
+
+  function updateInvoiceMaterial(data: SaveInvoiceMaterialParams) {
+    return CDR.post({ url: InvoiceMaterialUpdateUrl, data });
+  }
+
+  function deleteInvoiceMaterial(id: string) {
+    return CDR.get({ url: `${InvoiceMaterialDeleteUrl}/${id}` });
+  }
+
+  function getInvoiceMaterialDetail(id: string) {
+    return CDR.get<InvoiceMaterialItem>({ url: `${GetInvoiceMaterialDetailUrl}/${id}` });
+  }
+
   return {
     exportContractAll,
     exportContractSelected,
@@ -807,5 +835,11 @@ export default function useContractApi(CDR: CordysAxios) {
     deleteContractInvoicedView,
     dragContractInvoicedView,
     getInvoicedTab,
+    // 开票资料
+    getInvoiceMaterialList,
+    addInvoiceMaterial,
+    updateInvoiceMaterial,
+    deleteInvoiceMaterial,
+    getInvoiceMaterialDetail,
   };
 }

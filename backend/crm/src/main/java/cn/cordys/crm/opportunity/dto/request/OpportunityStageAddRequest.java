@@ -21,5 +21,6 @@ public class OpportunityStageAddRequest {
     @Schema(description = "源节点")
     private String targetId;
 
-
+    @Schema(description = "关联部门ID")
+    private String departmentId;
 }

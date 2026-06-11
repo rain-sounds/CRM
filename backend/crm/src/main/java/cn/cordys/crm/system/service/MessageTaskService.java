@@ -66,7 +66,7 @@ public class MessageTaskService {
     private LogService logService;
 
 
-    private static MessageTaskLogDTO buildLogDTO(MessageTask oldMessageTask, Boolean emailEnable, Boolean sysEnable, Boolean weComEnable, Boolean dingTalkEnable, Boolean larkEnable, Map<String, String> eventMap, MessageTaskConfigWithNameDTO nameDTO) {
+    private static MessageTaskLogDTO buildLogDTO(MessageTask oldMessageTask, Boolean emailEnable, Boolean sysEnable, Boolean weComEnable, Boolean dingTalkEnable, Boolean larkEnable, Boolean smsEnable, Map<String, String> eventMap, MessageTaskConfigWithNameDTO nameDTO) {
         MessageTaskLogDTO newDTO = new MessageTaskLogDTO();
         newDTO.setEvent(eventMap.get(oldMessageTask.getEvent()));
         if (emailEnable != null) {
@@ -93,6 +93,11 @@ public class MessageTaskService {
             newDTO.setLarkEnable(larkEnable ? Translator.get("log.enable.true") : Translator.get("log.enable.false"));
         } else {
             newDTO.setLarkEnable(oldMessageTask.getLarkEnable() ? Translator.get("log.enable.true") : Translator.get("log.enable.false"));
+        }
+        if (smsEnable != null) {
+            newDTO.setSmsEnable(smsEnable ? Translator.get("log.enable.true") : Translator.get("log.enable.false"));
+        } else {
+            newDTO.setSmsEnable(oldMessageTask.getSmsEnable() != null && oldMessageTask.getSmsEnable() ? Translator.get("log.enable.true") : Translator.get("log.enable.false"));
         }
         if (nameDTO != null) {
             newDTO.setOwnerEnable(nameDTO.isOwnerEnable() ? Translator.get("log.enable.true") : Translator.get("log.enable.false"));
@@ -157,6 +162,7 @@ public class MessageTaskService {
             messageTask.setWeComEnable(messageTaskRequest.isWeComEnable());
             messageTask.setDingTalkEnable(messageTaskRequest.isDingTalkEnable());
             messageTask.setLarkEnable(messageTaskRequest.isLarkEnable());
+            messageTask.setSmsEnable(messageTaskRequest.isSmsEnable());
             String template = MessageTemplateUtils.getTemplate(messageTaskRequest.getEvent());
             messageTask.setTemplate(template.getBytes(StandardCharsets.UTF_8));
             messageTaskMapper.insert(messageTask);
@@ -165,7 +171,7 @@ public class MessageTaskService {
                 saveConfig(messageTaskRequest, organizationId);
             }
             // 添加日志上下文
-            MessageTaskLogDTO newDTO = buildLogDTO(messageTask, messageTaskRequest.isEmailEnable(), messageTaskRequest.isSysEnable(), messageTaskRequest.isWeComEnable(), messageTaskRequest.isDingTalkEnable(), messageTaskRequest.isLarkEnable(), eventMap, null);
+            MessageTaskLogDTO newDTO = buildLogDTO(messageTask, messageTaskRequest.isEmailEnable(), messageTaskRequest.isSysEnable(), messageTaskRequest.isWeComEnable(), messageTaskRequest.isDingTalkEnable(), messageTaskRequest.isLarkEnable(), messageTaskRequest.isSmsEnable(), eventMap, null);
             LogDTO logDTO = new LogDTO(organizationId, messageTask.getId(), userId, LogType.UPDATE, LogModule.SYSTEM_MESSAGE_MESSAGE, eventMap.get(messageTask.getEvent()));
             logDTO.setOriginalValue(null);
             logDTO.setModifiedValue(newDTO);
@@ -189,6 +195,7 @@ public class MessageTaskService {
         messageTask.setWeComEnable(messageTaskRequest.isWeComEnable());
         messageTask.setDingTalkEnable(messageTaskRequest.isDingTalkEnable());
         messageTask.setLarkEnable(messageTaskRequest.isLarkEnable());
+        messageTask.setSmsEnable(messageTaskRequest.isSmsEnable());
         messageTask.setUpdateUser(userId);
         messageTask.setUpdateTime(System.currentTimeMillis());
         messageTaskMapper.update(messageTask);
@@ -211,8 +218,8 @@ public class MessageTaskService {
         }
         MessageTaskConfigWithNameDTO messageTaskConfigWithNameNewDTO = buildLogMessageTaskConfigWithNameDTO(messageTaskRequest.getConfig());
         // 添加日志上下文
-        MessageTaskLogDTO oldDTO = buildLogDTO(oldMessageTask, oldMessageTask.getEmailEnable(), oldMessageTask.getSysEnable(), oldMessageTask.getWeComEnable(), oldMessageTask.getDingTalkEnable(), oldMessageTask.getLarkEnable(), eventMap, messageTaskConfigWithNameOldDTO);
-        MessageTaskLogDTO newDTO = buildLogDTO(oldMessageTask, messageTaskRequest.isEmailEnable(), messageTaskRequest.isSysEnable(), messageTaskRequest.isWeComEnable(), messageTaskRequest.isDingTalkEnable(), messageTaskRequest.isLarkEnable(), eventMap, messageTaskConfigWithNameNewDTO);
+        MessageTaskLogDTO oldDTO = buildLogDTO(oldMessageTask, oldMessageTask.getEmailEnable(), oldMessageTask.getSysEnable(), oldMessageTask.getWeComEnable(), oldMessageTask.getDingTalkEnable(), oldMessageTask.getLarkEnable(), oldMessageTask.getSmsEnable(), eventMap, messageTaskConfigWithNameOldDTO);
+        MessageTaskLogDTO newDTO = buildLogDTO(oldMessageTask, messageTaskRequest.isEmailEnable(), messageTaskRequest.isSysEnable(), messageTaskRequest.isWeComEnable(), messageTaskRequest.isDingTalkEnable(), messageTaskRequest.isLarkEnable(), messageTaskRequest.isSmsEnable(), eventMap, messageTaskConfigWithNameNewDTO);
         LogDTO logDTO = new LogDTO(oldMessageTask.getOrganizationId(), messageTask.getId(), userId, LogType.UPDATE, LogModule.SYSTEM_MESSAGE_MESSAGE, eventMap.get(messageTaskRequest.getEvent()));
         logDTO.setOriginalValue(oldDTO);
         logDTO.setModifiedValue(newDTO);
@@ -299,6 +306,7 @@ public class MessageTaskService {
                     messageTaskDetailDTO.setWeComEnable(messageTask.getWeComEnable());
                     messageTaskDetailDTO.setDingTalkEnable(messageTask.getDingTalkEnable());
                     messageTaskDetailDTO.setLarkEnable(messageTask.getLarkEnable());
+                    messageTaskDetailDTO.setSmsEnable(messageTask.getSmsEnable());
                 }
             }
 
@@ -314,8 +322,8 @@ public class MessageTaskService {
         Map<String, String> eventMap = MessageTemplateUtils.getEventMap();
         List<LogDTO> logDTOList = new ArrayList<>();
         for (MessageTask messageTask : oldMessageList) {
-            MessageTaskLogDTO oldDTO = buildLogDTO(messageTask, messageTask.getEmailEnable(), messageTask.getSysEnable(), messageTask.getWeComEnable(), messageTask.getDingTalkEnable(), messageTask.getLarkEnable(), eventMap, null);
-            MessageTaskLogDTO newDTO = buildLogDTO(messageTask, messageTaskBatchRequest.getEmailEnable(), messageTaskBatchRequest.getSysEnable(), messageTaskBatchRequest.getWeComEnable(), messageTaskBatchRequest.getDingTalkEnable(), messageTaskBatchRequest.getLarkEnable(), eventMap, null);
+            MessageTaskLogDTO oldDTO = buildLogDTO(messageTask, messageTask.getEmailEnable(), messageTask.getSysEnable(), messageTask.getWeComEnable(), messageTask.getDingTalkEnable(), messageTask.getLarkEnable(), messageTask.getSmsEnable(), eventMap, null);
+            MessageTaskLogDTO newDTO = buildLogDTO(messageTask, messageTaskBatchRequest.getEmailEnable(), messageTaskBatchRequest.getSysEnable(), messageTaskBatchRequest.getWeComEnable(), messageTaskBatchRequest.getDingTalkEnable(), messageTaskBatchRequest.getLarkEnable(), messageTaskBatchRequest.getSmsEnable(), eventMap, null);
             LogDTO logDTO = new LogDTO(organizationId, messageTask.getId(), userId, LogType.UPDATE, LogModule.SYSTEM_MESSAGE_MESSAGE, eventMap.get(messageTask.getEvent()));
             logDTO.setOriginalValue(oldDTO);
             logDTO.setModifiedValue(newDTO);

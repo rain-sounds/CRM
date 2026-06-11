@@ -1,0 +1,17 @@
+export default {
+  'contract.invoiceMaterial.add': '新建开票资料',
+  'contract.invoiceMaterial.update': '编辑开票资料',
+  'contract.invoiceMaterial.hospitalName': '医院名称',
+  'contract.invoiceMaterial.hospitalNamePlaceholder': '请输入医院名称',
+  'contract.invoiceMaterial.invoice': '发票',
+  'contract.invoiceMaterial.verificationProof': '查验证明',
+  'contract.invoiceMaterial.sampleMailing': '样品邮寄',
+  'contract.invoiceMaterial.samplePhoto': '样品照片',
+  'contract.invoiceMaterial.report': '报告',
+  'contract.invoiceMaterial.outboundOrder': '出库单',
+  'contract.invoiceMaterial.contract': '合同',
+  'contract.invoiceMaterial.platform': '平台',
+  'contract.invoiceMaterial.otherMaterials': '其他资料',
+  'contract.invoiceMaterial.sequence': '序列',
+  'contract.invoiceMaterial.deleteContent': '删除后，数据无法恢复，请谨慎操作！',
+};

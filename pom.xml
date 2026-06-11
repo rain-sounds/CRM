@@ -202,6 +202,10 @@
             <id>cordys-public</id>
             <url>https://repository.fit2cloud.com/repository/cordys/</url>
         </repository>
+        <repository>
+            <id>aliyun</id>
+            <url>https://maven.aliyun.com/repository/public</url>
+        </repository>
     </repositories>
 
     <!-- 插件仓库 -->

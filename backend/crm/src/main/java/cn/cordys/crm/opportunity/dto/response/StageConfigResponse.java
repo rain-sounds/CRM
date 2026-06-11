@@ -26,6 +26,9 @@ public class StageConfigResponse {
     @Schema(description = "顺序")
     private Long pos;
 
+    @Schema(description = "关联部门ID")
+    private String departmentId;
+
     @Schema(description = "当前阶段是否存在数据")
     private Boolean stageHasData = false;
 }

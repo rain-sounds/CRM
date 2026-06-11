@@ -136,3 +136,10 @@ export const FixedContractInvoicedViewUrl = '/invoice/view/fixed'; // 固定发�
 export const EnableContractInvoicedViewUrl = '/invoice/view/enable'; // 启用/禁用发票视图
 export const GetContractInvoicedViewDetailUrl = '/invoice/view/detail'; // 发票视图详情
 export const DeleteContractInvoicedViewUrl = '/invoice/view/delete'; // 发票视图删除
+
+// 合同-开票资料
+export const InvoiceMaterialPageUrl = '/contract/invoice-material/page';
+export const InvoiceMaterialAddUrl = '/contract/invoice-material/add';
+export const InvoiceMaterialUpdateUrl = '/contract/invoice-material/update';
+export const InvoiceMaterialDeleteUrl = '/contract/invoice-material/delete';
+export const GetInvoiceMaterialDetailUrl = '/contract/invoice-material/get';

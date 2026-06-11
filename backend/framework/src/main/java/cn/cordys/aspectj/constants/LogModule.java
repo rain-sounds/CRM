@@ -144,8 +144,17 @@ public class LogModule {
      */
     public static final String CONTRACT_BUSINESS_TITLE = "CONTRACT_BUSINESS_TITLE";
     /**
+     * 开票资料
+     */
+    public static final String CONTRACT_INVOICE_MATERIAL = "CONTRACT_INVOICE_MATERIAL";
+    /**
      * 订单
      */
     public static final String ORDER_INDEX = "ORDER_INDEX";
+
+    /**
+     * 外包
+     */
+    public static final String OUTSOURCING = "OUTSOURCING";
 
 }

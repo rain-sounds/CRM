@@ -99,6 +99,7 @@ public class OpportunityStageService {
         stageConfig.setAfootRollBack(afootRollBack);
         stageConfig.setEndRollBack(endRollBack);
         stageConfig.setPos(pos);
+        stageConfig.setDepartmentId(request.getDepartmentId());
         stageConfig.setOrganizationId(orgId);
         stageConfig.setCreateUser(userId);
         stageConfig.setUpdateUser(userId);

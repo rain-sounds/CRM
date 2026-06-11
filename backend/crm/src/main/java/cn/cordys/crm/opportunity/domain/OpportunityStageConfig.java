@@ -27,6 +27,9 @@ public class OpportunityStageConfig extends BaseModel {
     @Schema(description = "顺序")
     private Long pos;
 
+    @Schema(description = "关联部门id")
+    private String departmentId;
+
     @Schema(description = "组织id")
     private String organizationId;
 }

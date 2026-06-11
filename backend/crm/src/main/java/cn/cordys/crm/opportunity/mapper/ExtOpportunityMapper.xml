@@ -63,9 +63,37 @@
 
         where o.organization_id = #{orgId}
 
-        <if test="dataPermission != null and dataPermission.self">
-            and o.owner = #{userId}
-        </if>
+        AND (
+            <if test="dataPermission != null and dataPermission.all">
+                1=1
+            </if>
+            <if test="dataPermission != null and dataPermission.self">
+                o.owner = #{userId}
+            </if>
+            <if test="dataPermission != null and !dataPermission.all and !dataPermission.self and dataPermission.deptIds.size() > 0">
+                sys_organization_user.user_id IS NOT NULL
+            </if>
+            <if test="dataPermission == null or (!dataPermission.all and !dataPermission.self and dataPermission.deptIds.size() == 0)">
+                1=1
+            </if>
+            <if test="dataPermission == null or !dataPermission.all">
+                OR (
+                    osc.department_id IS NOT NULL AND osc.department_id != ''
+                    AND (
+                        EXISTS (SELECT 1 FROM sys_department_commander dc WHERE FIND_IN_SET(dc.department_id, osc.department_id) AND dc.user_id = #{userId})
+                        OR EXISTS (
+                            SELECT 1 FROM opportunity_field opp_field
+                            JOIN sys_module_field smf ON opp_field.field_id = smf.id
+                            JOIN sys_department d ON FIND_IN_SET(d.id, osc.department_id)
+                            WHERE opp_field.resource_id = o.id
+                            AND smf.name LIKE CONCAT('%', d.name, '%')
+                            AND smf.type = 'MEMBER'
+                            AND opp_field.field_value = #{userId}
+                        )
+                    )
+                )
+            </if>
+        )
 
         <if test="!source and request.keyword != null and request.keyword != ''">
             and (

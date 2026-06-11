@@ -45,6 +45,7 @@
 
   const enableSystemMessage = ref(false);
   const enableEmailMessage = ref(false);
+  const enableSmsMessage = ref(false);
   const enableThirdPartyMessage = ref(false);
   const enableSystemLoading = ref(false);
   const noticeEnableMapKey: Record<string, keyof MessageTaskDetailDTOItem> = {
@@ -67,6 +68,7 @@
 
       enableSystemMessage.value = result.every((e) => e.messageTaskDetailDTOList.every((c) => c.sysEnable));
       enableEmailMessage.value = result.every((e) => e.messageTaskDetailDTOList.every((c) => c.emailEnable));
+      enableSmsMessage.value = result.every((e) => e.messageTaskDetailDTOList.every((c) => c.smsEnable));
       enableThirdPartyMessage.value = result.every((e) => {
         return e.messageTaskDetailDTOList.every((c) => c[thirdPartyEnableKey.value]);
       });
@@ -97,6 +99,7 @@
         event: row.event,
         emailEnable: type === 'email' ? !row.emailEnable : row.emailEnable,
         sysEnable: type === 'system' ? !row.sysEnable : row.sysEnable,
+        smsEnable: type === 'sms' ? !row.smsEnable : row.smsEnable,
         [thirdPartyEnableKey.value]:
           type === 'weChat' ? !row[thirdPartyEnableKey.value] : row[thirdPartyEnableKey.value],
       });
@@ -121,18 +124,22 @@
         weComEnable: boolean | undefined;
         dingTalkEnable: boolean | undefined;
         larkEnable: boolean | undefined;
+        smsEnable: boolean | undefined;
       } = {
         sysEnable: undefined,
         emailEnable: undefined,
         weComEnable: undefined,
         dingTalkEnable: undefined,
         larkEnable: undefined,
+        smsEnable: undefined,
       };
 
       if (type === 'system') {
         params.sysEnable = !enableSystemMessage.value;
       } else if (type === 'email') {
         params.emailEnable = !enableEmailMessage.value;
+      } else if (type === 'sms') {
+        params.smsEnable = !enableSmsMessage.value;
       } else if (type === 'weChat') {
         params[thirdPartyEnableKey.value as keyof typeof params] = !enableThirdPartyMessage.value;
       }
@@ -158,6 +165,7 @@
     'CONTRACT_EXPIRED',
     'CONTRACT_PAYMENT_EXPIRED',
     'CONTRACT_PAYMENT_EXPIRING',
+    'BUSINESS_STAGE_CHANGE',
   ];
 
   const showTimeSettingEvent = 'EXPIRING';
@@ -263,6 +271,31 @@
           disabled: !hasAnyPermission(['SYSTEM_NOTICE:UPDATE']),
           onChange: (cancel?: () => void) =>
             handleToggleSystemMessage(row as unknown as MessageConfigItem, 'email', cancel),
+        });
+      },
+    },
+    {
+      title: () => {
+        return h(SwitchPopConfirm, {
+          titleColumnText: t('system.message.smsReminder'),
+          value: enableSmsMessage.value,
+          loading: enableSystemLoading.value,
+          disabled: !hasAnyPermission(['SYSTEM_NOTICE:UPDATE']),
+          onChange: (cancel?: () => void) => toggleGlobalMessage('sms', cancel),
+        });
+      },
+      key: 'smsReminder',
+      width: 200,
+      ellipsis: {
+        tooltip: true,
+      },
+      render: (row) => {
+        return h(SwitchPopConfirm, {
+          value: row.smsEnable as boolean,
+          loading: enableSystemLoading.value,
+          disabled: !hasAnyPermission(['SYSTEM_NOTICE:UPDATE']),
+          onChange: (cancel?: () => void) =>
+            handleToggleSystemMessage(row as unknown as MessageConfigItem, 'sms', cancel),
         });
       },
     },

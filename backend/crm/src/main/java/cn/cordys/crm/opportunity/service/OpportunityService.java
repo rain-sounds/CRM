@@ -35,6 +35,9 @@ import cn.cordys.crm.opportunity.domain.Opportunity;
 import cn.cordys.crm.opportunity.domain.OpportunityField;
 import cn.cordys.crm.opportunity.domain.OpportunityFieldBlob;
 import cn.cordys.crm.opportunity.domain.OpportunityRule;
+import cn.cordys.crm.opportunity.domain.OpportunityStageConfig;
+import cn.cordys.crm.system.domain.DepartmentCommander;
+import cn.cordys.crm.system.domain.OrganizationUser;
 import cn.cordys.crm.opportunity.dto.request.*;
 import cn.cordys.crm.opportunity.dto.response.OpportunityDetailResponse;
 import cn.cordys.crm.opportunity.dto.response.OpportunityListResponse;
@@ -141,7 +144,13 @@ public class OpportunityService {
     @Resource
     private ExtOpportunityStageConfigMapper extOpportunityStageConfigMapper;
     @Resource
+    private BaseMapper<OpportunityStageConfig> opportunityStageConfigBaseMapper;
+    @Resource
     private DataScopeService dataScopeService;
+    @Resource
+    private BaseMapper<DepartmentCommander> departmentCommanderMapper;
+    @Resource
+    private BaseMapper<OrganizationUser> organizationUserMapper;
 
     public PagerWithOption<List<OpportunityListResponse>> list(OpportunityPageRequest request, String userId, String orgId,
                                                                DeptDataPermissionDTO deptDataPermission, Boolean source) {
@@ -500,8 +509,53 @@ public class OpportunityService {
         if (getResponse == null) {
             throw new GenericException(Translator.get("opportunity_not_found"));
         }
-        dataScopeService.hasDataPermission(userId, orgId, getResponse.getOwner(), PermissionConstants.OPPORTUNITY_MANAGEMENT_READ);
+        // 原有数据权限校验
+        try {
+            dataScopeService.hasDataPermission(userId, orgId, getResponse.getOwner(), PermissionConstants.OPPORTUNITY_MANAGEMENT_READ);
+        } catch (GenericException e) {
+            // 原有权限不通过时，检查阶段部门权限
+            if (!hasStageDepartmentPermission(userId, getResponse.getStage())) {
+                throw e;
+            }
+        }
         return getResponse;
+    }
+
+    /**
+     * 检查用户是否有项目阶段部门权限
+     * 到达某阶段后，关联部门的部门负责人和部门成员可以看到该项目
+     * departmentId 支持多值逗号分隔
+     */
+    private boolean hasStageDepartmentPermission(String userId, String stageId) {
+        if (stageId == null) {
+            return false;
+        }
+        // 获取阶段配置的关联部门
+        OpportunityStageConfig stageConfig = opportunityStageConfigBaseMapper.selectByPrimaryKey(stageId);
+        if (stageConfig == null || stageConfig.getDepartmentId() == null || stageConfig.getDepartmentId().isEmpty()) {
+            return false;
+        }
+        // 支持多部门（逗号分隔）
+        String[] departmentIds = stageConfig.getDepartmentId().split(",");
+        for (String departmentId : departmentIds) {
+            String deptId = departmentId.trim();
+            if (deptId.isEmpty()) continue;
+            // 检查是否是部门负责人
+            LambdaQueryWrapper<DepartmentCommander> commanderWrapper = new LambdaQueryWrapper<>();
+            commanderWrapper.eq(DepartmentCommander::getDepartmentId, deptId)
+                    .eq(DepartmentCommander::getUserId, userId);
+            if (!departmentCommanderMapper.selectListByLambda(commanderWrapper).isEmpty()) {
+                return true;
+            }
+            // 检查是否是部门成员
+            LambdaQueryWrapper<OrganizationUser> userWrapper = new LambdaQueryWrapper<>();
+            userWrapper.eq(OrganizationUser::getUserId, userId)
+                    .eq(OrganizationUser::getDepartmentId, deptId);
+            if (!organizationUserMapper.selectListByLambda(userWrapper).isEmpty()) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -675,6 +729,10 @@ public class OpportunityService {
 
         opportunityMapper.update(newOpportunity);
 
+        // 发送阶段变更通知
+        String stageName = stageMap.getOrDefault(request.getStage(), request.getStage());
+        sendStageChangeNotice(oldOpportunity, request.getStage(), stageName, stageConfigList, orgId);
+
         final Map<String, String> originalVal = new HashMap<>(1);
         originalVal.put("stage", stageMap.get(oldOpportunity.getStage()));
         final Map<String, String> modifiedVal = new HashMap<>(1);
@@ -687,6 +745,70 @@ public class OpportunityService {
                         .modifiedValue(modifiedVal)
                         .build()
         );
+    }
+
+    /**
+     * 发送项目阶段变更通知
+     * 通知对象：目标阶段关联部门的负责人和成员
+     */
+    private void sendStageChangeNotice(Opportunity opportunity, String stageId, String stageName,
+                                       List<StageConfigResponse> stageConfigList, String orgId) {
+        try {
+            // 获取目标阶段的关联部门
+            Optional<StageConfigResponse> targetStageOpt = stageConfigList.stream()
+                    .filter(cfg -> Strings.CS.equals(cfg.getId(), stageId))
+                    .findFirst();
+            if (targetStageOpt.isEmpty() || StringUtils.isBlank(targetStageOpt.get().getDepartmentId())) {
+                return;
+            }
+
+            String departmentIdStr = targetStageOpt.get().getDepartmentId();
+            List<String> departmentIds = Arrays.stream(departmentIdStr.split(","))
+                    .map(String::trim)
+                    .filter(StringUtils::isNotBlank)
+                    .toList();
+            if (CollectionUtils.isEmpty(departmentIds)) {
+                return;
+            }
+
+            // 获取部门负责人
+            List<DepartmentCommander> commanders = departmentCommanderMapper.selectListByLambda(
+                    new LambdaQueryWrapper<DepartmentCommander>().in(DepartmentCommander::getDepartmentId, departmentIds));
+            List<String> receiverUserIds = new ArrayList<>();
+            if (CollectionUtils.isNotEmpty(commanders)) {
+                receiverUserIds.addAll(commanders.stream().map(DepartmentCommander::getUserId).toList());
+            }
+
+            // 获取部门成员
+            List<OrganizationUser> orgUsers = organizationUserMapper.selectListByLambda(
+                    new LambdaQueryWrapper<OrganizationUser>().in(OrganizationUser::getDepartmentId, departmentIds));
+            if (CollectionUtils.isNotEmpty(orgUsers)) {
+                receiverUserIds.addAll(orgUsers.stream().map(OrganizationUser::getUserId).toList());
+            }
+
+            // 去重
+            receiverUserIds = receiverUserIds.stream().distinct().toList();
+            if (CollectionUtils.isEmpty(receiverUserIds)) {
+                return;
+            }
+
+            // 构建通知参数
+            Map<String, Object> resource = new HashMap<>();
+            resource.put("name", opportunity.getName());
+            resource.put("stageName", stageName);
+
+            commonNoticeSendService.sendNotice(
+                    NotificationConstants.Module.OPPORTUNITY,
+                    NotificationConstants.Event.BUSINESS_STAGE_CHANGE,
+                    resource,
+                    opportunity.getUpdateUser(),
+                    orgId,
+                    receiverUserIds,
+                    true
+            );
+        } catch (Exception e) {
+            log.error("发送项目阶段变更通知失败", e);
+        }
     }
 
     public ResourceTabEnableDTO getTabEnableConfig(String userId, String orgId) {

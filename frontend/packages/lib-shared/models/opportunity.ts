@@ -112,6 +112,7 @@ export interface StageConfigBaseItem{
   endRollBack: boolean;
   pos: number;
   organizationId: string;
+  departmentId?: string; // 关联部门ID
 }
 
 export interface StageConfigItem extends StageConfigBaseItem {

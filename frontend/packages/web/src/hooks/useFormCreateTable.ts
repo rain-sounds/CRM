@@ -334,7 +334,7 @@ export default async function useFormCreateTable(props: FormCreateTableProps) {
             field.businessKey === 'opportunityId'
           ) {
             return {
-              title: field.name,
+              title: '项目阶段',
               width: 200,
               key,
               fieldId: field.id,
