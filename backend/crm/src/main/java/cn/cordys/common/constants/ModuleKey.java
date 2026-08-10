@@ -28,7 +28,11 @@ public enum ModuleKey {
     /**
      * 系统设置
      */
-    SETTING("setting");
+    SETTING("setting"),
+    /**
+     * 外包管理
+     */
+    OUTSOURCING("outsourcing");
 
     private final String key;
 

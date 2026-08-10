@@ -40,7 +40,8 @@
         ct.create_time,
         ct.update_user,
         ct.update_time,
-        ct.alreadyPayAmount
+        ct.alreadyPayAmount,
+        (ct.amount - ct.alreadyPayAmount) AS pendingPayAmount
         FROM (
         SELECT ctt.*, IFNULL(SUM(cpr.record_amount), 0) AS alreadyPayAmount
         FROM contract ctt
@@ -163,7 +164,8 @@
         ct.update_time,
         ct.start_time,
         ct.end_time,
-        ct.alreadyPayAmount
+        ct.alreadyPayAmount,
+        (ct.amount - ct.alreadyPayAmount) AS pendingPayAmount
         FROM (
             SELECT ctt.*, IFNULL(SUM(cpr.record_amount), 0) AS alreadyPayAmount
             FROM contract ctt
@@ -211,8 +213,8 @@
                     <otherwise>
                         <if test="condition.name not in
                             {'name', 'owner', 'createTime', 'updateTime', 'customerId', 'opportunityId', 'createUser', 'updateUser',
-                             'departmentId', 'number', 'stage', 'amount', 'approvalStatus', 'startTime', 'endTime', 'alread
-                             yPayAmount'}">
+                             'departmentId', 'number', 'stage', 'amount', 'approvalStatus', 'startTime', 'endTime', 'alreadyPayAmount',
+                             'pendingPayAmount'}">
                             <if test="condition.blob">
                                 left join contract_field_blob ${tablePrefix}_${i}
                                 on ct.id = ${tablePrefix}_${i}.resource_id and ${tablePrefix}_${i}.field_id = #{condition.name}
@@ -235,7 +237,8 @@
     <sql id="fieldSortJoin">
         <if test="${sort} != null and ${sort}.valid() and ${sort}.name not in
                 {'name', 'owner', 'customer_id', 'opportunity_id', 'amount', 'stage', 'update_user', 'create_time',
-                 'approval_status', 'update_time', 'create_user', 'department_id', 'startTime', 'endTime', 'already_pay_amount'}">
+                 'approval_status', 'update_time', 'create_user', 'department_id', 'startTime', 'endTime', 'already_pay_amount',
+                 'pending_pay_amount'}">
             <bind name="sortName" value="${sort}.name"/>
             left join contract_field sort_table
             on ct.id = sort_table.resource_id and sort_table.field_id = #{sortName}
@@ -308,6 +311,12 @@
                         <include refid="cn.cordys.common.mapper.CommonMapper.condition">
                             <property name="condition" value="condition"/>
                             <property name="column" value="ct.alreadyPayAmount"/>
+                        </include>
+                    </when>
+                    <when test="condition.name == 'pendingPayAmount'">
+                        <include refid="cn.cordys.common.mapper.CommonMapper.condition">
+                            <property name="condition" value="condition"/>
+                            <property name="column" value="ct.pendingPayAmount"/>
                         </include>
                     </when>
                     <when test="condition.name == 'voidReason'">
@@ -454,6 +463,9 @@
                     </when>
                     <when test="${sort}.name == 'already_pay_amount'">
                         ct.`alreadyPayAmount` ${sortType}, ct.id ASC
+                    </when>
+                    <when test="${sort}.name == 'pending_pay_amount'">
+                        ct.`pendingPayAmount` ${sortType}, ct.id ASC
                     </when>
                     <when test="${sort}.name == 'stage'">
                         ct.`stage` ${sortType}, ct.id ASC

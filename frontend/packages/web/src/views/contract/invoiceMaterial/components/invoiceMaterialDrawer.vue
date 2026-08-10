@@ -112,10 +112,10 @@
 
 <script setup lang="ts">
   import { ref } from 'vue';
-  import { FormInst, NForm, NFormItem, NInput, NSelect, NScrollbar, useMessage } from 'naive-ui';
+  import { FormInst, NForm, NFormItem, NInput, NScrollbar, NSelect, useMessage } from 'naive-ui';
 
   import { useI18n } from '@lib/shared/hooks/useI18n';
-  import type { SaveInvoiceMaterialParams } from '@lib/shared/models/contract';
+  import { SaveInvoiceMaterialParams } from '@lib/shared/models/contract';
 
   import CrmDrawer from '@/components/pure/crm-drawer/index.vue';
 

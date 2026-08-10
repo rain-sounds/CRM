@@ -1,0 +1,15 @@
+export default {
+  'outsourcing.internalProjectNo': '内部项目编号',
+  'outsourcing.projectSource': '项目来源',
+  'outsourcing.experimentContent': '项目实验内容',
+  'outsourcing.experimentType': '实验类型',
+  'outsourcing.vendor': '外包商',
+  'outsourcing.dealPrice': '成交价格',
+  'outsourcing.amount': '外包金额',
+  'outsourcing.time': '外包时间',
+  'outsourcing.resultReturnTime': '结果返回时间',
+  'outsourcing.settlementTime': '结算时间',
+  'outsourcing.settlementAmount': '结算金额',
+  'outsourcing.followUpProcess': '后续流程',
+  'outsourcing.newOutsourcing': '新建外包',
+};

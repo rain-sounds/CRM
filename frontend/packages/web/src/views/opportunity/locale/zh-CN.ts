@@ -32,7 +32,7 @@ export default {
   'opportunity.myOpportunities': '我的项目',
   'opportunity.departmentOpportunities': '部门项目',
   'opportunity.convertedOpportunities': '成交项目',
-  'opportunity.searchPlaceholder': '输入客户/项目名称进行搜索',
+  'opportunity.searchPlaceholder': '输入客户/项目名称/项目编号进行搜索',
   'opportunity.clearRequirements': '需求明确',
   'opportunity.schemeValidation': '方案验证',
   'opportunity.projectProposalReport': '立项汇报',

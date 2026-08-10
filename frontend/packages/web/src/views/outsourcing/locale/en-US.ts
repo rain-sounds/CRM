@@ -1,0 +1,15 @@
+export default {
+  'outsourcing.internalProjectNo': 'Internal Project No.',
+  'outsourcing.projectSource': 'Project Source',
+  'outsourcing.experimentContent': 'Experiment Content',
+  'outsourcing.experimentType': 'Experiment Type',
+  'outsourcing.vendor': 'Vendor',
+  'outsourcing.dealPrice': 'Deal Price',
+  'outsourcing.amount': 'Outsourcing Amount',
+  'outsourcing.time': 'Outsourcing Time',
+  'outsourcing.resultReturnTime': 'Result Return Time',
+  'outsourcing.settlementTime': 'Settlement Time',
+  'outsourcing.settlementAmount': 'Settlement Amount',
+  'outsourcing.followUpProcess': 'Follow-up Process',
+  'outsourcing.newOutsourcing': 'New Outsourcing',
+};

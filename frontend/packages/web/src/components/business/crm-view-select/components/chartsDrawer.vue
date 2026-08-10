@@ -284,6 +284,7 @@
     [FormDesignKeyEnum.CONTRACT_PAYMENT_RECORD]: () => Promise.resolve([]),
     [FormDesignKeyEnum.INVOICE]: () => Promise.resolve([]),
     [FormDesignKeyEnum.ORDER]: () => Promise.resolve([]),
+    [FormDesignKeyEnum.OUTSOURCING]: () => Promise.resolve([]),
   };
   const loading = ref<boolean>(false);
   const expandNames = ref<string[]>(['1']);
@@ -317,7 +318,7 @@
         xData.value = [];
         seriesData.value = [];
         generatedChartType.value = chartType.value;
-        res.forEach((item) => {
+        res.forEach((item: any) => {
           chartCategoryMap[item.categoryAxisName || t('crmFormDesign.none')] = item.categoryAxis;
           if ([ChartTypeEnum.LINE, ChartTypeEnum.BAR].includes(chartType.value)) {
             xData.value.push(item.categoryAxisName || t('crmFormDesign.none'));

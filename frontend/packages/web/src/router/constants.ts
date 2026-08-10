@@ -8,6 +8,7 @@ import {
   DashboardRouteEnum,
   OpportunityRouteEnum,
   OrderRouteEnum,
+  OutsourcingRouteEnum,
   ProductRouteEnum,
   SystemRouteEnum,
   TenderRouteEnum,
@@ -50,6 +51,7 @@ export const featureRouteMap: Record<string, any> = {
   [DashboardRouteEnum.DASHBOARD]: ModuleConfigEnum.DASHBOARD,
   [AgentRouteEnum.AGENT]: ModuleConfigEnum.AGENT,
   [TenderRouteEnum.TENDER]: ModuleConfigEnum.TENDER,
+  [OutsourcingRouteEnum.OUTSOURCING]: ModuleConfigEnum.OUTSOURCING,
 };
 
 export const allMenuRouteMap: Record<string, any> = {

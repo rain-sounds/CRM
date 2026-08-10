@@ -8,6 +8,7 @@ import useFollowApi from '@lib/shared/api/modules/follow';
 import useHomeApi from '@lib/shared/api/modules/home';
 import useOpportunityApi from '@lib/shared/api/modules/opportunity';
 import useOrderApi from '@lib/shared/api/modules/order';
+import useOutsourcingApi from '@lib/shared/api/modules/outsourcing';
 import useProductApi from '@lib/shared/api/modules/product';
 import useSysApi from '@lib/shared/api/modules/sys';
 import useLicenseApi from '@lib/shared/api/modules/system/authorizedManagement';
@@ -47,6 +48,7 @@ const dashboardApi = useDashboard(CDR);
 const opportunityApi = useOpportunityApi(CDR);
 const contractApi = useContractApi(CDR);
 const orderApi = useOrderApi(CDR);
+const outsourcingApi = useOutsourcingApi(CDR);
 
 export const {
   getOrderFormConfig,
@@ -78,6 +80,26 @@ export const {
   deleteOrderStatus,
   getOrderStatistic,
 } = orderApi;
+
+export const {
+  getOutsourcingList,
+  addOutsourcing,
+  updateOutsourcing,
+  deleteOutsourcing,
+  getOutsourcingDetail,
+  getOutsourcingFormConfig,
+  getOutsourcingTab,
+  exportOutsourcingAll,
+  exportOutsourcingSelected,
+  addOutsourcingView,
+  updateOutsourcingView,
+  getOutsourcingViewList,
+  getOutsourcingViewDetail,
+  fixedOutsourcingView,
+  enableOutsourcingView,
+  deleteOutsourcingView,
+  dragOutsourcingView,
+} = outsourcingApi;
 
 export const {
   getFollowPlanTab,

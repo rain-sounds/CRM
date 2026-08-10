@@ -50,7 +50,8 @@ export type FormKey =
   | FormDesignKeyEnum.CONTRACT_INVOICE
   | FormDesignKeyEnum.ORDER
   | FormDesignKeyEnum.CONTRACT_ORDER
-  | FormDesignKeyEnum.CUSTOMER_ORDER;
+  | FormDesignKeyEnum.CUSTOMER_ORDER
+  | FormDesignKeyEnum.OUTSOURCING;
 
 export interface FormCreateTableProps {
   formKey: FormKey;
@@ -110,6 +111,7 @@ export default async function useFormCreateTable(props: FormCreateTableProps) {
     [FormDesignKeyEnum.ORDER]: TableKeyEnum.ORDER,
     [FormDesignKeyEnum.CONTRACT_ORDER]: TableKeyEnum.CONTRACT_ORDER,
     [FormDesignKeyEnum.CUSTOMER_ORDER]: TableKeyEnum.ORDER,
+    [FormDesignKeyEnum.OUTSOURCING]: undefined,
   };
   const noPaginationKey = [FormDesignKeyEnum.CUSTOMER_CONTACT];
   // 存储地址类型字段集合
@@ -345,8 +347,7 @@ export default async function useFormCreateTable(props: FormCreateTableProps) {
                 tooltip: true,
               },
               render: (row: any) => {
-                if (!row.opportunityName) return '-';
-                return row.opportunityStageName || row.opportunityName || '-';
+                return row.opportunityStageName || '-';
               },
               resourceFieldId: field.resourceFieldId,
             };

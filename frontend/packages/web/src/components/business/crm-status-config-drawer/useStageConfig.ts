@@ -7,6 +7,7 @@ import { getGenerateId } from '@lib/shared/method';
 import type { StageConfigItem } from '@lib/shared/models/opportunity';
 
 import type { ActionsItem } from '@/components/pure/crm-more-action/type';
+
 import { getDepartmentTree } from '@/api/modules';
 
 import { useStatusApiConfig, useStatusStrategyConfig, useStatusTextConfig } from './config';
@@ -36,12 +37,12 @@ export default function useStageConfig(type: StatusBizType): UseStatusConfigRetu
 
   // 将部门树转换为扁平选项
   function flattenDepartmentTree(nodes: any[], result: { label: string; value: string }[] = []) {
-    for (const node of nodes) {
+    nodes.forEach((node) => {
       result.push({ label: node.name, value: node.id });
       if (node.children?.length) {
         flattenDepartmentTree(node.children, result);
       }
-    }
+    });
     return result;
   }
 

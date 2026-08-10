@@ -32,7 +32,7 @@ export default {
   'opportunity.myOpportunities': 'My opportunities',
   'opportunity.departmentOpportunities': 'Department opportunities',
   'opportunity.convertedOpportunities': 'Converted opportunities',
-  'opportunity.searchPlaceholder': 'Please enter account name and opportunity name to search',
+  'opportunity.searchPlaceholder': 'Please enter account name, opportunity name or opportunity number to search',
   'opportunity.clearRequirements': 'Clear requirements',
   'opportunity.schemeValidation': 'Solution validation',
   'opportunity.projectProposalReport': 'Project proposal report',

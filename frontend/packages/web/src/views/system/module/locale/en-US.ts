@@ -123,4 +123,6 @@ export default {
   'module.contract.businessNameValidateConfig': 'Business Title Form Required Settings',
   'module.contract.invoiceFormSetting': 'Invoice Form Settings',
   'module.invoice': 'Invoice Records',
+  'module.outsourcing': 'Outsourcing',
+  'module.outsourcingExperiment': 'Experiment Outsourcing',
 };

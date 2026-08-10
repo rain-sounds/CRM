@@ -24,6 +24,7 @@ import {
   addOptFollowPlan,
   addOptFollowRecord,
   addOrder,
+  addOutsourcing,
   addPaymentPlan,
   addPaymentRecord,
   addProduct,
@@ -88,6 +89,9 @@ import {
   getOrderFormSnapshotConfig,
   getOrderInContractList,
   getOrderList,
+  getOutsourcingDetail,
+  getOutsourcingFormConfig,
+  getOutsourcingList,
   getPaymentPlanDetail,
   getPaymentPlanFormConfig,
   getPaymentPlanList,
@@ -121,6 +125,7 @@ import {
   updateOptFollowPlan,
   updateOptFollowRecord,
   updateOrder,
+  updateOutsourcing,
   updatePaymentPlan,
   updatePaymentRecord,
   updateProduct,
@@ -800,6 +805,7 @@ export const getFormConfigApiMap: Record<FormDesignKeyEnum, (id?: string) => Pro
   [FormDesignKeyEnum.CONTRACT_ORDER]: getOrderFormConfig,
   [FormDesignKeyEnum.CUSTOMER_ORDER]: getOrderFormConfig,
   [FormDesignKeyEnum.ORDER_SNAPSHOT]: (id) => getOrderFormSnapshotConfig(id),
+  [FormDesignKeyEnum.OUTSOURCING]: getOutsourcingFormConfig,
 };
 
 export const createFormApi: Record<FormDesignKeyEnum, (data: any) => Promise<any>> = {
@@ -844,6 +850,7 @@ export const createFormApi: Record<FormDesignKeyEnum, (data: any) => Promise<any
   [FormDesignKeyEnum.ORDER_SNAPSHOT]: addOrder,
   [FormDesignKeyEnum.CONTRACT_ORDER]: async () => ({}),
   [FormDesignKeyEnum.CUSTOMER_ORDER]: async () => ({}),
+  [FormDesignKeyEnum.OUTSOURCING]: addOutsourcing,
 };
 
 export const updateFormApi: Record<FormDesignKeyEnum, (data: any) => Promise<any>> = {
@@ -888,6 +895,7 @@ export const updateFormApi: Record<FormDesignKeyEnum, (data: any) => Promise<any
   [FormDesignKeyEnum.ORDER_SNAPSHOT]: updateOrder,
   [FormDesignKeyEnum.CONTRACT_ORDER]: async () => ({}),
   [FormDesignKeyEnum.CUSTOMER_ORDER]: async () => ({}),
+  [FormDesignKeyEnum.OUTSOURCING]: updateOutsourcing,
 };
 
 export const getFormDetailApiMap: Partial<Record<FormDesignKeyEnum, (id: string) => Promise<FormDetail>>> = {
@@ -928,6 +936,7 @@ export const getFormDetailApiMap: Partial<Record<FormDesignKeyEnum, (id: string)
   [FormDesignKeyEnum.CONTRACT_ORDER]: getOrderDetailSnapshot,
   [FormDesignKeyEnum.CUSTOMER_ORDER]: getOrderDetailSnapshot,
   [FormDesignKeyEnum.ORDER_SNAPSHOT]: getOrderDetailSnapshot,
+  [FormDesignKeyEnum.OUTSOURCING]: getOutsourcingDetail,
 };
 
 export const getFormListApiMap: Partial<Record<FormDesignKeyEnum, (data: any) => Promise<CommonList<any>>>> = {
@@ -961,6 +970,7 @@ export const getFormListApiMap: Partial<Record<FormDesignKeyEnum, (data: any) =>
   [FormDesignKeyEnum.ORDER]: getOrderList,
   [FormDesignKeyEnum.CONTRACT_ORDER]: getOrderInContractList,
   [FormDesignKeyEnum.CUSTOMER_ORDER]: getCustomerOrderList,
+  [FormDesignKeyEnum.OUTSOURCING]: getOutsourcingList,
 };
 
 export const dataSourceFilterFormKeyMap: Partial<Record<FieldDataSourceTypeEnum, FormDesignKeyEnum>> = {

@@ -16,6 +16,7 @@ import {
   addFollowRecordView,
   addLeadPoolView,
   addOrderView,
+  addOutsourcingView,
   addPaymentPlanView,
   addPaymentRecordView,
   addQuotationView,
@@ -30,6 +31,7 @@ import {
   deleteFollowRecordView,
   deleteLeadPoolView,
   deleteOrderView,
+  deleteOutsourcingView,
   deletePaymentPlanView,
   deletePaymentRecordView,
   deleteQuotationView,
@@ -44,6 +46,7 @@ import {
   dragFollowRecordView,
   dragLeadPoolView,
   dragOrderView,
+  dragOutsourcingView,
   dragPaymentPlanView,
   dragPaymentRecordView,
   dragQuotationView,
@@ -58,6 +61,7 @@ import {
   enableFollowRecordView,
   enableLeadPoolView,
   enableOrderView,
+  enableOutsourcingView,
   enablePaymentPlanView,
   enablePaymentRecordView,
   enableQuotationView,
@@ -72,6 +76,7 @@ import {
   fixedFollowRecordView,
   fixedLeadPoolView,
   fixedOrderView,
+  fixedOutsourcingView,
   fixedPaymentPlanView,
   fixedPaymentRecordView,
   fixedQuotationView,
@@ -97,6 +102,8 @@ import {
   getLeadPoolViewList,
   getOrderViewDetail,
   getOrderViewList,
+  getOutsourcingViewDetail,
+  getOutsourcingViewList,
   getPaymentPlanViewDetail,
   getPaymentPlanViewList,
   getPaymentRecordViewDetail,
@@ -114,6 +121,7 @@ import {
   updateFollowRecordView,
   updateLeadPoolView,
   updateOrderView,
+  updateOutsourcingView,
   updatePaymentPlanView,
   updatePaymentRecordView,
   updateQuotationView,
@@ -141,6 +149,7 @@ export const viewApiMap: Record<ViewAction, Record<TabType, (...args: any[]) => 
     [FormDesignKeyEnum.CONTRACT_PAYMENT_RECORD]: getPaymentRecordViewList,
     [FormDesignKeyEnum.INVOICE]: getContractInvoicedViewList,
     [FormDesignKeyEnum.ORDER]: getOrderViewList,
+    [FormDesignKeyEnum.OUTSOURCING]: getOutsourcingViewList,
   },
   add: {
     [FormDesignKeyEnum.CLUE]: addClueView,
@@ -157,6 +166,7 @@ export const viewApiMap: Record<ViewAction, Record<TabType, (...args: any[]) => 
     [FormDesignKeyEnum.CONTRACT_PAYMENT_RECORD]: addPaymentRecordView,
     [FormDesignKeyEnum.INVOICE]: addContractInvoicedView,
     [FormDesignKeyEnum.ORDER]: addOrderView,
+    [FormDesignKeyEnum.OUTSOURCING]: addOutsourcingView,
   },
   update: {
     [FormDesignKeyEnum.CLUE]: updateClueView,
@@ -173,6 +183,7 @@ export const viewApiMap: Record<ViewAction, Record<TabType, (...args: any[]) => 
     [FormDesignKeyEnum.CONTRACT_PAYMENT_RECORD]: updatePaymentRecordView,
     [FormDesignKeyEnum.INVOICE]: updateContractInvoicedView,
     [FormDesignKeyEnum.ORDER]: updateOrderView,
+    [FormDesignKeyEnum.OUTSOURCING]: updateOutsourcingView,
   },
   delete: {
     [FormDesignKeyEnum.CLUE]: deleteClueView,
@@ -189,6 +200,7 @@ export const viewApiMap: Record<ViewAction, Record<TabType, (...args: any[]) => 
     [FormDesignKeyEnum.CONTRACT_PAYMENT_RECORD]: deletePaymentRecordView,
     [FormDesignKeyEnum.INVOICE]: deleteContractInvoicedView,
     [FormDesignKeyEnum.ORDER]: deleteOrderView,
+    [FormDesignKeyEnum.OUTSOURCING]: deleteOutsourcingView,
   },
   detail: {
     [FormDesignKeyEnum.CLUE]: getClueViewDetail,
@@ -205,6 +217,7 @@ export const viewApiMap: Record<ViewAction, Record<TabType, (...args: any[]) => 
     [FormDesignKeyEnum.CONTRACT_PAYMENT_RECORD]: getPaymentRecordViewDetail,
     [FormDesignKeyEnum.INVOICE]: getContractInvoicedViewDetail,
     [FormDesignKeyEnum.ORDER]: getOrderViewDetail,
+    [FormDesignKeyEnum.OUTSOURCING]: getOutsourcingViewDetail,
   },
   fixed: {
     [FormDesignKeyEnum.CLUE]: fixedClueView,
@@ -221,6 +234,7 @@ export const viewApiMap: Record<ViewAction, Record<TabType, (...args: any[]) => 
     [FormDesignKeyEnum.CONTRACT_PAYMENT_RECORD]: fixedPaymentRecordView,
     [FormDesignKeyEnum.INVOICE]: fixedContractInvoicedView,
     [FormDesignKeyEnum.ORDER]: fixedOrderView,
+    [FormDesignKeyEnum.OUTSOURCING]: fixedOutsourcingView,
   },
   enable: {
     [FormDesignKeyEnum.CLUE]: enableClueView,
@@ -237,6 +251,7 @@ export const viewApiMap: Record<ViewAction, Record<TabType, (...args: any[]) => 
     [FormDesignKeyEnum.CONTRACT_PAYMENT_RECORD]: enablePaymentRecordView,
     [FormDesignKeyEnum.INVOICE]: enableContractInvoicedView,
     [FormDesignKeyEnum.ORDER]: enableOrderView,
+    [FormDesignKeyEnum.OUTSOURCING]: enableOutsourcingView,
   },
   drag: {
     [FormDesignKeyEnum.CLUE]: dragClueView,
@@ -253,6 +268,7 @@ export const viewApiMap: Record<ViewAction, Record<TabType, (...args: any[]) => 
     [FormDesignKeyEnum.CONTRACT_PAYMENT_RECORD]: dragPaymentRecordView,
     [FormDesignKeyEnum.INVOICE]: dragContractInvoicedView,
     [FormDesignKeyEnum.ORDER]: dragOrderView,
+    [FormDesignKeyEnum.OUTSOURCING]: dragOutsourcingView,
   },
 };
 

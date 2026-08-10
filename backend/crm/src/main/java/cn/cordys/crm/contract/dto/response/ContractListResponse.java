@@ -44,6 +44,9 @@ public class ContractListResponse extends Contract {
 	@Schema(description = "已回款金额")
 	private BigDecimal alreadyPayAmount;
 
+	@Schema(description = "待回款金额")
+	private BigDecimal pendingPayAmount;
+
     @Schema(description = "自定义字段")
     private List<BaseModuleFieldValue> moduleFields;
 }

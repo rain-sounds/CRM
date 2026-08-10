@@ -99,11 +99,25 @@
             and (
             o.name like concat('%', #{request.keyword},'%')
             or c.name like concat('%', #{request.keyword},'%')
+            or EXISTS (
+                SELECT 1 FROM opportunity_field of2
+                WHERE of2.resource_id = o.id
+                AND of2.field_id = '177807967012000000'
+                AND of2.field_value LIKE concat('%', #{request.keyword},'%')
+            )
             )
         </if>
 
         <if test="source and request.keyword != null and request.keyword != ''">
-            and o.name like concat('%', #{request.keyword},'%')
+            and (
+            o.name like concat('%', #{request.keyword},'%')
+            or EXISTS (
+                SELECT 1 FROM opportunity_field of2
+                WHERE of2.resource_id = o.id
+                AND of2.field_id = '177807967012000000'
+                AND of2.field_value LIKE concat('%', #{request.keyword},'%')
+            )
+            )
         </if>
 
         <if test="request.viewId != null and request.viewId != '' and request.viewId == 'OPPORTUNITY_SUCCESS'">
@@ -256,6 +270,12 @@
             and (
             o.name like concat('%', #{request.keyword},'%')
             or c.name like concat('%', #{request.keyword},'%')
+            or EXISTS (
+                SELECT 1 FROM opportunity_field of2
+                WHERE of2.resource_id = o.id
+                AND of2.field_id = '177807967012000000'
+                AND of2.field_value LIKE concat('%', #{request.keyword},'%')
+            )
             )
         </if>
 
@@ -858,6 +878,12 @@
             and (
             o.name like concat('%', #{request.keyword},'%')
             or c.name like concat('%', #{request.keyword},'%')
+            or EXISTS (
+                SELECT 1 FROM opportunity_field of2
+                WHERE of2.resource_id = o.id
+                AND of2.field_id = '177807967012000000'
+                AND of2.field_value LIKE concat('%', #{request.keyword},'%')
+            )
             )
         </if>
 

@@ -15,6 +15,7 @@ export interface ContractItem {
   opportunityStageName: string;
   amount: number;
   alreadyPayAmount: number;
+  pendingPayAmount: number;
   approvalStatus: QuotationStatusEnum;
   stage: string;
   owner: string;

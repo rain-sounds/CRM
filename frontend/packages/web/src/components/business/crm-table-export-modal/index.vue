@@ -165,6 +165,8 @@
     exportInvoicedSelected,
     exportOpportunityAll,
     exportOpportunitySelected,
+    exportOutsourcingAll,
+    exportOutsourcingSelected,
     exportPaymentPlanAll,
     exportPaymentPlanSelected,
     exportPaymentRecordAll,
@@ -187,7 +189,8 @@
       | 'contractPaymentRecord'
       | 'price'
       | 'businessTitle'
-      | 'invoice';
+      | 'invoice'
+      | 'outsourcing';
     exportColumns: ExportTableColumnItem[];
     isExportAll?: boolean;
   }>();
@@ -216,6 +219,7 @@
     price: t('module.productManagementPrice'),
     businessTitle: t('module.businessTitle'),
     invoice: t('module.invoice'),
+    outsourcing: t('module.outsourcing'),
   };
 
   const loading = ref<boolean>(false);
@@ -326,6 +330,7 @@
     price: exportProductPriceAll,
     businessTitle: exportBusinessTitleAll,
     invoice: exportInvoicedAll,
+    outsourcing: exportOutsourcingAll,
   };
 
   const exportSelectedApiMap = {
@@ -341,6 +346,7 @@
     price: exportProductPriceSelected,
     businessTitle: exportBusinessTitleSelected,
     invoice: exportInvoicedSelected,
+    outsourcing: exportOutsourcingSelected,
   };
 
   function confirmHandler() {

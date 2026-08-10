@@ -102,6 +102,10 @@ const defaultModuleConfig = [
     moduleKey: ModuleConfigEnum.TENDER,
     enable: true,
   },
+  {
+    moduleKey: ModuleConfigEnum.OUTSOURCING,
+    enable: true,
+  },
 ];
 
 const useAppStore = defineStore('app', {

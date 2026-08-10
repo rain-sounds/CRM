@@ -74,6 +74,8 @@ public class DataInitService {
 			initOneTime(moduleFieldExtService::modifyInternalSubSumColumn, "modify.internal.sum.column");
 			initOneTime(moduleFieldExtService::modifyInternalSubCalcFormula, "modify.internal.calc.formula");
 			initOneTime(moduleFieldExtService::refreshFormulaOldReferencedId, "refresh.formula.old.referenced.id");
+            initOneTime(moduleFormService::initUpgradeForm, "init.upgrade.form.v1.8.0");
+            initOneTime(moduleFormService::initUpgradeForm, "init.upgrade.form.v1.8.0.outsourcing");
 		} finally {
             lock.unlock();
         }

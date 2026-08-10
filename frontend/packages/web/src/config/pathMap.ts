@@ -125,6 +125,18 @@ export const pathMap: PathMapItem[] = [
     ],
   },
   {
+    key: 'OUTSOURCING',
+    route: AppRouteEnum.OUTSOURCING,
+    locale: 'module.outsourcing',
+    children: [
+      {
+        key: 'OUTSOURCING_EXPERIMENT',
+        route: AppRouteEnum.OUTSOURCING_EXPERIMENT,
+        locale: 'module.outsourcingExperiment',
+      },
+    ],
+  },
+  {
     key: 'CLUE_MANAGEMENT',
     route: AppRouteEnum.CLUE_MANAGEMENT,
     locale: 'module.clueManagement',

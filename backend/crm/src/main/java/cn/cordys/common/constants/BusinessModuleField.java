@@ -292,6 +292,22 @@ public enum BusinessModuleField {
     ORDER_TOTAL_AMOUNT("orderAmount", "amount", Set.of("rules.required", "mobile", "readable"), FormKey.ORDER.getKey()),
     /*------ end: ORDER ------*/
 
+    /*------ start: OUTSOURCING ------*/
+    OUTSOURCING_INTERNAL_PROJECT_NO("outsourcingInternalProjectNo", "internalProjectNo", Set.of("mobile", "readable"), FormKey.OUTSOURCING.getKey()),
+    OUTSOURCING_PROJECT_SOURCE("outsourcingProjectSource", "projectSource", Set.of("mobile", "readable"), FormKey.OUTSOURCING.getKey()),
+    OUTSOURCING_EXPERIMENT_CONTENT("outsourcingExperimentContent", "experimentContent", Set.of("mobile", "readable"), FormKey.OUTSOURCING.getKey()),
+    OUTSOURCING_EXPERIMENT_TYPE("outsourcingExperimentType", "experimentType", Set.of("mobile", "readable"), FormKey.OUTSOURCING.getKey()),
+    OUTSOURCING_VENDOR("outsourcingVendor", "outsourcingVendor", Set.of("mobile", "readable"), FormKey.OUTSOURCING.getKey()),
+    OUTSOURCING_DEAL_PRICE("outsourcingDealPrice", "dealPrice", Set.of("mobile", "readable"), FormKey.OUTSOURCING.getKey()),
+    OUTSOURCING_AMOUNT("outsourcingAmount", "outsourcingAmount", Set.of("mobile", "readable"), FormKey.OUTSOURCING.getKey()),
+    OUTSOURCING_TIME("outsourcingTime", "outsourcingTime", Set.of("mobile", "readable"), FormKey.OUTSOURCING.getKey()),
+    OUTSOURCING_RESULT_RETURN_TIME("outsourcingResultReturnTime", "resultReturnTime", Set.of("mobile", "readable"), FormKey.OUTSOURCING.getKey()),
+    OUTSOURCING_SETTLEMENT_TIME("outsourcingSettlementTime", "settlementTime", Set.of("mobile", "readable"), FormKey.OUTSOURCING.getKey()),
+    OUTSOURCING_SETTLEMENT_AMOUNT("outsourcingSettlementAmount", "settlementAmount", Set.of("mobile", "readable"), FormKey.OUTSOURCING.getKey()),
+    OUTSOURCING_FOLLOW_UP_PROCESS("outsourcingFollowUpProcess", "followUpProcess", Set.of("mobile", "readable"), FormKey.OUTSOURCING.getKey()),
+    OUTSOURCING_OWNER("outsourcingOwner", "owner", Set.of("rules.required", "mobile", "readable"), FormKey.OUTSOURCING.getKey()),
+    /*------ end: OUTSOURCING ------*/
+
 
     ;
 

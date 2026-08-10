@@ -78,6 +78,11 @@ export enum TenderRouteEnum {
   TENDER_INDEX = 'tenderIndex',
 }
 
+export enum OutsourcingRouteEnum {
+  OUTSOURCING = 'outsourcing',
+  OUTSOURCING_EXPERIMENT = 'outsourcingExperiment',
+}
+
 export enum FullPageEnum {
   FULL_PAGE = 'fullPage',
   FULL_PAGE_DASHBOARD = 'fullPageDashboard',
@@ -98,4 +103,5 @@ export const AppRouteEnum = {
   ...ContractRouteEnum,
   ...OrderRouteEnum,
   ...TenderRouteEnum,
+  ...OutsourcingRouteEnum,
 };
