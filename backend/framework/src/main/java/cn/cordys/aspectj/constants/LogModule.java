@@ -157,4 +157,5 @@ public class LogModule {
      */
     public static final String OUTSOURCING = "OUTSOURCING";
 
+    public static final String APPROVAL_FLOW = "APPROVAL_FLOW";
 }

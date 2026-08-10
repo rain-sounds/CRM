@@ -39,7 +39,7 @@ import cn.cordys.crm.contract.mapper.ExtContractInvoiceMapper;
 import cn.cordys.crm.contract.mapper.ExtContractMapper;
 import cn.cordys.crm.contract.mapper.ExtContractSnapshotMapper;
 import cn.cordys.crm.customer.domain.Customer;
-import cn.cordys.crm.opportunity.constants.ApprovalState;
+import cn.cordys.crm.approval.constants.ApprovalState;
 import cn.cordys.crm.opportunity.domain.Opportunity;
 import cn.cordys.crm.opportunity.domain.OpportunityStageConfig;
 import cn.cordys.crm.system.constants.DictModule;

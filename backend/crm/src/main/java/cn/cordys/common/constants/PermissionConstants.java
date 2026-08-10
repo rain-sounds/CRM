@@ -257,5 +257,12 @@ public class PermissionConstants {
     public static final String OUTSOURCING_DELETE = "OUTSOURCING:DELETE";
     public static final String OUTSOURCING_EXPORT = "OUTSOURCING:EXPORT";
     /*------ end: OUTSOURCING ------*/
+
+    /*------ start: APPROVAL_FLOW ------*/
+    public static final String APPROVAL_FLOW_READ = "APPROVAL_FLOW:READ";
+    public static final String APPROVAL_FLOW_ADD = "APPROVAL_FLOW:ADD";
+    public static final String APPROVAL_FLOW_UPDATE = "APPROVAL_FLOW:UPDATE";
+    public static final String APPROVAL_FLOW_DELETE = "APPROVAL_FLOW:DELETE";
+    /*------ end: APPROVAL_FLOW ------*/
 }
 
