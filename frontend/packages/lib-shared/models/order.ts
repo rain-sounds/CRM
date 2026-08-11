@@ -1,6 +1,6 @@
 import type { ModuleField } from './common';
 import type { FormDesignConfigDetailParams } from '@lib/shared/models/system/module';
-import { ProcessStatusType } from '@lib/shared/models/system/process';
+import { ProcessStatusEnum } from '@lib/shared/enums/process';
 
 export interface SaveOrderParams {
   name: string;
@@ -19,6 +19,7 @@ export interface UpdateOrderParams extends SaveOrderParams {
 export interface OrderItem {
   id: string;
   name: string;
+  approved?: boolean;
   contractName: string;
   contractId: string;
   moduleFields: ModuleField[]; // 自定义字段
@@ -28,7 +29,7 @@ export interface OrderItem {
   owner: string;
   number: string;
   stage: string;
-  approvalStatus: ProcessStatusType;
+  approvalStatus: ProcessStatusEnum;
   stageName: string;
   organizationId: string;
   customerName: string;

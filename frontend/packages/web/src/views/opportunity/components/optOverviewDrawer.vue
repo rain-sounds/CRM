@@ -11,6 +11,7 @@
     :form-key="FormDesignKeyEnum.BUSINESS"
     :source-id="sourceId"
     :formViewSize="formViewSize"
+    @button-pop-update="handleTransferPopUpdate"
     @button-select="handleSelect"
     @saved="refreshList"
   >
@@ -24,6 +25,7 @@
           :column="layout === 'vertical' ? 3 : undefined"
           :label-width="layout === 'vertical' ? 'auto' : undefined"
           :value-align="layout === 'vertical' ? 'start' : undefined"
+          :readonly="!hasAnyPermission(['OPPORTUNITY_MANAGEMENT:UPDATE'])"
           @init="handleDescriptionInit"
           @open-customer-detail="emit('openCustomerDrawer', $event)"
         />
@@ -34,15 +36,13 @@
         v-model:stage="currentStatus"
         :show-confirm-status="true"
         class="mb-[16px]"
-        :stage-config-list="stageConfig?.stageConfigList || []"
+        :stageConfig="stageConfig"
         is-limit-back
         :failure-reason="lastFailureReason"
         :back-stage-permission="['OPPORTUNITY_MANAGEMENT:UPDATE', 'OPPORTUNITY_MANAGEMENT:RESIGN']"
         :source-id="sourceId"
         :operation-permission="['OPPORTUNITY_MANAGEMENT:UPDATE']"
         :update-api="updateOptStage"
-        :afoot-roll-back="stageConfig?.afootRollBack"
-        :end-roll-back="stageConfig?.endRollBack"
         @load-detail="refreshList"
       />
     </template>
@@ -212,8 +212,8 @@
 
     if (isSuccess.value) {
       return hasAllPermission(['OPPORTUNITY_MANAGEMENT:UPDATE', 'OPPORTUNITY_MANAGEMENT:RESIGN'])
-        ? [...editAction, ...deleteAction]
-        : [...deleteAction];
+        ? [...editAction, ...transferAction, ...deleteAction]
+        : [...transferAction, ...deleteAction];
     }
 
     return [...editAction, ...transferAction, ...deleteAction];
@@ -251,6 +251,17 @@
 
   // 转移
   const transferFormRef = ref<InstanceType<typeof TransferForm>>();
+
+  function resetTransferForm() {
+    transferForm.value = { ...defaultTransferForm };
+  }
+
+  function handleTransferPopUpdate(key: string, show: boolean) {
+    if (key === 'transfer' && show) {
+      resetTransferForm();
+    }
+  }
+
   function handleTransfer(done?: () => void) {
     transferFormRef.value?.formRef?.validate(async (error) => {
       if (!error) {
@@ -261,7 +272,7 @@
             ids: [sourceId.value],
           });
           Message.success(t('common.transferSuccess'));
-          transferForm.value = { ...defaultTransferForm };
+          resetTransferForm();
           showOptOverviewDrawer.value = false;
           done?.();
           emit('refresh');

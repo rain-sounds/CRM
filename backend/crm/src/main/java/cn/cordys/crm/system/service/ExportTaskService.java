@@ -45,10 +45,16 @@ public class ExportTaskService {
         exportTaskMapper.updateById(exportTask);
     }
 
-    public void checkUserTaskLimit(String userId, String status) {
-        int userTaskCount = extExportTaskMapper.getExportTaskCount(userId, status);
+    public void checkUserTaskLimit(String userId, String resourceType) {
+        // 先检查用户是否有10个或以上的待处理任务
+        int userTaskCount = extExportTaskMapper.getExportTaskCount(userId, ExportConstants.ExportStatus.PREPARED.name());
         if (userTaskCount >= 10) {
             throw new GenericException(Translator.get("user_export_task_limit"));
+        }
+        // 再检查是否存在相同资源类型的待处理任务，防止重复点击导致大量相同任务积压
+        int count = extExportTaskMapper.checkPreparedUniqueness(userId, resourceType);
+        if (count > 0) {
+            throw new GenericException(Translator.get("user_export_task_prepared_limit"));
         }
     }
 }

@@ -6,12 +6,15 @@ import cn.cordys.common.util.HikariCPUtils;
 import cn.cordys.common.util.JSON;
 import cn.cordys.common.util.rsa.RsaKey;
 import cn.cordys.common.util.rsa.RsaUtils;
+import cn.cordys.common.utils.SqlInjectionChecker;
 import cn.cordys.crm.system.service.ExportTaskStopService;
 import cn.cordys.crm.system.service.ExtScheduleService;
 import cn.cordys.crm.system.service.SystemService;
+import cn.cordys.security.SessionUser;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -37,6 +40,12 @@ class AppListener implements ApplicationRunner {
     @Resource
     private SystemService systemService;
 
+    @Value("${cordys.secret.key}")
+    private String secretInstance;
+
+    @Value("${sql.injection.dangerous-pattern:}")
+    private String configuredPattern;
+
     /**
      * 应用启动后执行的初始化方法。
      * <p>
@@ -48,6 +57,8 @@ class AppListener implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         log.info("===== 开始初始化配置 =====");
+        SessionUser.secret = secretInstance;
+        SqlInjectionChecker.setDangerousPattern(configuredPattern);
 
         // 初始化唯一ID生成器
         uidGenerator.init();
@@ -72,6 +83,7 @@ class AppListener implements ApplicationRunner {
 
         log.info("===== 完成初始化配置 =====");
     }
+
 
     /**
      * 初始化 RSA 配置。

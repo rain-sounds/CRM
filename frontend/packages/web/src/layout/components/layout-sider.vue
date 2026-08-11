@@ -30,6 +30,7 @@
           :collapsed-icon-size="28"
           :options="menuOptions"
           :render-label="renderLabel"
+          :expand-icon="renderExpandMenuIcon"
           accordion
           @update-value="menuChange"
         />
@@ -103,6 +104,7 @@
   import personalExportDrawer from '@/views/system/business/components/personalExportDrawer.vue';
 
   import useMenuTree from '@/hooks/useMenuTree';
+  import useModal from '@/hooks/useModal';
   import useUser from '@/hooks/useUser';
   import useVisit from '@/hooks/useVisit';
   import type { AppRouteRecordRaw } from '@/router/routes/types';
@@ -128,6 +130,7 @@
 
   const { logout } = useUser();
 
+  const { openModal } = useModal();
   const { t } = useI18n();
   const appStore = useAppStore();
   const userStore = useUserStore();
@@ -248,6 +251,14 @@
     }
   }
 
+  function renderExpandMenuIcon(option: MenuOption) {
+    const type = expandedKeys.value.includes(option.key as string) ? 'iconicon_chevron_down' : 'iconicon_chevron_right';
+    return h(CrmIcon, {
+      size: 16,
+      type,
+    });
+  }
+
   const isRequiredExportRoute = (key: OpportunityRouteEnum | ClueRouteEnum | CustomerRouteEnum) =>
     [AppRouteEnum.CLUE_MANAGEMENT, AppRouteEnum.OPPORTUNITY, AppRouteEnum.CUSTOMER].includes(
       key as OpportunityRouteEnum | ClueRouteEnum | CustomerRouteEnum
@@ -256,6 +267,13 @@
   async function menuChange(key: string, item: MenuOption) {
     const routeItem = item as unknown as AppRouteRecordRaw;
     const name = routeItem.meta?.hideChildrenInMenu ? getFirstRouterNameByCurrentRoute(routeItem.name as string) : key;
+    if (name === DashboardRouteEnum.DASHBOARD_INDEX && !licenseStore.hasLicense()) {
+      openModal(licenseStore.getNoLicenseModalConfig());
+      nextTick(() => {
+        menuValue.value = router.currentRoute.value.name as string;
+      });
+      return;
+    }
     await router.push({ name });
     if (isRequiredExportRoute(key as OpportunityRouteEnum | ClueRouteEnum | CustomerRouteEnum)) {
       initExportPop();
@@ -322,11 +340,13 @@
   });
 
   function setMenuValue(_route: RouteLocationNormalizedGeneric) {
+    const hideChildrenRoute = [..._route.matched].reverse().find((item) => item.meta?.hideChildrenInMenu && item.name);
+
     if (_route.meta.isTopMenu) {
       menuValue.value = _route.matched[_route.matched.length - 2]
         ?.name as (typeof AppRouteEnum)[keyof typeof AppRouteEnum];
-    } else if (_route.meta.hideChildrenInMenu) {
-      menuValue.value = _route.name as (typeof AppRouteEnum)[keyof typeof AppRouteEnum];
+    } else if (hideChildrenRoute) {
+      menuValue.value = hideChildrenRoute.name as (typeof AppRouteEnum)[keyof typeof AppRouteEnum];
     } else {
       menuValue.value = _route.name as (typeof AppRouteEnum)[keyof typeof AppRouteEnum];
       if (_route.name?.toString().includes('system')) {

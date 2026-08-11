@@ -8,6 +8,8 @@ import cn.cordys.crm.contract.service.ContractLogService;
 import cn.cordys.crm.customer.service.*;
 import cn.cordys.crm.follow.service.FollowUpPlanLogService;
 import cn.cordys.crm.follow.service.FollowUpRecordLogService;
+import cn.cordys.crm.form.service.CustomFormDataLogService;
+import cn.cordys.crm.form.service.CustomFormLogService;
 import cn.cordys.crm.opportunity.service.OpportunityLogService;
 import cn.cordys.crm.opportunity.service.OpportunityQuotationalLogService;
 import cn.cordys.crm.order.service.OrderLogService;
@@ -37,9 +39,12 @@ public class ModuleLogServiceFactory {
         logServiceMap.put(LogModule.SYSTEM_ROLE, CommonBeanFactory.getBean(RoleLogService.class));
         logServiceMap.put(LogModule.SYSTEM_MODULE, CommonBeanFactory.getBean(SystemModuleLogService.class));
         logServiceMap.put(LogModule.CONTRACT_PAYMENT, CommonBeanFactory.getBean(ContractPaymentPlanLogService.class));
+        logServiceMap.put(LogModule.CONTRACT_PAYMENT_RECORD, CommonBeanFactory.getBean(ContractPaymentRecordLogService.class));
         logServiceMap.put(LogModule.CONTRACT_INVOICE, CommonBeanFactory.getBean(ContractInvoiceLogService.class));
         logServiceMap.put(LogModule.ORDER_INDEX, CommonBeanFactory.getBean(OrderLogService.class));
         logServiceMap.put(LogModule.APPROVAL_FLOW, CommonBeanFactory.getBean(ApprovalFlowLogService.class));
+        logServiceMap.put(LogModule.CUSTOM_FORM, CommonBeanFactory.getBean(CustomFormLogService.class));
+        logServiceMap.put(LogModule.CUSTOM_FORM_DATA, CommonBeanFactory.getBean(CustomFormDataLogService.class));
 
     }
 

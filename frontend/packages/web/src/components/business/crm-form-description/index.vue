@@ -14,24 +14,67 @@
         <CrmFormCreateDivider :field-config="item.fieldInfo" class="!m-0 w-full" />
       </template>
       <template #image="{ item }">
-        <n-image-group>
+        <n-image-group v-if="item.value?.length">
           <n-space :class="`${props.valueAlign ?? '!justify-end'}`">
-            <n-image v-for="img in item.value" :key="img" :src="`${PreviewPictureUrl}/${img}`" width="40" height="40" />
+            <n-image
+              v-for="img in item.value"
+              :key="img"
+              :src="`${PreviewPictureUrl}/${img}?userId=${userStore.userInfo.id}`"
+              width="40"
+              height="40"
+            />
           </n-space>
         </n-image-group>
+        <data v-else>-</data>
       </template>
-      <template #[FieldTypeEnum.TEXTAREA]="{ item }">
-        <div
-          class="field-line flex w-full"
-          :class="props.column && props.column > 1 ? 'items-baseline' : 'items-center'"
-        >
+      <template #[FieldTypeEnum.INPUT]="{ item }">
+        <div class="field-line flex w-full items-center">
           <div
             class="mr-[16px] whitespace-nowrap text-[var(--text-n2)]"
             :style="{ width: props.labelWidth || '120px' }"
           >
             {{ item.label }}
           </div>
-          <div v-html="item.value?.toString().replace(/\n/g, '<br />')"></div>
+          <CrmSingleText
+            v-if="editableByPermission.includes(item.fieldInfo.id)"
+            v-model:value="formDetail[item.fieldInfo.id]"
+            :field-config="{
+              ...item.fieldInfo,
+              showLabel: false,
+            }"
+            :path="item.fieldInfo.id"
+            isDescriptionRender
+            :feedback="feedbackMap[item.fieldInfo.id]"
+            needInitDetail
+            class="flex-1"
+          />
+          <div v-else>{{ item.value || '-' }}</div>
+        </div>
+      </template>
+      <template #[FieldTypeEnum.TEXTAREA]="{ item }">
+        <div class="field-line flex w-full items-start">
+          <div
+            class="mr-[16px] whitespace-nowrap text-[var(--text-n2)]"
+            :style="{ width: props.labelWidth || '120px' }"
+          >
+            {{ item.label }}
+          </div>
+          <CrmTextarea
+            v-if="editableByPermission.includes(item.fieldInfo.id)"
+            v-model:value="formDetail[item.fieldInfo.id]"
+            :field-config="{
+              ...item.fieldInfo,
+              showLabel: false,
+            }"
+            :path="item.fieldInfo.id"
+            :disabled="!hasAnyPermission(['OPPORTUNITY_MANAGEMENT:UPDATE'])"
+            isDescriptionRender
+            :feedback="feedbackMap[item.fieldInfo.id]"
+            needInitDetail
+            class="flex-1"
+          />
+          <div v-else-if="item.value" v-html="item.value?.toString().replace(/\n/g, '<br />')"></div>
+          <div v-else>-</div>
         </div>
       </template>
       <!-- 链接字段 -->
@@ -43,7 +86,7 @@
           >
             {{ item.label }}
           </div>
-          <n-tooltip :delay="300">
+          <n-tooltip v-if="item.value && item.value !== '-'" :delay="300">
             <template #trigger>
               <div class="one-line-text cursor-pointer text-[var(--primary-8)]" @click="openLink(item)">
                 {{ item.value }}
@@ -51,6 +94,7 @@
             </template>
             {{ item.value }}
           </n-tooltip>
+          <div v-else>-</div>
         </div>
       </template>
 
@@ -61,7 +105,7 @@
             {{ item.label }}
           </div>
           <CrmTableButton
-            v-if="canOpenDataSource(item) && item.value"
+            v-if="canOpenDataSource(item) && item.value !== '-' && item.value"
             class="crm-form-description-link-button flex-1 overflow-hidden"
             :class="`justify-${props.valueAlign ?? 'end'}`"
             @click="openDataSource(item)"
@@ -72,20 +116,21 @@
             {{ item.value }}
           </CrmTableButton>
           <n-tooltip
-            v-else
+            v-else-if="
+              item.value !== undefined && item.value !== null && item.value?.toString() !== '' && item.value !== '-'
+            "
             :delay="300"
             :placement="(props.tooltipPosition || item.tooltipPosition) ?? 'top-start'"
             :disabled="item.value === undefined || item.value === null || item.value?.toString() === ''"
           >
             <template #trigger>
               <div class="one-line-text">
-                {{
-                  item.value === undefined || item.value === null || item.value?.toString() === '' ? '-' : item.value
-                }}
+                {{ item.value }}
               </div>
             </template>
             {{ item.value }}
           </n-tooltip>
+          <div v-else>-</div>
         </div>
       </template>
 
@@ -95,7 +140,10 @@
           <div class="mr-[16px] text-[var(--text-n2)]" :style="{ width: props.labelWidth || '120px' }">
             {{ item.label }}
           </div>
-          <div v-if="canOpenDataSource(item)" class="flex flex-1 flex-col items-start gap-[12px] overflow-hidden">
+          <div
+            v-if="canOpenDataSource(item) && item.value && item.value.length"
+            class="flex flex-1 flex-col items-start gap-[12px] overflow-hidden"
+          >
             <CrmTableButton
               v-for="v in item.value"
               :key="v.id || v"
@@ -114,6 +162,7 @@
             :label-key="item.tagProps?.labelKey"
             :class="`justify-${props.valueAlign ?? 'end'}`"
           />
+          <div v-else>-</div>
         </div>
       </template>
 
@@ -122,18 +171,76 @@
           <div class="mr-[16px] text-[var(--text-n2)]" :style="{ width: props.labelWidth || '120px' }">
             {{ item.label }}
           </div>
-          <dateTime
+          <CrmDateTime
+            v-if="
+              editableByPermission.includes(item.fieldInfo.id) ||
+              (item.fieldInfo.businessKey === 'expectedEndTime' && !item.fieldInfo.resourceFieldId)
+            "
             v-model:value="formDetail[item.fieldInfo.id]"
             :field-config="{
               ...item.fieldInfo,
               showLabel: false,
             }"
             :path="item.fieldInfo.id"
-            :disabled="!hasAnyPermission(['OPPORTUNITY_MANAGEMENT:UPDATE'])"
+            :disabled="
+              item.fieldInfo.businessKey === 'expectedEndTime' && !item.fieldInfo.resourceFieldId
+                ? !item.fieldInfo.editable
+                : !editableByPermission.includes(item.fieldInfo.id)
+            "
             isDescriptionRender
             :feedback="feedbackMap[item.fieldInfo.id]"
-            @change="handleFormChange(item.fieldInfo)"
+            needInitDetail
+            @change="editableByPermission.includes(item.fieldInfo.id) ? undefined : handleFormChange()"
           />
+          <div v-else>{{ item.value || '-' }}</div>
+        </div>
+      </template>
+      <template #[FieldTypeEnum.SELECT]="{ item }">
+        <div class="field-line flex w-full items-center">
+          <div class="mr-[16px] text-nowrap text-[var(--text-n2)]" :style="{ width: props.labelWidth || '120px' }">
+            {{ item.label }}
+          </div>
+          <CrmSelect
+            v-if="editableByPermission.includes(item.fieldInfo.id)"
+            v-model:value="formDetail[item.fieldInfo.id]"
+            :field-config="{
+              ...item.fieldInfo,
+              showLabel: false,
+            }"
+            :path="item.fieldInfo.id"
+            isDescriptionRender
+            :feedback="feedbackMap[item.fieldInfo.id]"
+            class="w-[180px]"
+            needInitDetail
+            @update:value="handleFieldChange(item.fieldInfo, $event)"
+          />
+          <CrmTagGroup
+            v-else-if="Array.isArray(item.value) && item.value.length"
+            :tags="item.value"
+            :label-key="item.tagProps?.labelKey"
+            :class="`justify-${props.valueAlign ?? 'end'}`"
+          />
+          <div v-else>{{ typeof item.value === 'string' ? item.value || '-' : '-' }}</div>
+        </div>
+      </template>
+      <template #[FieldTypeEnum.INPUT_NUMBER]="{ item }">
+        <div class="field-line flex w-full items-center">
+          <div class="mr-[16px] text-[var(--text-n2)]" :style="{ width: props.labelWidth || '120px' }">
+            {{ item.label }}
+          </div>
+          <CrmInputNumber
+            v-if="editableByPermission.includes(item.fieldInfo.id)"
+            v-model:value="formDetail[item.fieldInfo.id]"
+            :field-config="{
+              ...item.fieldInfo,
+              showLabel: false,
+            }"
+            :path="item.fieldInfo.id"
+            isDescriptionRender
+            :feedback="feedbackMap[item.fieldInfo.id]"
+            needInitDetail
+          />
+          <div v-else>{{ isNotEmpty(item.value) ? item.value : '-' }}</div>
         </div>
       </template>
       <template #[FieldTypeEnum.ATTACHMENT]="{ item }">
@@ -199,9 +306,12 @@
 
   import { PreviewPictureUrl } from '@lib/shared/api/requrls/system/module';
   import { FieldDataSourceTypeEnum, FieldTypeEnum, FormDesignKeyEnum } from '@lib/shared/enums/formDesignEnum';
+  import { ApprovalFieldPermissionModeEnum } from '@lib/shared/enums/process';
   import { useI18n } from '@lib/shared/hooks/useI18n';
+  import { isNotEmpty } from '@lib/shared/method/is.js';
   import { CollaborationType } from '@lib/shared/models/customer';
   import type { FormConfig } from '@lib/shared/models/system/module';
+  import type { ApprovalFieldPermission } from '@lib/shared/models/system/process';
 
   import CrmDescription, { Description } from '@/components/pure/crm-description/index.vue';
   import CrmTableButton from '@/components/pure/crm-table-button/index.vue';
@@ -209,9 +319,14 @@
   import CrmFileListModal from '@/components/business/crm-file-list-modal/index.vue';
   import CrmFormCreateDivider from '@/components/business/crm-form-create/components/basic/divider.vue';
   import CrmSubTable from '@/components/business/crm-sub-table/index.vue';
-  import dateTime from '../crm-form-create/components/basic/dateTime.vue';
+  import CrmDateTime from '../crm-form-create/components/basic/dateTime.vue';
+  import CrmInputNumber from '../crm-form-create/components/basic/inputNumber.vue';
+  import CrmSelect from '../crm-form-create/components/basic/select.vue';
+  import CrmSingleText from '../crm-form-create/components/basic/singleText.vue';
+  import CrmTextarea from '../crm-form-create/components/basic/textarea.vue';
 
   import useFormCreateApi from '@/hooks/useFormCreateApi';
+  import useUserStore from '@/store/modules/user';
   import { hasAnyPermission } from '@/utils/permission';
 
   import { AttachmentInfo, type FormCreateField } from '../crm-form-create/types';
@@ -249,6 +364,9 @@
       oneLineValue?: boolean; // value 是否单行显示
       oneLineLabel?: boolean; // label 是否单行显示
       isContractTableDetail?: boolean; // 只支持合同列表打开的合同详情抽屉高亮跳转
+      fieldPermissions?: ApprovalFieldPermission[]; // 字段权限控制
+      otherSaveParams?: Record<string, any>;
+      customFormId?: string;
     }>(),
     {
       oneLineLabel: true,
@@ -272,8 +390,22 @@
 
   const { t } = useI18n();
   const Message = useMessage();
+  const userStore = useUserStore();
 
   const needInitDetail = computed(() => true);
+  const hiddenFieldByPermission = computed(
+    () =>
+      props.fieldPermissions
+        ?.filter((e) => e.permissionType === ApprovalFieldPermissionModeEnum.HIDDEN)
+        .map((e) => e.fieldId) || []
+  );
+  const editableByPermission = computed(
+    () =>
+      props.fieldPermissions
+        ?.filter((e) => e.permissionType === ApprovalFieldPermissionModeEnum.EDIT)
+        .map((e) => e.fieldId) || []
+  );
+  const { formKey, sourceId, otherSaveParams, customFormId } = toRefs(props);
   const {
     fieldList,
     descriptions,
@@ -288,16 +420,25 @@
     initFormConfig,
     initFormDescription,
     saveForm,
+    initFormShowControl,
+    applyFieldLink,
   } = useFormCreateApi({
-    formKey: toRefs(props).formKey,
-    sourceId: toRefs(props).sourceId,
+    formKey,
+    sourceId,
     needInitDetail,
     isContractTableDetail: props.isContractTableDetail,
+    otherSaveParams,
+    customFormId,
   });
 
   const realDescriptions = computed(() => {
     return descriptions.value
-      .filter((item) => !props.hiddenFields?.includes(item.fieldInfo.id))
+      .filter(
+        (item) =>
+          !props.hiddenFields?.includes(item.fieldInfo.id) &&
+          !hiddenFieldByPermission.value?.includes(item.fieldInfo.id) &&
+          item.fieldInfo?.show !== false
+      )
       .map((item) => {
         // 独占一行
         if (
@@ -318,11 +459,50 @@
 
   const feedbackMap = ref<Record<string, string>>({});
 
-  function handleFormChange(field: FormCreateField) {
+  function validateField(field: FormCreateField) {
+    if (
+      editableByPermission.value.includes(field.id) ||
+      (field.businessKey === 'expectedEndTime' && !field.resourceFieldId)
+    ) {
+      // 只校验可编辑字段（商机结束日期字段特殊处理）
+      if (field.rules.some((rule) => rule.key === 'required')) {
+        const currentValue = formDetail.value[field.id];
+        if (
+          currentValue === null ||
+          currentValue === undefined ||
+          (Array.isArray(currentValue) && currentValue.length === 0) ||
+          (typeof currentValue === 'string' && currentValue.trim() === '')
+        ) {
+          Message.warning(t('common.notNull', { value: field.name }));
+          feedbackMap.value[field.id] = t('common.notNull', { value: field.name });
+          return false;
+        }
+        feedbackMap.value[field.id] = '';
+        return true;
+      }
+    }
+    feedbackMap.value[field.id] = '';
+    return true;
+  }
+
+  function handleFieldChange(item: FormCreateField, value: any) {
+    // 控制显示规则
+    if (item.showControlRules?.length) {
+      initFormShowControl();
+    }
+    // 字段联动
+    if (item.linkProp?.targetField && item.linkProp?.linkOptions.length) {
+      applyFieldLink(item);
+    }
+  }
+
+  function handleFormChange(callback?: () => void) {
     nextTick(async () => {
       try {
         if (!isInit.value) return;
-        fieldList.value.forEach((item) => {
+        let hasErrorField = false;
+        for (let i = 0; i < fieldList.value.length; i++) {
+          const item = fieldList.value[i];
           if (
             [FieldTypeEnum.DATA_SOURCE, FieldTypeEnum.MEMBER, FieldTypeEnum.DEPARTMENT].includes(item.type) &&
             Array.isArray(formDetail.value[item.id])
@@ -330,22 +510,27 @@
             // 处理数据源字段，单选传单个值
             formDetail.value[item.id] = formDetail.value[item.id]?.[0];
           }
-        });
-        if (field.rules.some((rule) => rule.key === 'required')) {
-          const currentValue = formDetail.value[field.id];
-          if (
-            currentValue === null ||
-            currentValue === undefined ||
-            (Array.isArray(currentValue) && currentValue.length === 0) ||
-            (typeof currentValue === 'string' && currentValue.trim() === '')
-          ) {
-            Message.warning(t('common.notNull', { value: field.name }));
-            feedbackMap.value[field.id] = t('common.notNull', { value: field.name });
-            return;
+          if (item.subFields?.length) {
+            const parentFieldDetail = formDetail.value[item.id];
+            if (parentFieldDetail) {
+              parentFieldDetail.forEach((subItem: Record<string, any>) => {
+                item.subFields?.forEach((subField) => {
+                  if ([FieldTypeEnum.DATA_SOURCE].includes(subField.type) && Array.isArray(subItem[subField.id])) {
+                    // 处理数据源字段，单选传单个值
+                    subItem[subField.id] = subItem[subField.id]?.[0];
+                  }
+                });
+              });
+            }
           }
-          feedbackMap.value[field.id] = '';
+          if (item.show && !validateField(item)) {
+            hasErrorField = true;
+            break;
+          }
         }
-        await saveForm(formDetail.value, false, () => ({}), true);
+        if (!hasErrorField) {
+          await saveForm(formDetail.value, false, callback, true);
+        }
       } catch (error) {
         // eslint-disable-next-line no-console
         console.log(error);
@@ -488,7 +673,7 @@
     formDetail.value[activeDescItem.value?.fieldInfo.id] = formDetail.value[activeDescItem.value?.fieldInfo.id].filter(
       (e: string) => e !== id
     );
-    handleFormChange(activeDescItem.value?.fieldInfo);
+    handleFormChange();
   }
 
   watch(
@@ -508,6 +693,7 @@
 
   defineExpose({
     initFormDescription,
+    handleFormChange,
     moduleFormConfig,
   });
 </script>

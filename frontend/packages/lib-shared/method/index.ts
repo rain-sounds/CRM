@@ -64,7 +64,7 @@ export function sleep(ms: number): Promise<void> {
   });
 }
 
-export function getQueryVariable(variable: string) {
+export function getQueryVariable(variable: string): string | undefined {
   const urlString = window.location.href;
   const queryIndex = urlString.indexOf('?');
   if (queryIndex !== -1) {
@@ -76,7 +76,7 @@ export function getQueryVariable(variable: string) {
     // 分割查询参数
     const params = query.split('&');
     // 遍历参数，找到 _token 参数的值
-    let variableValue;
+    let variableValue: string | undefined;
     params.forEach((param) => {
       const equalIndex = param.indexOf('=');
       const variableName = param.substring(0, equalIndex);
@@ -597,7 +597,7 @@ export function isDingTalkBrowser() {
 // 飞书
 export function isLarkBrowser(): boolean {
   const ua = window.navigator.userAgent.toLowerCase();
-  return ua.includes('lark') || ua.includes('feishu') || getQueryVariable('state') === 'LARK';
+  return ua.includes('lark') || ua.includes('feishu') || getQueryVariable('state')?.startsWith('lark.') === true;
 }
 
 /**
@@ -704,4 +704,34 @@ export function getCopiedName(name: string, suffix = 'copy', maxLen = 255): stri
     return baseName.slice(0, maxLen - suffix.length) + suffix;
   }
   return baseName + suffix;
+}
+
+/**
+ * 通用数字千分位展示
+ * @param value 数值或数值字符串
+ * @param options 小数位配置
+ * @returns 格式化后的字符串
+ */
+export function formatThousands(
+  value: string | number | null | undefined,
+  options?: {
+    minimumFractionDigits?: number;
+    maximumFractionDigits?: number;
+  }
+) {
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
+
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue)) {
+    return String(value);
+  }
+
+  const decimalLength = String(value).includes('.') ? String(value).split('.')[1]?.length || 0 : 0;
+
+  return numberValue.toLocaleString('en-US', {
+    minimumFractionDigits: options?.minimumFractionDigits,
+    maximumFractionDigits: options?.maximumFractionDigits ?? decimalLength,
+  });
 }

@@ -1,5 +1,5 @@
 import { useMessage } from 'naive-ui';
-import { cloneDeep } from 'lodash-es';
+import { cloneDeep, isEqual } from 'lodash-es';
 import dayjs from 'dayjs';
 
 import {
@@ -10,7 +10,7 @@ import {
   type FormLinkScenarioEnum,
 } from '@lib/shared/enums/formDesignEnum';
 import { useI18n } from '@lib/shared/hooks/useI18n';
-import { getCityPath, getIndustryPath, safeFractionConvert } from '@lib/shared/method';
+import { formatTimeValue, getCityPath, getIndustryPath, safeFractionConvert } from '@lib/shared/method';
 import {
   dataSourceTypes,
   departmentTypes,
@@ -27,6 +27,7 @@ import {
 } from '@lib/shared/method/formCreate';
 import type { ModuleField } from '@lib/shared/models/common';
 import type { CollaborationType } from '@lib/shared/models/customer';
+import type { CustomFormDetail } from '@lib/shared/models/customForm';
 import type { FormConfig, FormDesignConfigDetailParams } from '@lib/shared/models/system/module';
 
 import type { Description } from '@/components/pure/crm-description/index.vue';
@@ -39,8 +40,9 @@ import {
 } from '@/components/business/crm-form-create/config';
 import type { FormCreateField, FormCreateFieldRule, FormDetail } from '@/components/business/crm-form-create/types';
 
-import { checkRepeat } from '@/api/modules';
+import { checkRepeat, getDatasourceFieldConfig } from '@/api/modules';
 import useUserStore from '@/store/modules/user';
+import { hasAnyPermission } from '@/utils/permission';
 
 export interface FormCreateApiProps {
   sourceId?: Ref<string | undefined>;
@@ -52,6 +54,10 @@ export interface FormCreateApiProps {
   linkFormKey?: Ref<FormDesignKeyEnum | undefined>; // 关联表单key
   linkScenario?: Ref<FormLinkScenarioEnum | undefined>; // 关联表单场景
   isContractTableDetail?: boolean;
+  hiddenFieldIds?: string[]; // 需要隐藏的字段id列表
+  editableFieldIds?: string[]; // 可编辑的字段id列表
+  customFormId?: Ref<string | undefined>; // 自定义表单id
+  isDatasource?: boolean; // 是否数据源表单配置
 }
 
 export default function useFormCreateApi(props: FormCreateApiProps) {
@@ -91,6 +97,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
   const formDetail = ref<Record<string, any>>({});
   const originFormDetail = ref<Record<string, any>>({});
   const moduleFormConfig = ref<FormDesignConfigDetailParams>();
+  const customFormConfig = ref<CustomFormDetail>();
 
   // 详情
   const detail = ref<Record<string, any>>({});
@@ -290,9 +297,13 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
   // 用于快照保存表单配置
   const needModuleFormConfigParamsType = [
     FormDesignKeyEnum.OPPORTUNITY_QUOTATION,
+    FormDesignKeyEnum.OPPORTUNITY_QUOTATION_SNAPSHOT,
     FormDesignKeyEnum.CONTRACT,
+    FormDesignKeyEnum.CONTRACT_SNAPSHOT,
     FormDesignKeyEnum.INVOICE,
+    FormDesignKeyEnum.INVOICE_SNAPSHOT,
     FormDesignKeyEnum.ORDER,
+    FormDesignKeyEnum.ORDER_SNAPSHOT,
   ];
 
   function initFormShowControl(value?: any) {
@@ -334,6 +345,36 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
         }
       }
     });
+  }
+
+  /**
+   * 字段联动
+   * @param item 触发字段
+   */
+  function applyFieldLink(item: FormCreateField, callback?: () => void) {
+    const currentFieldValue = formDetail.value[item.id];
+    const linkField = fieldList.value.find((f) => f.id === item.linkProp?.targetField);
+    if (item.linkProp?.linkOptions) {
+      for (let i = 0; i < item.linkProp?.linkOptions.length; i++) {
+        const option = item.linkProp?.linkOptions[i];
+        if (isEqual(currentFieldValue, option.current)) {
+          if (linkField) {
+            if (option.method === 'HIDDEN') {
+              linkField.linkRange = Array.isArray(option.target) ? option.target : [option.target];
+            } else {
+              linkField.linkRange = undefined;
+              formDetail.value[linkField.id] = option.target;
+            }
+            return;
+          }
+        } else if (linkField) {
+          linkField.linkRange = undefined;
+        }
+      }
+      if (callback) {
+        callback();
+      }
+    }
   }
 
   /**
@@ -399,14 +440,17 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
   }
 
   function makeDescriptionItem(item: FormCreateField, form: FormDetail) {
-    if (item.show === false || !item.readable) return;
+    if (!item.readable) return; // 这里不过滤 show = false字段，在描述组件内过滤
     if (item.businessKey === 'expectedEndTime' && !item.resourceFieldId) {
       // TODO:项目结束时间原位编辑
       descriptions.value.push({
         label: item.name,
         value: parseFormDetailValue(item, form),
         slotName: FieldTypeEnum.DATE_TIME,
-        fieldInfo: item,
+        fieldInfo: {
+          ...item,
+          editable: !hasAnyPermission(['OPPORTUNITY_MANAGEMENT:UPDATE']),
+        },
         tooltipPosition: 'top-end',
       });
     } else if (
@@ -504,8 +548,6 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
         FieldTypeEnum.DEPARTMENT_MULTIPLE,
         FieldTypeEnum.MEMBER,
         FieldTypeEnum.MEMBER_MULTIPLE,
-        FieldTypeEnum.SELECT,
-        FieldTypeEnum.SELECT_MULTIPLE,
         FieldTypeEnum.RADIO,
         FieldTypeEnum.CHECKBOX,
       ].includes(item.type)
@@ -516,11 +558,20 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
         fieldInfo: item,
         tooltipPosition: 'top-end',
       });
+    } else if ([FieldTypeEnum.SELECT, FieldTypeEnum.SELECT_MULTIPLE].includes(item.type)) {
+      descriptions.value.push({
+        label: item.name,
+        value: parseFormDetailValue(item, form),
+        slotName: FieldTypeEnum.SELECT,
+        fieldInfo: item,
+        tooltipPosition: 'top-end',
+      });
     } else if (item.type === FieldTypeEnum.DATE_TIME) {
       descriptions.value.push({
         label: item.name,
         value: parseFormDetailValue(item, form),
         fieldInfo: item,
+        slotName: FieldTypeEnum.DATE_TIME,
         tooltipPosition: 'top-end',
       });
     } else if (item.type === FieldTypeEnum.INPUT_NUMBER) {
@@ -528,6 +579,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
         label: item.name,
         value: parseFormDetailValue(item, form),
         fieldInfo: item,
+        slotName: FieldTypeEnum.INPUT_NUMBER,
         tooltipPosition: 'top-end',
       });
     } else if (item.type === FieldTypeEnum.TEXTAREA) {
@@ -570,6 +622,14 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
         fieldInfo: item,
         tooltipPosition: 'top-end',
       });
+    } else if (item.type === FieldTypeEnum.INPUT) {
+      descriptions.value.push({
+        label: item.name,
+        value: parseFormDetailValue(item, form),
+        slotName: FieldTypeEnum.INPUT,
+        fieldInfo: item,
+        tooltipPosition: 'top-end',
+      });
     } else {
       descriptions.value.push({
         label: item.name,
@@ -589,13 +649,19 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
       if (!formData) {
         const asyncApi = getFormDetailApiMap[props.formKey.value];
         if (!asyncApi || !props.sourceId?.value) return;
-        form = await asyncApi(props.sourceId?.value);
+        form = await asyncApi(props.sourceId?.value, props.otherSaveParams?.value?.approvalTaskId);
       }
       descriptions.value = [];
       detail.value = form;
       collaborationType.value = form.collaborationType;
       formDescriptionShowControlRulesSet(form);
       fieldList.value.forEach((item) => {
+        if (props.hiddenFieldIds?.includes(item.id)) {
+          return;
+        }
+        if (props.editableFieldIds?.includes(item.id)) {
+          item.editable = true;
+        }
         const value = item.businessKey
           ? form[item.businessKey]
           : form.moduleFields?.find((mf) => mf.fieldId === item.id)?.fieldValue;
@@ -684,7 +750,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
             case dataSourceTypes.includes(field.type):
               // 数据源填充，且替换initialOptions
               field.initialOptions = linkField.initialOptions || [];
-              formDetail.value[field.id] = linkField.value.map((e: Record<string, any>) => e.id);
+              formDetail.value[field.id] = linkField.value?.map((e: Record<string, any>) => e.id);
               break;
             case multipleTypes.includes(field.type):
               // 多选填充
@@ -717,13 +783,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
                 formDetail.value[field.id] = linkField.value.join(',').slice(0, limitLength);
               } else if (linkField.type === FieldTypeEnum.DATE_TIME) {
                 // 联动的字段是日期时间则转换
-                if (linkField.dateType === 'month') {
-                  formDetail.value[field.id] = dayjs(linkField.value).format('YYYY-MM');
-                } else if (linkField.dateType === 'date') {
-                  formDetail.value[field.id] = dayjs(linkField.value).format('YYYY-MM-DD');
-                } else {
-                  formDetail.value[field.id] = dayjs(linkField.value).format('YYYY-MM-DD HH:mm:ss');
-                }
+                formDetail.value[field.id] = formatTimeValue(linkField.value, linkField.dateType);
               } else if (linkField.type === FieldTypeEnum.LOCATION) {
                 // 联动的字段是省市区则填充城市路径
                 const addressArr: string[] = linkField.value.split('-') || [];
@@ -797,9 +857,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     } else {
       // 其他的字段读取moduleFields
       const field = res.moduleFields?.find((moduleField: ModuleField) => moduleField.fieldId === item.id);
-      if (field) {
-        formDetail.value[item.id] = initFieldValue(item, field.fieldValue);
-      }
+      formDetail.value[item.id] = initFieldValue(item, field?.fieldValue);
       const options = res.optionMap?.[item.id];
       if (
         [
@@ -846,31 +904,53 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
   function makeSubFieldInitialOptions(subField: FormCreateField, parentFieldId: string, res: FormDetail) {
     if (subField.businessKey) {
       const options = res.optionMap?.[subField.businessKey];
-      if ([FieldTypeEnum.DATA_SOURCE].includes(subField.type)) {
+      if (
+        [
+          FieldTypeEnum.DATA_SOURCE,
+          FieldTypeEnum.MEMBER,
+          FieldTypeEnum.MEMBER_MULTIPLE,
+          FieldTypeEnum.DEPARTMENT,
+          FieldTypeEnum.DEPARTMENT_MULTIPLE,
+        ].includes(subField.type)
+      ) {
         // 处理成员和数据源类型的字段
-        subField.initialOptions = options
-          ?.filter((e) =>
-            formDetail.value[parentFieldId]?.some((item: Record<string, any>) =>
-              item[subField.businessKey!]?.includes(e.id)
+        subField.initialOptions = [
+          ...(subField.initialOptions || []),
+          ...(options
+            ?.filter((e) =>
+              formDetail.value[parentFieldId]?.some((item: Record<string, any>) =>
+                item[subField.businessKey!]?.includes(e.id)
+              )
             )
-          )
-          .map((e) => ({
-            ...e,
-            name: e.name || t('common.optionNotExist'),
-          }));
+            .map((e) => ({
+              ...e,
+              name: e.name || t('common.optionNotExist'),
+            })) || []),
+        ];
       }
     } else {
       const options = res.optionMap?.[subField.id];
-      if ([FieldTypeEnum.DATA_SOURCE].includes(subField.type)) {
+      if (
+        [
+          FieldTypeEnum.DATA_SOURCE,
+          FieldTypeEnum.MEMBER,
+          FieldTypeEnum.MEMBER_MULTIPLE,
+          FieldTypeEnum.DEPARTMENT,
+          FieldTypeEnum.DEPARTMENT_MULTIPLE,
+        ].includes(subField.type)
+      ) {
         // 处理成员和数据源类型的字段
-        subField.initialOptions = options
-          ?.filter((e) =>
-            formDetail.value[parentFieldId]?.some((item: Record<string, any>) => item[subField.id]?.includes(e.id))
-          )
-          .map((e) => ({
-            ...e,
-            name: e.name || t('common.optionNotExist'),
-          }));
+        subField.initialOptions = [
+          ...(subField.initialOptions || []),
+          ...(options
+            ?.filter((e) =>
+              formDetail.value[parentFieldId]?.some((item: Record<string, any>) => item[subField.id]?.includes(e.id))
+            )
+            .map((e) => ({
+              ...e,
+              name: e.name || t('common.optionNotExist'),
+            })) || []),
+        ];
       }
     }
   }
@@ -884,7 +964,8 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     try {
       const asyncApi = getFormDetailApiMap[props.formKey.value];
       if (!asyncApi || !props.sourceId?.value) return;
-      const res = await asyncApi(props.sourceId?.value);
+      const res = await asyncApi(props.sourceId?.value, props.otherSaveParams?.value?.approvalTaskId);
+      detail.value = res;
       formDetail.value = {};
       if (needInitFormDescription) {
         await initFormDescription(res);
@@ -1279,6 +1360,23 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
       // 跟进记录/计划表单：隐藏特定字段并添加"跟进部门"下拉
       handleFollowFormCustomization();
       formConfig.value = res.formProp;
+      const api = props.isDatasource ? getDatasourceFieldConfig : getFormConfigApiMap[props.formKey.value];
+      if (props.formKey.value === FormDesignKeyEnum.CUSTOM_FORM) {
+        const res = await api(props.customFormId?.value ?? '');
+        moduleFormConfig.value = cloneDeep(res);
+        initFormFieldConfig(res.fields);
+        formConfig.value = res.formProp;
+        customFormConfig.value = res as CustomFormDetail;
+      } else {
+        const res = await api(
+          props.isDatasource ? props.formKey.value : props.sourceId?.value ?? '',
+          props.otherSaveParams?.value?.approvalTaskId
+        );
+        moduleFormConfig.value = cloneDeep(res);
+        initFormFieldConfig(res.fields);
+        formConfig.value = res.formProp;
+        customFormConfig.value = undefined;
+      }
       nextTick(() => {
         unsaved.value = false;
       });
@@ -1332,7 +1430,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
                 if (info.repeat) {
                   return Promise.reject(
                     new Error(
-                      info.name.length
+                      info.name?.length
                         ? t('crmFormCreate.repeatTip', { name: info.name })
                         : t('crmFormCreate.repeatTipWithoutName')
                     )
@@ -1366,31 +1464,60 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     item.rules = fullRules;
   }
 
-  function subFieldInit(field: FormCreateField) {
+  function initFormCreateFieldDefaultValue(field: FormCreateField) {
     let defaultValue = field.defaultValue || '';
     if (field.resourceFieldId && field.defaultValue) {
-      defaultValue = parseModuleFieldValue(field, field.defaultValue, field.initialOptions);
-    } else if ([FieldTypeEnum.INPUT_NUMBER, FieldTypeEnum.FORMULA].includes(field.type)) {
+      defaultValue = parseModuleFieldValue(
+        field,
+        field.defaultValue,
+        field.initialOptions || field.options?.map((opt) => ({ id: opt.value, name: opt.label }))
+      );
+      formDetail.value[field.id] = defaultValue;
+      return defaultValue;
+    }
+    if ([FieldTypeEnum.DATE_TIME, FieldTypeEnum.INPUT_NUMBER, FieldTypeEnum.FORMULA].includes(field.type)) {
       defaultValue = Number.isNaN(Number(defaultValue)) || defaultValue === '' ? null : Number(defaultValue);
-    } else if ([FieldTypeEnum.PICTURE, FieldTypeEnum.ATTACHMENT].includes(field.type)) {
-      defaultValue = defaultValue || [];
     } else if (getRuleType(field) === 'array') {
       defaultValue =
-        field.type === FieldTypeEnum.DATA_SOURCE && typeof field.defaultValue === 'string'
+        [FieldTypeEnum.DEPARTMENT, FieldTypeEnum.DATA_SOURCE, FieldTypeEnum.MEMBER].includes(field.type) &&
+        typeof field.defaultValue === 'string'
           ? [defaultValue]
           : defaultValue || [];
+    } else if ([FieldTypeEnum.PICTURE, FieldTypeEnum.ATTACHMENT].includes(field.type)) {
+      defaultValue = defaultValue || [];
+    } else if ([FieldTypeEnum.MEMBER, FieldTypeEnum.MEMBER_MULTIPLE].includes(field.type) && field.hasCurrentUser) {
+      field.defaultValue = field.resourceFieldId ? userStore.userInfo.name : userStore.userInfo.id;
+      field.initialOptions = [
+        ...(field.initialOptions || []),
+        {
+          id: userStore.userInfo.id,
+          name: userStore.userInfo.name,
+        },
+      ].filter((option, index, self) => self.findIndex((o) => o.id === option.id) === index);
+      return field.defaultValue;
+    } else if (
+      [FieldTypeEnum.DEPARTMENT, FieldTypeEnum.DEPARTMENT_MULTIPLE].includes(field.type) &&
+      field.hasCurrentUserDept
+    ) {
+      field.defaultValue = field.resourceFieldId ? userStore.userInfo.departmentName : userStore.userInfo.departmentId;
+      field.initialOptions = [
+        ...(field.initialOptions || []),
+        {
+          id: userStore.userInfo.departmentId,
+          name: userStore.userInfo.departmentName,
+        },
+      ].filter((option, index, self) => self.findIndex((o) => o.id === option.id) === index);
+      return field.defaultValue;
     }
-    field.defaultValue = defaultValue;
+    return defaultValue;
   }
 
   function initForm(linkScenario?: FormLinkScenarioEnum) {
     fieldList.value.forEach((item) => {
-      // const initLine: Record<string, any> = {};
       if ([FieldTypeEnum.SUB_PRICE, FieldTypeEnum.SUB_PRODUCT].includes(item.type)) {
         item.subFields?.forEach((subField) => {
-          subFieldInit(subField);
+          initFormCreateFieldDefaultValue(subField);
           replaceRule(subField, item.id);
-          // initLine[subField.businessKey || subField.id] = subField.defaultValue;
         });
         if (!formDetail.value[item.id]) {
           formDetail.value[item.id] = [];
@@ -1401,53 +1528,11 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
         // 详情页编辑时，从详情获取值，不需要默认值
         item.defaultValue = undefined;
       }
-      let defaultValue = item.defaultValue || '';
-      if (item.resourceFieldId && item.defaultValue) {
-        defaultValue = parseModuleFieldValue(
-          item,
-          item.defaultValue,
-          item.initialOptions || item.options?.map((opt) => ({ id: opt.value, name: opt.label }))
-        );
-        formDetail.value[item.id] = defaultValue;
-        return;
-      }
-      if ([FieldTypeEnum.DATE_TIME, FieldTypeEnum.INPUT_NUMBER, FieldTypeEnum.FORMULA].includes(item.type)) {
-        defaultValue = Number.isNaN(Number(defaultValue)) || defaultValue === '' ? null : Number(defaultValue);
-      } else if (getRuleType(item) === 'array') {
-        defaultValue =
-          [FieldTypeEnum.DEPARTMENT, FieldTypeEnum.DATA_SOURCE, FieldTypeEnum.MEMBER].includes(item.type) &&
-          typeof item.defaultValue === 'string'
-            ? [defaultValue]
-            : defaultValue || [];
-      } else if ([FieldTypeEnum.PICTURE, FieldTypeEnum.ATTACHMENT].includes(item.type)) {
-        defaultValue = defaultValue || [];
-      }
+      const defaultValue = initFormCreateFieldDefaultValue(item);
       if (!formDetail.value[item.id]) {
         formDetail.value[item.id] = defaultValue;
       }
       replaceRule(item);
-      if ([FieldTypeEnum.MEMBER, FieldTypeEnum.MEMBER_MULTIPLE].includes(item.type) && item.hasCurrentUser) {
-        item.defaultValue = item.resourceFieldId ? userStore.userInfo.name : userStore.userInfo.id;
-        item.initialOptions = [
-          ...(item.initialOptions || []),
-          {
-            id: userStore.userInfo.id,
-            name: userStore.userInfo.name,
-          },
-        ].filter((option, index, self) => self.findIndex((o) => o.id === option.id) === index);
-      } else if (
-        [FieldTypeEnum.DEPARTMENT, FieldTypeEnum.DEPARTMENT_MULTIPLE].includes(item.type) &&
-        item.hasCurrentUserDept
-      ) {
-        item.defaultValue = item.resourceFieldId ? userStore.userInfo.departmentName : userStore.userInfo.departmentId;
-        item.initialOptions = [
-          ...(item.initialOptions || []),
-          {
-            id: userStore.userInfo.departmentId,
-            name: userStore.userInfo.departmentName,
-          },
-        ].filter((option, index, self) => self.findIndex((o) => o.id === option.id) === index);
-      }
       if (Object.keys(props.linkFormInfo?.value || {}).length && linkScenario) {
         // 如果有关联表单信息，则填充关联表单字段值
         fillLinkFormFieldValue(item, linkScenario);
@@ -1474,13 +1559,17 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     form: Record<string, any>,
     isContinue: boolean,
     callback?: (_isContinue: boolean, res: any) => void,
-    noReset = false
+    noReset = false,
+    isReview = false,
+    extraParams: Record<string, any> = {}
   ) {
     try {
       loading.value = true;
       const params: Record<string, any> = {
         ...props.otherSaveParams?.value,
+        ...extraParams,
         moduleFields: [],
+        customFormId: customFormConfig.value?.id,
         id: props.sourceId?.value,
       };
       fieldList.value.forEach((item) => {
@@ -1509,7 +1598,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
         } else {
           params.moduleFields.push({
             fieldId: item.id,
-            fieldValue: getNormalFieldValue(item, form[item.id]),
+            fieldValue: getNormalFieldValue(item, form[item.id] === t('common.optionNotExist') ? '' : form[item.id]),
           });
         }
       });
@@ -1520,13 +1609,17 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
       let res;
       if (props.sourceId?.value && props.needInitDetail?.value) {
         res = await updateFormApi[props.formKey.value](params);
-        Message.success(t('common.updateSuccess'));
+        if (!isReview) {
+          Message.success(t('common.updateSuccess'));
+        }
       } else {
         res = await createFormApi[props.formKey.value](params);
-        if (props.formKey.value === FormDesignKeyEnum.CLUE_TRANSITION_CUSTOMER) {
-          Message.success(t('clue.transferredToCustomer'));
-        } else {
-          Message.success(t('common.createSuccess'));
+        if (!isReview) {
+          if (props.formKey.value === FormDesignKeyEnum.CLUE_TRANSITION_CUSTOMER) {
+            Message.success(t('clue.transferredToCustomer'));
+          } else {
+            Message.success(t('common.createSuccess'));
+          }
         }
       }
       if (callback) {
@@ -1548,6 +1641,9 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
       return t('clue.convertToCustomer');
     }
     const prefix = props.sourceId?.value && props.needInitDetail?.value ? t('common.edit') : t('common.newCreate');
+    if (props.formKey.value === FormDesignKeyEnum.CUSTOM_FORM) {
+      return `${prefix}${customFormConfig.value?.name}`;
+    }
     return `${prefix}${t(`crmFormCreate.drawer.${props.formKey.value}`)}`;
   });
 
@@ -1572,6 +1668,8 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     resetForm,
     initFormShowControl,
     makeLinkFormFields,
+    applyFieldLink,
+    formDescriptionShowControlRulesSet,
     moduleFormConfig,
     detail,
   };

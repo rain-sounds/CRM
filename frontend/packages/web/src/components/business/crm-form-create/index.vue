@@ -43,10 +43,9 @@
           {{ formConfig.optBtnContent[1].text }}
         </n-button>
       </template>
-      <!-- todo 提审和重新提审按钮& emit 事件  xinxinwu -->
-      <!-- <n-button type="primary" ghost @click="handleApproval">
-        {{ t('common.review') }}
-      </n-button> -->
+      <n-button v-if="reviewAction.visible" type="primary" ghost @click="handleReview">
+        {{ reviewAction.text }}
+      </n-button>
       <n-button v-if="formConfig.optBtnContent[2].enable" secondary @click="emit('cancel')">
         {{ formConfig.optBtnContent[2].text }}
       </n-button>
@@ -55,7 +54,8 @@
 </template>
 
 <script setup lang="ts">
-  import { FormInst, NButton, NForm, NScrollbar, useMessage } from 'naive-ui';
+  import { h } from 'vue';
+  import { FormInst, NButton, NForm, NFormItem, NInput, NScrollbar, useMessage } from 'naive-ui';
   import { cloneDeep, isEqual } from 'lodash-es';
   import dayjs from 'dayjs';
 
@@ -69,6 +69,7 @@
   import { getCityPath, getGenerateId, getIndustryPath } from '@lib/shared/method';
   import {
     dataSourceTypes,
+    getDisplayFieldText,
     getFieldItemId,
     linkAllAcceptTypes,
     mergeUniqueOptions,
@@ -76,6 +77,7 @@
     singleTypes,
     specialBusinessKeyMap,
     transformData,
+    transformFieldValue,
   } from '@lib/shared/method/formCreate';
   import { FormViewSize } from '@lib/shared/models/system/module';
 
@@ -84,8 +86,11 @@
 
   import { getDatasourceRefDetailList } from '@/api/modules';
   import useFormCreateApi from '@/hooks/useFormCreateApi';
+  import useFormReviewAction from '@/hooks/useFormReviewAction';
+  import useModal from '@/hooks/useModal';
 
   import { formKeyMap } from '../crm-data-source-select/config';
+  import { isCustomDataSourceType } from '../crm-data-source-select/utils';
   import { FormulaDataSourceMap } from '../crm-formula/formula-runtime/types';
   import { safeParseFormula } from '../crm-formula-editor/utils';
   import { getFormConfigApiMap, multipleValueTypeList } from './config';
@@ -100,16 +105,18 @@
     linkFormInfo?: Record<string, any>; // 关联表单信息
     linkFormKey?: FormDesignKeyEnum;
     linkScenario?: FormLinkScenarioEnum; // 关联表单场景
+    customFormId?: string;
   }>();
   const emit = defineEmits<{
     (e: 'cancel'): void;
     (e: 'init', title: string, formViewSize?: FormViewSize): void;
-    (e: 'saved', isContinue: boolean, res: any): void;
-    (e: 'approval', res: any): void;
+    (e: 'saved', isContinue: boolean, res: any, isUpdateReview?: boolean): void;
+    (e: 'review', res: any): void;
   }>();
 
   const { t } = useI18n();
   const Message = useMessage();
+  const { openModal } = useModal();
 
   const formLoading = defineModel<boolean>('loading', {
     default: false,
@@ -128,6 +135,7 @@
     linkFormInfo,
     linkFormKey,
     linkScenario,
+    customFormId,
   } = toRefs(props);
 
   const {
@@ -143,6 +151,8 @@
     saveForm,
     initForm,
     initFormShowControl,
+    applyFieldLink,
+    detail,
   } = useFormCreateApi({
     formKey,
     sourceId,
@@ -152,6 +162,14 @@
     linkFormInfo,
     linkFormKey,
     linkScenario,
+    customFormId,
+  });
+
+  const { reviewAction, shouldConfirmUpdateChange, initApprovalReviewConfig } = useFormReviewAction({
+    formKey,
+    isEdit: computed(() => props.isEdit),
+    approvalStatus: computed(() => detail.value?.approvalStatus),
+    detail,
   });
 
   function getItemComponent(item: FormCreateField) {
@@ -217,29 +235,6 @@
     }
     if ([FieldTypeEnum.SUB_PRICE, FieldTypeEnum.SUB_PRODUCT].includes(item.type)) {
       return CrmFormCreateComponents.advancedComponents.dataTable;
-    }
-  }
-
-  function applyFieldLink(item: FormCreateField) {
-    const currentFieldValue = formDetail.value[item.id];
-    const linkField = fieldList.value.find((f) => f.id === item.linkProp?.targetField);
-    if (item.linkProp?.linkOptions) {
-      for (let i = 0; i < item.linkProp?.linkOptions.length; i++) {
-        const option = item.linkProp?.linkOptions[i];
-        if (isEqual(currentFieldValue, option.current)) {
-          if (linkField) {
-            if (option.method === 'HIDDEN') {
-              linkField.linkRange = Array.isArray(option.target) ? option.target : [option.target];
-            } else {
-              linkField.linkRange = undefined;
-              formDetail.value[linkField.id] = option.target;
-            }
-            return;
-          }
-        } else if (linkField) {
-          linkField.linkRange = undefined;
-        }
-      }
     }
   }
 
@@ -355,6 +350,9 @@
         }
       }
     });
+    nextTick(() => {
+      formRef.value?.restoreValidation();
+    });
   }
 
   async function initDatasourceLinkOptions(
@@ -368,9 +366,14 @@
       }));
       const resList = await Promise.all(paramsList.map((params) => getDatasourceRefDetailList(params)));
       const datasourceFormConfigGroup = await Promise.all(
-        paramsList.map((params) =>
-          getFormConfigApiMap[formKeyMap[params.dataSourceType as FieldDataSourceTypeEnum] as FormDesignKeyEnum]()
-        )
+        paramsList.map((params) => {
+          if (isCustomDataSourceType(params.dataSourceType)) {
+            return getFormConfigApiMap[FormDesignKeyEnum.CUSTOM_FORM](params.dataSourceType);
+          }
+          return getFormConfigApiMap[
+            formKeyMap[params.dataSourceType as FieldDataSourceTypeEnum] as FormDesignKeyEnum
+          ]();
+        })
       );
       beFilledSubFields.forEach((field) => {
         const currentRes = resList[paramsList.findIndex((params) => params.dataSourceType === field.dataSourceType)];
@@ -518,11 +521,13 @@
                       line[currentKey] = subData[key];
                     }
                     break;
-                  case currentChildField.type === FieldTypeEnum.INPUT_NUMBER:
+                  case [FieldTypeEnum.INPUT_NUMBER, FieldTypeEnum.DATE_TIME, FieldTypeEnum.PHONE].includes(
+                    currentChildField.type
+                  ):
                     line[currentKey] = subData[`${childLinkField.id}_original`];
                     break;
                   default:
-                    line[currentKey] = subData[key];
+                    line[currentKey] = subData[key] === '-' ? '' : subData[key];
                     break;
                 }
               }
@@ -557,7 +562,7 @@
     fieldList.value.forEach((item) => {
       if ([FieldTypeEnum.FORMULA, FieldTypeEnum.INPUT, FieldTypeEnum.SERIAL_NUMBER].includes(item.type)) {
         const { fields } = safeParseFormula(item.formula ?? '');
-        fields.forEach((e: any) => {
+        fields?.forEach((e: any) => {
           let options = [];
           const targetField = fieldMap.get(e.fieldId);
 
@@ -600,7 +605,11 @@
     }
     // 字段联动
     if (item.linkProp?.targetField && item.linkProp?.linkOptions.length) {
-      applyFieldLink(item);
+      applyFieldLink(item, () => {
+        nextTick(() => {
+          formRef.value?.restoreValidation();
+        });
+      });
     }
     // 单选数据源字段联动
     if (item.linkFields?.length && value && value.length) {
@@ -624,10 +633,12 @@
       const showFields = fieldList.value.filter((f) => f.resourceFieldId === item.id);
       showFields.forEach((field) => {
         const target = source.find((s) => s.id === value[0]);
-        formDetail.value[field.id] =
+        const fieldValue =
           field.businessKey && specialBusinessKeyMap[field.businessKey]
             ? target?.[specialBusinessKeyMap[field.businessKey]]
             : target?.[field.businessKey || getFieldItemId(field)];
+
+        formDetail.value[field.id] = getDisplayFieldText(field, fieldValue);
       });
     }
 
@@ -642,43 +653,14 @@
     unsaved.value = true;
   }
 
-  function transformFieldValue(item: FormCreateField, result: Record<string, any>, key: string) {
-    if (
-      [FieldTypeEnum.DATA_SOURCE, FieldTypeEnum.MEMBER, FieldTypeEnum.DEPARTMENT].includes(item.type) &&
-      Array.isArray(result[key])
-    ) {
-      // 处理数据源字段，单选传单个值
-      result[key] = result[key]?.[0];
-    }
-    if (item.type === FieldTypeEnum.PHONE) {
-      // 去空格
-      result[key] = result[key]?.replace(/[\s\uFEFF\xA0]+/g, '');
-    }
-    if ([FieldTypeEnum.SELECT, FieldTypeEnum.RADIO].includes(item.type)) {
-      // 处理单选/下拉选择字段，传value值
-      const currentOption = item.options?.find((e) => e.value === result[key]);
-      if (currentOption) {
-        result[key] = currentOption.value;
-      } else {
-        result[key] = '';
-      }
-    }
-    if ([FieldTypeEnum.SELECT_MULTIPLE, FieldTypeEnum.CHECKBOX].includes(item.type)) {
-      // 处理多选/复选字段，传value数组
-      const currentOptions = item.options?.filter((e) => result[key]?.includes(e.value));
-      if (currentOptions) {
-        result[key] = currentOptions.map((e) => e.value);
-      } else {
-        result[key] = [];
-      }
-    }
-  }
-
   function transformSubFieldsValue(item: FormCreateField, result: Record<string, any>[]) {
     const currentFieldValues = result.map((res) => res[item.businessKey || item.id]);
     currentFieldValues.forEach((fieldValue, index) => {
-      if ([FieldTypeEnum.DATA_SOURCE].includes(item.type) && Array.isArray(fieldValue)) {
-        // 处理数据源字段，单选传单个值
+      if (
+        [FieldTypeEnum.DATA_SOURCE, FieldTypeEnum.MEMBER, FieldTypeEnum.DEPARTMENT].includes(item.type) &&
+        Array.isArray(fieldValue)
+      ) {
+        // 处理数据源/成员/部门字段，单选传单个值
         result[index][item.businessKey || item.id] = result[index].price_sub
           ? fieldValue?.filter((e) => e !== result[index].price_sub)[0] // 价格表子表格特殊处理，price_sub是行号，这里不填充到fieldValue中
           : fieldValue?.[0];
@@ -687,32 +669,155 @@
         // 去空格
         result[index][item.businessKey || item.id] = fieldValue?.replace(/[\s\uFEFF\xA0]+/g, '');
       }
+      if (item.type === FieldTypeEnum.DATE_TIME && typeof fieldValue === 'string') {
+        // 去空格
+        result[index][item.businessKey || item.id] = dayjs(fieldValue).valueOf();
+      }
     });
   }
 
-  function handleSave(isContinue = false) {
-    formRef.value?.validate((errors) => {
-      if (!errors) {
-        const result = cloneDeep(formDetail.value);
-        fieldList.value.forEach((item) => {
-          if ([FieldTypeEnum.SUB_PRODUCT, FieldTypeEnum.SUB_PRICE].includes(item.type) && item.subFields?.length) {
-            item.subFields.forEach((subField) => {
-              transformSubFieldsValue(subField, result[item.id]);
-            });
-          } else {
-            transformFieldValue(item, result, item.id);
-          }
-        });
-        saveForm(result, isContinue, (_isContinue, res) => {
-          emit('saved', isContinue, res);
+  function scrollToFirstError(errors: any[]) {
+    const firstErrorId = errors[0]?.[0]?.field;
+    if (firstErrorId) {
+      const fieldElement = document.getElementById(firstErrorId);
+      fieldElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  function buildSavePayload() {
+    const result = cloneDeep(formDetail.value);
+    fieldList.value.forEach((item) => {
+      if ([FieldTypeEnum.SUB_PRODUCT, FieldTypeEnum.SUB_PRICE].includes(item.type) && item.subFields?.length) {
+        item.subFields.forEach((subField) => {
+          transformSubFieldsValue(subField, result[item.id]);
         });
       } else {
-        // 滚动到报错的位置
-        const firstErrorId = errors[0]?.[0]?.field;
-        if (firstErrorId) {
-          const fieldElement = document.getElementById(firstErrorId);
-          fieldElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        transformFieldValue(item, result, item.id);
+      }
+    });
+    return result;
+  }
+
+  function openUpdateChangeModal() {
+    return new Promise<string | undefined>((resolve) => {
+      const changeDescription = ref('');
+      let modalReactive: ReturnType<typeof openModal> | null = null;
+      const syncPositiveDisabled = (disabled: boolean) => {
+        if (!modalReactive) {
+          return;
         }
+        modalReactive.positiveButtonProps = {
+          ...(modalReactive.positiveButtonProps ?? {}),
+          disabled,
+        };
+      };
+
+      modalReactive = openModal({
+        maskClosable: false,
+        size: 'medium',
+        title: t('crm.approval.change'),
+        positiveText: t('crm.approval.confirmChange'),
+        negativeText: t('common.cancel'),
+        positiveButtonProps: {
+          size: 'medium',
+          disabled: true,
+        },
+        content: () =>
+          h(
+            NFormItem,
+            {
+              label: t('crm.approval.changeDescription'),
+              required: true,
+              showFeedback: false,
+            },
+            {
+              default: () =>
+                h(NInput, {
+                  value: changeDescription.value,
+                  type: 'textarea',
+                  maxlength: 300,
+                  showCount: true,
+                  autosize: {
+                    minRows: 3,
+                  },
+                  onUpdateValue: (value: string) => {
+                    changeDescription.value = value;
+                    syncPositiveDisabled(!value.trim().length);
+                  },
+                }),
+            }
+          ),
+        onPositiveClick: () => {
+          const description = changeDescription.value.trim();
+          if (!description.length) {
+            Message.warning(t('common.notNull', { value: t('crm.approval.changeDescription') }));
+            return false;
+          }
+          resolve(description);
+        },
+        onNegativeClick: () => {
+          resolve(undefined);
+        },
+        onAfterLeave: () => {
+          resolve(undefined);
+        },
+      });
+    });
+  }
+
+  async function getUpdateReviewExtraParams() {
+    if (!shouldConfirmUpdateChange.value) {
+      return {};
+    }
+
+    const comment = await openUpdateChangeModal();
+    if (!comment) {
+      return false;
+    }
+
+    return { comment };
+  }
+
+  function handleSave(isContinue = false) {
+    formRef.value?.validate(async (errors) => {
+      if (!errors) {
+        const result = buildSavePayload();
+        // 获取变更说明
+        const extraParams = await getUpdateReviewExtraParams();
+        if (extraParams === false) {
+          return;
+        }
+        saveForm(
+          result,
+          isContinue,
+          (_isContinue, res) => {
+            emit('saved', isContinue, res, Boolean((extraParams as Record<string, any>).comment));
+          },
+          false,
+          false,
+          extraParams
+        );
+      } else {
+        scrollToFirstError(errors);
+      }
+    });
+  }
+
+  function handleReview() {
+    formRef.value?.validate((errors) => {
+      if (!errors) {
+        const result = buildSavePayload();
+        saveForm(
+          result,
+          false,
+          (_isContinue, res) => {
+            emit('review', res);
+          },
+          false,
+          true
+        );
+      } else {
+        scrollToFirstError(errors);
       }
     });
   }
@@ -732,6 +837,7 @@
   );
 
   onBeforeMount(async () => {
+    const initApprovalReviewConfigPromise = initApprovalReviewConfig();
     await initFormConfig();
     emit('init', formCreateTitle.value, formConfig.value.viewSize);
     if (props.sourceId && props.needInitDetail) {
@@ -739,6 +845,7 @@
     }
     initForm(props.linkScenario);
     initFormulaDataSourceRemark();
+    await initApprovalReviewConfigPromise;
   });
 </script>
 

@@ -5,6 +5,7 @@ import cn.cordys.common.dto.RoleUserTreeNode;
 import cn.cordys.crm.system.dto.request.RoleUserPageRequest;
 import cn.cordys.crm.system.dto.response.RoleUserListResponse;
 import cn.cordys.crm.system.dto.response.RoleUserOptionResponse;
+import cn.cordys.crm.system.dto.response.EnableOptionDTO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -17,11 +18,13 @@ public interface ExtUserRoleMapper {
 
     List<RoleUserListResponse> list(@Param("request") RoleUserPageRequest request, @Param("orgId") String orgId);
 
-    List<DeptUserTreeNode> selectUserDeptForRelevance(@Param("orgId") String orgId, @Param("roleId") String roleId);
+    List<DeptUserTreeNode> selectUserDeptForRelevance(@Param("orgId") String orgId, @Param("roleId") String roleId, @Param("includeDisabled") Boolean includeDisabled);
 
-    List<DeptUserTreeNode> selectUserDeptForOrg(@Param("orgId") String orgId);
+    List<DeptUserTreeNode> selectUserDeptForOrg(@Param("orgId") String orgId, @Param("includeDisabled") Boolean includeDisabled);
 
     List<RoleUserTreeNode> selectUserRoleForRelevance(@Param("orgId") String orgId, @Param("roleId") String roleId);
+
+    List<RoleUserTreeNode> selectUserRoleForOrg(@Param("orgId") String orgId);
 
     void deleteUserRoleByUserId(@Param("userId") String userId);
 
@@ -31,7 +34,9 @@ public interface ExtUserRoleMapper {
 
     void deleteByIds(@Param("ids") List<String> ids);
 
-    List<RoleUserOptionResponse> selectUserOptionByRoleId(@Param("orgId") String orgId, @Param("roleId") String roleId);
+    List<RoleUserOptionResponse> selectUserOption(@Param("orgId") String orgId, @Param("includeDisabled") Boolean includeDisabled);
+
+    List<EnableOptionDTO> selectUserOptionByRoleId(@Param("orgId") String orgId, @Param("roleId") String roleId, @Param("includeDisabled") Boolean includeDisabled);
 
     List<String> selectUserRole(@Param("userId") String userId, @Param("orgId") String orgId);
 

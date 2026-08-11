@@ -67,6 +67,7 @@ public class BusinessTitleExportService extends BaseExportService {
     public LinkedHashMap<String, Object> getSystemFieldMap(BusinessTitleListResponse data) {
         LinkedHashMap<String, Object> systemFieldMap = new LinkedHashMap<>();
         systemFieldMap.put("name", data.getName());
+        systemFieldMap.put("id", data.getId());
         systemFieldMap.put("identificationNumber", data.getIdentificationNumber());
         systemFieldMap.put("openingBank", data.getOpeningBank());
         systemFieldMap.put("type", Translator.get(data.getType()));
@@ -88,6 +89,7 @@ public class BusinessTitleExportService extends BaseExportService {
         systemFieldMap.put("createTime", TimeUtils.getDateTimeStr(data.getCreateTime()));
         systemFieldMap.put("updateUser", data.getUpdateUserName());
         systemFieldMap.put("updateTime", TimeUtils.getDateTimeStr(data.getUpdateTime()));
+        systemFieldMap.put("companyNumber", data.getCompanyNumber());
         return systemFieldMap;
     }
 
@@ -101,7 +103,7 @@ public class BusinessTitleExportService extends BaseExportService {
     public List<List<Object>> getExportData(String taskId, ExportDTO exportDTO) throws InterruptedException {
         var pageRequest = (BusinessTitlePageRequest) exportDTO.getPageRequest();
         var orgId = exportDTO.getOrgId();
-        PageHelper.startPage(pageRequest.getCurrent(), pageRequest.getPageSize());
+        PageHelper.startPage(pageRequest.getCurrent(), pageRequest.getPageSize(), false);
         var dataList = extBusinessTitleMapper.list(pageRequest, orgId, exportDTO.getUserId());
         baseService.setCreateAndUpdateUserName(dataList);
         return buildExportResult(dataList, taskId, exportDTO);

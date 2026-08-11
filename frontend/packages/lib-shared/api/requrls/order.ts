@@ -12,6 +12,12 @@ export const GetOrderTabUrl = '/order/tab';
 export const OrderInContractPageUrl = '/contract/order/page';
 export const DownloadOrderUrl = '/order/download';
 export const OrderStatisticUrl = '/order/statistic';
+export const SortOrderUrl = '/order/sort';
+
+// 订单导入
+export const PreCheckOrderImportUrl = '/order/import/pre-check';
+export const DownloadOrderTemplateUrl = '/order/template/download';
+export const ImportOrderUrl = '/order/import';
 
 // 订单视图
 export const AddOrderViewUrl = '/order/view/add';
@@ -30,3 +36,5 @@ export const SortOrderStatusUrl = '/order/stage/sort'; // 订单状态排序
 export const AddOrderStatusUrl = '/order/stage/add'; // 订单状态添加
 export const GetOrderStatusConfigUrl = '/order/stage/get'; // 获取订单状态配置
 export const DeleteOrderStatusUrl = '/order/stage/delete'; // 删除订单状态
+export const SwitchOrderCirculationTypeUrl = '/order/stage/circulation-type'; // 切换流转配置
+export const SaveAdvanceConfigUrl = '/order/stage/advanced/config'; // 保存高级流转配置

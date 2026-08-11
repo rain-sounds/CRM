@@ -5,19 +5,17 @@ import { useI18n } from '@lib/shared/hooks/useI18n';
 
 import type { CrmDataTableColumn } from '@/components/pure/crm-table/type';
 
-import { contractPaymentPlanStatusOptions, contractStatusOptions } from '@/config/contract';
+import { contractPaymentPlanStatusOptions } from '@/config/contract';
 import { quotationStatus } from '@/config/opportunity';
 import { processStatusOptions } from '@/config/process';
 import useReasonConfig from '@/hooks/useReasonConfig';
 
-import useApprovalConfig from './useApprovalConfig';
 import { FormCreateTableProps } from './useFormCreateTable';
 import { FilterOption } from 'naive-ui/es/data-table/src/interface';
 
 interface FormCreateSystemColumnsResult {
   internalColumnMap: Record<string, CrmDataTableColumn[]>;
   staticColumns: CrmDataTableColumn[];
-  dicApprovalEnable: Ref<boolean>;
   reasonOptions: Ref<FilterOption[]>;
   noSorterType: FieldTypeEnum[];
 }
@@ -28,7 +26,6 @@ export default async function useFormCreateSystemColumns(
   const { t } = useI18n();
 
   const { reasonOptions, initReasonConfig } = useReasonConfig(props.formKey);
-  const { initApprovalConfig, dicApprovalEnable } = useApprovalConfig(props.formKey);
   const showPagination = props.showPagination ?? true;
   const columnsSorter = showPagination ? true : 'default';
 
@@ -48,8 +45,7 @@ export default async function useFormCreateSystemColumns(
 
   // 静态列和高级筛选增加原因配置筛选
   await initReasonConfig();
-  // 审批配置
-  await initApprovalConfig();
+
   const customerInternalColumns: CrmDataTableColumn[] = [
     {
       title: t('org.department'),
@@ -341,24 +337,19 @@ export default async function useFormCreateSystemColumns(
       render: props.specialRender?.status,
     },
   ];
-
   // 审批状态
-  const approvalStatusColumn = (
-    dicApprovalEnable.value
-      ? [
-          {
-            title: t('contract.approvalStatus'),
-            width: 120,
-            key: 'approvalStatus',
-            filterOptions: processStatusOptions,
-            sortOrder: false,
-            sorter: true,
-            filter: true,
-            render: props.specialRender?.approvalStatus,
-          },
-        ]
-      : []
-  ) as CrmDataTableColumn[];
+  const approvalStatusColumn = [
+    {
+      title: t('contract.approvalStatus'),
+      width: 120,
+      key: 'approvalStatus',
+      filterOptions: processStatusOptions,
+      sortOrder: false,
+      sorter: true,
+      filter: true,
+      render: props.specialRender?.approvalStatus,
+    },
+  ] as CrmDataTableColumn[];
 
   const invoiceInternalColumns: CrmDataTableColumn[] = [
     ...approvalStatusColumn,
@@ -707,12 +698,12 @@ export default async function useFormCreateSystemColumns(
       {
         title: t('common.status'),
         width: 120,
-        key: 'status',
+        key: 'invalid',
         filterOptions: quotationStatus,
         sortOrder: false,
         sorter: true,
         filter: true,
-        render: props.specialRender?.status,
+        render: props.specialRender?.invalid,
       },
       ...approvalStatusColumn,
     ],
@@ -732,7 +723,11 @@ export default async function useFormCreateSystemColumns(
         title: t('contract.status'),
         width: 120,
         key: 'stage',
-        filterOptions: contractStatusOptions,
+        filterOptions:
+          props.contractStage?.map((e) => ({
+            label: e.name,
+            value: e.id,
+          })) || [],
         sortOrder: false,
         sorter: true,
         filter: true,
@@ -832,7 +827,6 @@ export default async function useFormCreateSystemColumns(
   return {
     internalColumnMap,
     staticColumns,
-    dicApprovalEnable,
     reasonOptions,
     noSorterType,
   };

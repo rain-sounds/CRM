@@ -1,10 +1,11 @@
 package cn.cordys.crm.approval.dto.request;
 
 import cn.cordys.common.constants.EnumValue;
-import cn.cordys.crm.approval.constants.DuplicateApproverRuleEnum;
 import cn.cordys.crm.approval.constants.ApprovalFormTypeEnum;
+import cn.cordys.crm.approval.constants.DuplicateApproverRuleEnum;
 import cn.cordys.crm.approval.dto.StatusPermissionDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -22,8 +23,14 @@ public class ApprovalFlowAddRequest {
     @Schema(description = "表单类型：quotation/contract/invoice/order")
     private String formType;
 
-    @Schema(description = "执行时机列表：CREATE/EDIT")
-    private List<String> executeTiming;
+    @Schema(description = "新建时执行")
+    private Boolean createExecute = true;
+
+    @Schema(description = "编辑时执行")
+    private Boolean updateExecute = true;
+
+    @Schema(description = "删除时执行")
+    private Boolean deleteExecute = false;
 
     @Schema(description = "启用状态")
     private Boolean enable;
@@ -51,8 +58,18 @@ public class ApprovalFlowAddRequest {
     private Boolean requireComment;
 
     @Schema(description = "状态权限配置")
+    @Valid
     private List<StatusPermissionDTO> statusPermissions;
 
-    @Schema(description = "节点配置列表")
-    private List<ApprovalNodeRequest> nodes;
+    @Schema(description = "新建时节点配置")
+    @Valid
+    private ApprovalFlowNodeConfigRequest createNodeConfig;
+
+    @Schema(description = "编辑时节点配置")
+    @Valid
+    private ApprovalFlowNodeConfigRequest updateNodeConfig;
+
+    @Schema(description = "删除时节点配置")
+    @Valid
+    private ApprovalFlowNodeConfigRequest deleteNodeConfig;
 }

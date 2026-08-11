@@ -30,7 +30,7 @@
             and file_name like concat('%', #{request.keyword},'%')
         </if>
         <if test="request.exportType != null and request.exportType != ''">
-            and resource_type like concat(#{request.exportType},'%')
+            and resource_type = #{request.exportType}
         </if>
         <if test="request.exportStatus != null and request.exportStatus != ''">
             and status = #{request.exportStatus}
@@ -38,4 +38,13 @@
         ORDER BY
             create_time DESC
     </select>
+
+    <select id="checkPreparedUniqueness" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM export_task
+        WHERE status = 'PREPARED'
+          AND create_user = #{createUser}
+          AND resource_type = #{resourceType}
+    </select>
+
 </mapper>

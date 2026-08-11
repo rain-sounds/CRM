@@ -12,6 +12,14 @@
 
     </update>
 
+    <update id="voided">
+        update opportunity_quotation
+        set invalid = true,
+            update_user     = #{userId},
+            update_time     = #{updateTime}
+        where id = #{approvingId}
+    </update>
+
     <update id="batchUpdate">
         update opportunity_quotation
         <set>
@@ -38,7 +46,7 @@
 
 
     <select id="list" resultType="cn.cordys.crm.opportunity.dto.response.OpportunityQuotationListResponse">
-        select oq.id, oq.name, oq.opportunity_id, o.name as opportunityName, oq.approval_status, oq.amount,
+        select oq.id, oq.name, oq.opportunity_id, o.name as opportunityName, oq.approval_status, oq.approved, oq.invalid, oq.amount,
         oq.until_time, oq.organization_id, oq.create_time,
         oq.update_time, oq.create_user, oq.update_user
         from opportunity_quotation oq
@@ -66,7 +74,7 @@
             <foreach collection="dataPermission.deptIds" item="deptId" open="(" close=")" separator=",">
                 #{deptId}
             </foreach>
-            <if test="dataPermission.viewId == 'ALL'">
+            <if test="dataPermission.viewId != 'DEPARTMENT'">
                 or sys_organization_user.user_id = #{userId}
             </if>
             )
@@ -128,6 +136,7 @@
                     <otherwise>
                         <if test="condition.name != 'name'
                             and condition.name != 'approvalStatus'
+                            and condition.name != 'invalid'
                             and condition.name != 'amount'
                             and condition.name != 'opportunityId'
                             and condition.name != 'departmentId'
@@ -163,7 +172,7 @@
 
     <sql id="fieldSortJoin">
         <if test="${sort} != null and ${sort}.valid() and ${sort}.name not in
-                {'name', 'approval_status', 'amount', 'opportunity_id', 'update_user', 'create_time', 'update_time', 'until_time',
+                {'name', 'approval_status', 'invalid', 'amount', 'opportunity_id', 'update_user', 'create_time', 'update_time', 'until_time',
                 'create_user', 'department_id' }">
             <bind name="sortName" value="${sort}.name"/>
             left join opportunity_quotation_field sort_table
@@ -185,7 +194,10 @@
                         oq.`name` ${sortType}, oq.id ASC
                     </when>
                     <when test="${sort}.name == 'approval_status'">
-                        oq.`approval_status` ${sortType}, oq.id ASC
+                        FIELD(oq.approval_status, 'NONE', 'PENDING', 'APPROVING', 'APPROVED', 'REVOKED', 'UNAPPROVED') ${sortType}, oq.id ASC
+                    </when>
+                    <when test="${sort}.name == 'invalid'">
+                        oq.`invalid` ${sortType}, oq.id ASC
                     </when>
                     <when test="${sort}.name == 'amount'">
                         oq.`amount` ${sortType}, oq.id ASC
@@ -213,7 +225,7 @@
                     </when>
                     <otherwise>
                         CASE
-                        WHEN module_table.type = 'INPUT_NUMBER'
+                        WHEN module_table.type = 'INPUT_NUMBER' OR module_table.type = 'FORMULA'
                         THEN sort_table.field_value+0
                         END ${sortType},
                         sort_table.field_value ${sortType},
@@ -272,6 +284,28 @@
                             <property name="condition" value="condition"/>
                             <property name="column" value="oq.approval_status"/>
                         </include>
+                    </when>
+                    <when test="condition.name == 'invalid'">
+                        <if test="condition.operator == 'IN'">
+                            oq.invalid in
+                            <foreach collection="${condition}.value" item="v" separator="," open="(" close=")">
+                                #{v}
+                            </foreach>
+                        </if>
+                        <if test="condition.operator == 'NOT_IN'">
+                            !( oq.invalid
+                            in
+                            <foreach collection="${condition}.value" item="v" separator="," open="(" close=")">
+                                #{v}
+                            </foreach>
+                            )
+                        </if>
+                        <if test="${condition}.operator == 'EMPTY'">
+                            oq.invalid is null
+                        </if>
+                        <if test="${condition}.operator == 'NOT_EMPTY'">
+                            oq.invalid is not null
+                        </if>
                     </when>
                     <when test="condition.name == 'amount'">
                         <include refid="cn.cordys.common.mapper.CommonMapper.condition">

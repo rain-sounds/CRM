@@ -3,6 +3,7 @@ import useAgentApi from '@lib/shared/api/modules/agent';
 import useClueApi from '@lib/shared/api/modules/clue';
 import useContractApi from '@lib/shared/api/modules/contract';
 import useCustomerApi from '@lib/shared/api/modules/customer';
+import useCustomFormApi from '@lib/shared/api/modules/customForm';
 import useDashboard from '@lib/shared/api/modules/dashboard';
 import useFollowApi from '@lib/shared/api/modules/follow';
 import useHomeApi from '@lib/shared/api/modules/home';
@@ -17,6 +18,7 @@ import useLoginApi from '@lib/shared/api/modules/system/login';
 import useMessageApi from '@lib/shared/api/modules/system/message';
 import useModuleApi from '@lib/shared/api/modules/system/module';
 import useOrgApi from '@lib/shared/api/modules/system/org';
+import useProcessApi from '@lib/shared/api/modules/system/process';
 import useRoleApi from '@lib/shared/api/modules/system/role';
 
 import useDiscreteApi from '@/hooks/useDiscreteApi';
@@ -49,6 +51,39 @@ const opportunityApi = useOpportunityApi(CDR);
 const contractApi = useContractApi(CDR);
 const orderApi = useOrderApi(CDR);
 const outsourcingApi = useOutsourcingApi(CDR);
+const customFormApi = useCustomFormApi(CDR);
+const processApi = useProcessApi(CDR);
+
+export const {
+  addCustomForm,
+  updateCustomForm,
+  getCustomFormDetail,
+  saveCustomFormAdmins,
+  getCustomFormAdmins,
+  relateCustomFormMember,
+  getCustomFormRoles,
+  getCustomFormRoleUsers,
+  getCustomFormRoleUserDeptTree,
+  getCustomFormRoleUserRoleTree,
+  removeCustomFormMember,
+  getCustomFormList,
+  getCustomFormDataDetail,
+  getCustomFormDataPage,
+  addCustomFormData,
+  batchUpdateCustomFormData,
+  batchDeleteCustomFormData,
+  updateCustomFormData,
+  deleteCustomFormData,
+  deleteCustomForm,
+  enableCustomForm,
+  disableCustomForm,
+  getCustomFormOptions,
+  preCheckImportCustomForm,
+  downloadCustomFormTemplate,
+  importCustomForm,
+  exportCustomFormAll,
+  exportCustomFormSelected,
+} = customFormApi;
 
 export const {
   getOrderFormConfig,
@@ -72,13 +107,19 @@ export const {
   dragOrderView,
   updateOrderStatus,
   updateOrderStatusRollback,
+  sortOrder,
   sortOrderStatus,
   addOrderStatus,
   getOrderStatusConfig,
   updateOrderStage,
   downloadOrder,
+  preCheckImportOrder,
+  downloadOrderTemplate,
+  importOrder,
   deleteOrderStatus,
   getOrderStatistic,
+  saveAdvanceConfig,
+  switchOrderCirculationType,
 } = orderApi;
 
 export const {
@@ -161,6 +202,8 @@ export const {
   preCheckImportProductPrice,
   importProductPrice,
   copyProductPrice,
+  exportProductAll,
+  exportProductSelected,
 } = productApi;
 
 export const {
@@ -248,6 +291,7 @@ export const {
   assignClue,
   getClueTab,
   importLead,
+  importPoolLead,
   getClueList,
   getPoolClue,
   addClueView,
@@ -282,6 +326,7 @@ export const {
   generateLeadChart,
   exportClueSelected,
   preCheckImportLead,
+  preCheckImportPoolLead,
   deleteLeadPoolView,
   updateLeadPoolView,
   enableLeadPoolView,
@@ -295,6 +340,7 @@ export const {
   deleteClueFollowPlan,
   cancelClueFollowPlan,
   downloadLeadTemplate,
+  downloadPoolLeadTemplate,
   getClueFollowPlanList,
   getGlobalCluePoolList,
   getLeadPoolViewDetail,
@@ -318,6 +364,7 @@ export const {
   getCustomer,
   mergeAccount,
   importAccount,
+  importPoolAccount,
   importContact,
   updateCustomer,
   deleteCustomer,
@@ -377,6 +424,7 @@ export const {
   getGlobalCustomerList,
   exportContactSelected,
   preCheckImportAccount,
+  preCheckImportPoolAccount,
   preCheckImportContact,
   deleteAccountPoolView,
   updateAccountPoolView,
@@ -394,6 +442,7 @@ export const {
   isCustomerOpenSeaNoPick,
   getCustomerRelationList,
   downloadAccountTemplate,
+  downloadPoolAccountTemplate,
   downloadContactTemplate,
   updateCustomerFollowPlan,
   deleteCustomerFollowPlan,
@@ -528,6 +577,9 @@ export const {
   getInvoicedFormSnapshotConfig,
   exportInvoicedAll,
   exportInvoicedSelected,
+  preCheckImportContractInvoiced,
+  downloadContractInvoicedTemplate,
+  importContractInvoiced,
   revokeInvoiced,
   approvalInvoiced,
   batchDeleteInvoiced,
@@ -543,13 +595,29 @@ export const {
   getInvoicedInContractList,
   getContractDetailSnapshot,
   getInvoicedDetailSnapshot,
+  preCheckImportContract,
+  downloadContractTemplate,
+  importContract,
   getContractStatistic,
+  sortContract,
   getPaymentRecordStatistic,
   getInvoiceMaterialList,
   addInvoiceMaterial,
   updateInvoiceMaterial,
   deleteInvoiceMaterial,
   getInvoiceMaterialDetail,
+  updateContractStatus,
+  updateContractStatusRollback,
+  sortContractStatus,
+  addContractStatus,
+  getContractStatusConfig,
+  deleteContractStatus,
+  updateContractStage,
+  saveContractAdvanceConfig,
+  switchContractCirculationType,
+  preCheckImportContractPaymentPlan,
+  importContractPaymentPlan,
+  downloadContractPaymentPlanTemplate,
 } = contractApi;
 
 export const {
@@ -636,6 +704,7 @@ export const {
   getFieldDeptTree,
   getFieldClueList,
   getFieldContractList,
+  getFieldInvoiceList,
   getFieldContractPaymentPlanList,
   getFieldContractPaymentRecordList,
   deleteReasonItem,
@@ -681,6 +750,8 @@ export const {
   getFieldDisplayList,
   getFieldBusinessTitleList,
   getDatasourceRefDetailList,
+  getFieldCustomFormList,
+  getDatasourceFieldConfig,
 } = moduleApi;
 
 export const {
@@ -695,6 +766,7 @@ export const {
   getUserDetail,
   batchEditUser,
   getUserOptions,
+  getAdminOptions,
   getRoleOptions,
   sortDepartment,
   deleteUserCheck,
@@ -729,7 +801,7 @@ export const {
   batchRemoveRoleMember,
 } = roleApi;
 
-export const { login, signout, isLogin, getKey, getThirdCallback, getThirdOauthCallback } = loginApi;
+export const { login, signout, isLogin, getKey, getThirdCallback, getThirdOauthCallback, getOauthState } = loginApi;
 
 export const { getSystemVersion, changeLocaleBackEnd } = sysApi;
 
@@ -786,3 +858,31 @@ export const {
   agentApplicationOptions,
   getMkApplication,
 } = agentApi;
+
+export const {
+  getApprovalProcessList,
+  getApprovalPermissions,
+  addApprovalProcess,
+  updateApprovalProcess,
+  approvalProcessDetail,
+  deleteApprovalProcess,
+  toggleApprovalProcess,
+  getApprovalConfigDetail,
+  getResourceApprovingDetail,
+  reviewResource,
+  revokeResource,
+  getProcessedApprovalList,
+  getPendingApprovalList,
+  getInitiatedApprovalList,
+  getCcApprovalList,
+  rejectApproval,
+  backApproval,
+  addSignApproval,
+  getApprovalResourceDetail,
+  getTodoStatistic,
+  revokeApproval,
+  batchRejectApproval,
+  agreeApproval,
+  batchAgreeApproval,
+  testApprovalWebHook,
+} = processApi;

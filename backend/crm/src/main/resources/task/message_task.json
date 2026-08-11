@@ -238,6 +238,20 @@
   },
   {
     "organizationId": "",
+    "module": "ORDER",
+    "moduleName": "",
+    "messageTaskDetailDTOList": [
+      {
+        "event": "ORDER_APPROVAL",
+        "eventName": "",
+        "emailEnable": false,
+        "sysEnable": false,
+        "weComEnable": false
+      }
+    ]
+  },
+  {
+    "organizationId": "",
     "module": "CONTRACT",
     "moduleName": "",
     "messageTaskDetailDTOList": [
@@ -288,6 +302,21 @@
         "sysEnable": false,
         "weComEnable": false,
         "smsEnable": false
+        "weComEnable": false
+      },
+      {
+        "event": "CONTRACT_APPROVAL",
+        "eventName": "",
+        "emailEnable": false,
+        "sysEnable": false,
+        "weComEnable": false
+      },
+      {
+        "event": "INVOICE_APPROVAL",
+        "eventName": "",
+        "emailEnable": false,
+        "sysEnable": false,
+        "weComEnable": false
       }
     ]
   }

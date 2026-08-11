@@ -107,10 +107,11 @@ public class AdvancedCustomerContactSearchService extends BaseSearchService<Cust
                 .collect(Collectors.toList());
 
         Map<String, List<BaseModuleFieldValue>> caseCustomFiledMap = customerContactFieldService.getResourceFieldMap(customerContactIds, true);
+        Map<String, List<BaseModuleFieldValue>> fieldValueMap = customerContactFieldService.setBusinessRefFieldValue(list, moduleFormService.getFlattenFormFields(FormKey.CONTACT.getKey(), orgId), caseCustomFiledMap);
 
         Map<String, String> customNameMap = extCustomerMapper.selectOptionByIds(customerIds)
                 .stream()
-                .collect(Collectors.toMap(OptionDTO::getId, OptionDTO::getName));
+                .collect(Collectors.toMap(OptionDTO::getIdAsString, OptionDTO::getName));
 
         List<String> ownerIds = list.stream()
                 .map(CustomerContactListResponse::getOwner)
@@ -122,7 +123,7 @@ public class AdvancedCustomerContactSearchService extends BaseSearchService<Cust
         List<AdvancedCustomerContactResponse> returnList = new ArrayList<>();
         list.forEach(customerListResponse -> {
             // 获取自定义字段
-            List<BaseModuleFieldValue> customerFields = caseCustomFiledMap.get(customerListResponse.getId());
+            List<BaseModuleFieldValue> customerFields = fieldValueMap.get(customerListResponse.getId());
             customerListResponse.setModuleFields(customerFields);
 
             UserDeptDTO userDeptDTO = userDeptMap.get(customerListResponse.getOwner());

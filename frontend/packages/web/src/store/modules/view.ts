@@ -9,22 +9,13 @@ import type { SortParams, TableDraggedParams } from '@lib/shared/models/common';
 import type { OpportunityStageConfig } from '@lib/shared/models/opportunity';
 import type { ViewItem } from '@lib/shared/models/view';
 
-import { ConditionsItem, FilterFormItem } from '@/components/pure/crm-advance-filter/type';
+import { ConditionsItem, FilterFormItem, filterOptionKeyMap } from '@/components/pure/crm-advance-filter/type';
 import { internalConditionsMap, viewApiMap } from '@/components/business/crm-view-select/config';
 
 import { getOpportunityStageConfig } from '@/api/modules';
 import { TabType } from '@/hooks/useHiddenTab';
 import useLocalForage from '@/hooks/useLocalForage';
 import useUserStore from '@/store/modules/user';
-
-const typeToKeyMap: Partial<Record<FieldTypeEnum, 'selectedRows' | 'selectedUserList'>> = {
-  [FieldTypeEnum.DATA_SOURCE]: 'selectedRows',
-  [FieldTypeEnum.DATA_SOURCE_MULTIPLE]: 'selectedRows',
-  [FieldTypeEnum.DEPARTMENT]: 'selectedUserList',
-  [FieldTypeEnum.DEPARTMENT_MULTIPLE]: 'selectedUserList',
-  [FieldTypeEnum.MEMBER]: 'selectedUserList',
-  [FieldTypeEnum.MEMBER_MULTIPLE]: 'selectedUserList',
-};
 
 // 视图
 const useViewStore = defineStore('view', {
@@ -175,6 +166,7 @@ const useViewStore = defineStore('view', {
       ];
       // admin 不显示部门视图
       if (userStore.userInfo.id === 'admin') {
+        // @ts-ignore-next-line
         this.internalViews = merged.filter((item) => item.id !== CustomerSearchTypeEnum.DEPARTMENT);
       } else {
         this.internalViews = merged;
@@ -204,7 +196,7 @@ const useViewStore = defineStore('view', {
               res.optionMap?.[item.name as string]?.filter((i: { id: string; name: string }) =>
                 item.value?.includes(i.id)
               ) ?? [];
-            const keyText = typeToKeyMap[item.type as FieldTypeEnum];
+            const keyText = filterOptionKeyMap[item.type as FieldTypeEnum];
 
             return {
               ...item,

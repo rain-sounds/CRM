@@ -1,7 +1,7 @@
 package cn.cordys.common.dto;
 
+import cn.cordys.common.utils.SqlInjectionChecker;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,7 +16,6 @@ import org.apache.commons.lang3.Strings;
 @AllArgsConstructor
 public class SortRequest {
 
-    @Pattern(regexp = "^[A-Za-z0-9]+$")
     @Schema(description = "排序字段")
     private String name;
 
@@ -39,28 +38,11 @@ public class SortRequest {
         return underline;
     }
 
-    /**
-     * 返回 true 表示存在 SQL 注入风险
-     *
-     * @param script
-     *
-     * @return
-     */
-    public static boolean checkSqlInjection(String script) {
-        if (StringUtils.isEmpty(script)) {
-            return false;
-        }
-        // 检测危险SQL模式
-        java.util.regex.Pattern dangerousPattern = java.util.regex.Pattern.compile(
-                "(;|--|#|'|\"|/\\*|\\*/|\\b(select|insert|update|delete|drop|alter|truncate|exec|union|xp_)\\b)",
-                java.util.regex.Pattern.CASE_INSENSITIVE);
-
-        // 返回true表示存在注入风险
-        return dangerousPattern.matcher(script).find();
-    }
-
     public String getName() {
-        if (checkSqlInjection(name)) {
+        if (name == null || !name.matches("^[A-Za-z0-9]+$")) {
+            return "1";
+        }
+        if (SqlInjectionChecker.containsSqlInjectionRisk(name)) {
             return "1";
         }
         return camelToUnderline(name);
@@ -80,6 +62,6 @@ public class SortRequest {
      * @return
      */
     public boolean valid() {
-        return StringUtils.isNotBlank(name) && !checkSqlInjection(name);
+        return StringUtils.isNotBlank(name) && !SqlInjectionChecker.containsSqlInjectionRisk(name);
     }
 }

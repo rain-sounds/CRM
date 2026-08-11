@@ -13,6 +13,7 @@ import cn.cordys.security.SessionUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import org.apache.shiro.authz.annotation.Logical;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -56,13 +57,13 @@ public class ModuleController {
     @GetMapping("/user/dept/tree")
     @Operation(summary = "获取部门用户树")
     @RequiresPermissions(PermissionConstants.MODULE_SETTING_READ)
-    public List<DeptUserTreeNode> getDeptUserTree() {
-        return moduleService.getDeptUserTree(OrganizationContext.getOrganizationId());
+    public List<DeptUserTreeNode> getDeptUserTree(@RequestParam(required = false, defaultValue = "false") Boolean includeDisabled) {
+        return moduleService.getDeptUserTree(OrganizationContext.getOrganizationId(), includeDisabled);
     }
 
     @GetMapping("/role/tree")
     @Operation(summary = "获取角色树")
-    @RequiresPermissions(PermissionConstants.MODULE_SETTING_READ)
+    @RequiresPermissions(value = {PermissionConstants.MODULE_SETTING_READ, PermissionConstants.PROCESS_SETTING_READ}, logical = Logical.OR)
     public List<RoleUserTreeNode> getRoleTree() {
         return moduleService.getRoleTree(OrganizationContext.getOrganizationId());
     }

@@ -14,4 +14,9 @@ public class OpportunityQuotationEditRequest extends OpportunityQuotationAddRequ
     @Schema(description = "审批状态", requiredMode = Schema.RequiredMode.REQUIRED)
     private String approvalStatus;
 
+    @Schema(description = "是否提审更新  normal-正常更新  approval-评审更新")
+    private String updateType;
+
+    @Schema(description = "变更说明")
+    private String comment;
 }

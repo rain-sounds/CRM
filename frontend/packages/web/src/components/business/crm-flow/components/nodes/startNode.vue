@@ -1,9 +1,11 @@
 <template>
   <BaseFlowNode
     :name="nodeData.name ?? ''"
+    :number="nodeData.number"
     :description="nodeData.description"
     :show-content="nodeData.showContent ?? true"
     :selected="Boolean(nodeData.selected)"
+    :invalid="Boolean(nodeData.invalid)"
     node-type="start"
     :icon="{
       type: 'iconicon_play_circle_stroke',
@@ -30,8 +32,11 @@
 
   const { nodeData } = useX6NodeData<{
     name?: string;
+    number?: string;
     description?: string;
     showContent?: boolean;
     selected?: boolean;
+    invalid?: boolean;
+    readonly?: boolean;
   }>(toRef(props, 'node'));
 </script>

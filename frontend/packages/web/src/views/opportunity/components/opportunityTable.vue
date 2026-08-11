@@ -200,6 +200,7 @@
   import CrmFormCreateDrawer from '@/components/business/crm-form-create-drawer/index.vue';
   import CrmImportButton from '@/components/business/crm-import-button/index.vue';
   import CrmOperationButton from '@/components/business/crm-operation-button/index.vue';
+  import { OpenDetailType } from '@/components/business/crm-stage-board/types';
   import CrmTableExportModal from '@/components/business/crm-table-export-modal/index.vue';
   import TransferModal from '@/components/business/crm-transfer-modal/index.vue';
   import TransferForm from '@/components/business/crm-transfer-modal/transferForm.vue';
@@ -306,15 +307,11 @@
               ? ['OPPORTUNITY_MANAGEMENT:UPDATE']
               : ['OPPORTUNITY_MANAGEMENT:UPDATE', 'OPPORTUNITY_MANAGEMENT:RESIGN'],
         },
-        ...(activeTab.value !== OpportunitySearchTypeEnum.OPPORTUNITY_SUCCESS
-          ? [
-              {
-                label: t('common.batchTransfer'),
-                key: 'batchTransfer',
-                permission: ['OPPORTUNITY_MANAGEMENT:TRANSFER'],
-              },
-            ]
-          : []),
+        {
+          label: t('common.batchTransfer'),
+          key: 'batchTransfer',
+          permission: ['OPPORTUNITY_MANAGEMENT:TRANSFER'],
+        },
         {
           label: t('common.batchDelete'),
           key: 'batchDelete',
@@ -486,6 +483,16 @@
   const transferFormRef = ref<InstanceType<typeof TransferForm>>();
   const transferLoading = ref(false);
 
+  function resetTransferForm() {
+    transferForm.value = { ...defaultTransferForm };
+  }
+
+  function handleTransferPopUpdate(key: string, show: boolean) {
+    if (key === 'transfer' && show) {
+      resetTransferForm();
+    }
+  }
+
   // 转移
   function handleTransfer(row: OpportunityItem, done?: () => void) {
     transferFormRef.value?.formRef?.validate(async (error) => {
@@ -497,7 +504,7 @@
             ids: [row.id],
           });
           Message.success(t('common.transferSuccess'));
-          transferForm.value = { ...defaultTransferForm };
+          resetTransferForm();
           tableRefreshId.value += 1;
           done?.();
         } catch (e) {
@@ -571,7 +578,9 @@
     }
 
     if (row.stage === successStage.value?.id) {
-      return hasBackStagePermission.value ? [...editAction, ...deleteAction] : [...deleteAction];
+      return hasBackStagePermission.value
+        ? [...editAction, ...transferAction, ...deleteAction]
+        : [...transferAction, ...deleteAction];
     }
 
     return [
@@ -634,9 +643,8 @@
                   {
                     groupList: getOperationGroupList(row),
                     onSelect: (key: string, done?: () => void) => handleActionSelect(row, key, done),
-                    onCancel: () => {
-                      transferForm.value = { ...defaultTransferForm };
-                    },
+                    onCancel: resetTransferForm,
+                    onPopUpdate: handleTransferPopUpdate,
                   },
                   {
                     transferPopContent: () => {
@@ -671,18 +679,22 @@
         return props.readonly ? h(CrmNameTooltip, { text: row.name }) : createNameButton();
       },
       customerId: (row: OpportunityItem) => {
-        return props.isCustomerTab ||
+        if (
+          props.isCustomerTab ||
           props.formKey === FormDesignKeyEnum.SEARCH_ADVANCED_OPPORTUNITY ||
           (!row.inCustomerPool && !hasAnyPermission(['CUSTOMER_MANAGEMENT:READ'])) ||
           (row.inCustomerPool && !hasAnyPermission(['CUSTOMER_MANAGEMENT_POOL:READ']))
+        ) {
+          return h(
+            CrmNameTooltip,
+            { text: row.customerName },
+            {
+              default: () => row.customerName,
+            }
+          );
+        }
+        return row.customerName
           ? h(
-              CrmNameTooltip,
-              { text: row.customerName },
-              {
-                default: () => row.customerName,
-              }
-            )
-          : h(
               CrmTableButton,
               {
                 onClick: () => {
@@ -690,7 +702,8 @@
                 },
               },
               { default: () => row.customerName, trigger: () => row.customerName }
-            );
+            )
+          : '-';
       },
       stage: (row: OpportunityItem) => {
         return row.stageName || '-';
@@ -834,7 +847,7 @@
   });
 
   const exportColumns = computed<ExportTableColumnItem[]>(() =>
-    getExportColumns(propsRes.value.columns, customFieldsFilterConfig.value as FilterFormItem[])
+    getExportColumns(propsRes.value.columns, customFieldsFilterConfig.value as FilterFormItem[], fieldList.value, true)
   );
 
   function searchData(_keyword?: string, refreshId?: string) {
@@ -1019,7 +1032,7 @@
     }
   }
 
-  function handleOpenDetail(type: 'customer' | 'opportunity', item: any) {
+  function handleOpenDetail(type: OpenDetailType, item: any) {
     if (type === 'customer') {
       showCustomerDrawer(item);
     } else if (type === 'opportunity') {
@@ -1043,6 +1056,11 @@
   }
 
   function removeItemFromList(id: string) {
+    if (activeShowType.value === 'billboard') {
+      billboardRef.value?.refresh();
+      getStatistic();
+      return;
+    }
     propsRes.value.data = propsRes.value.data.filter((item) => item.id !== id);
     propsRes.value.crmPagination = {
       ...propsRes.value.crmPagination,

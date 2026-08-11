@@ -1,5 +1,6 @@
 export default {
   'taskDrawer.applicant': 'Applicant',
+  'taskDrawer.approvalType': 'Approval Type',
   'taskDrawer.applyTime': 'Apply Time',
   'taskDrawer.approved': 'Approved',
   'taskDrawer.approveReason': 'Approve Reason',
@@ -8,4 +9,13 @@ export default {
   'taskDrawer.rejectReason': 'Reject Reason',
   'taskDrawer.confirmReject': 'Confirm Reject',
   'taskDrawer.items': '({count} items)',
+  'taskDrawer.result.PENDING': 'Pending',
+  'taskDrawer.result.APPROVING': 'In Progress',
+  'taskDrawer.result.APPROVED': 'Approved',
+  'taskDrawer.result.UNAPPROVED': 'Rejected',
+  'taskDrawer.result.REVOKED': 'Revoked',
+  'taskDrawer.operation.APPROVE': 'Approve',
+  'taskDrawer.operation.REJECT': 'Reject',
+  'taskDrawer.operation.SIGN': 'Sign',
+  'taskDrawer.operation.BACK': 'Back',
 };

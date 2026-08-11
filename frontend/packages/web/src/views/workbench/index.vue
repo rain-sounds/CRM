@@ -15,8 +15,8 @@
       @after-leave="showAlert = false"
     >
       <span>{{ t('system.personal.changePasswordTip') }}</span>
-      <n-button class="ml-[8px]" text type="primary" @click="changePassword">
-        {{ t('system.personal.changePassword') }}
+      <n-button class="ml-[8px]" text type="primary" size="small" @click="changePassword">
+        <div class="text-[14px]"> {{ t('system.personal.changePassword') }}</div>
       </n-button>
     </n-alert>
     <n-scrollbar x-scrollable content-style="min-width: 1000px;height: 100%;width: 100%">
@@ -46,14 +46,14 @@
               />
             </CrmCard>
           </div>
-          <div class="flex h-full flex-wrap">
+          <div class="flex h-full w-[400px] flex-col justify-between overflow-hidden">
             <CrmCard hide-footer no-content-padding auto-height class="ml-[16px] w-full">
               <div class="max-h-[352px] p-[24px]">
-                <div class="title !mb-[8px]">
+                <div class="title !mb-[16px]">
                   <div class="title-name">{{ t('workbench.dataOverview.myTasks') }}</div>
                 </div>
                 <div class="grid grid-cols-2 gap-[8px_16px]">
-                  <div class="task-item" @click="openTaskDrawer('pending')">
+                  <div class="task-item" @click="openTaskDrawer(ApprovalListTypeEnum.PENDING)">
                     <div class="task-icon bg-[var(--info-blue)]">
                       <CrmIcon type="iconicon_contract" :size="16" color="var(--text-n10)" />
                     </div>
@@ -62,19 +62,19 @@
                       <div class="font-semibold text-[var(--primary-8)]">{{ pendingApprovalCount }}</div>
                     </div>
                   </div>
-                  <div class="task-item" @click="openTaskDrawer('approved')">
+                  <div class="task-item" @click="openTaskDrawer(ApprovalListTypeEnum.APPROVAL)">
                     <div class="task-icon bg-[var(--success-green)]">
                       <CrmIcon type="iconicon_check_circle" :size="16" color="var(--text-n10)" />
                     </div>
                     {{ t('workbench.dataOverview.approvedByMe') }}
                   </div>
-                  <div class="task-item" @click="openTaskDrawer('initiated')">
+                  <div class="task-item" @click="openTaskDrawer(ApprovalListTypeEnum.INITIATED)">
                     <div class="task-icon bg-[var(--primary-8)]">
                       <CrmIcon type="iconicon_add" :size="16" color="var(--text-n10)" />
                     </div>
                     {{ t('workbench.dataOverview.initiatedByMe') }}
                   </div>
-                  <div class="task-item" @click="openTaskDrawer('copied')">
+                  <div class="task-item" @click="openTaskDrawer(ApprovalListTypeEnum.COPIED)">
                     <div class="task-icon bg-[var(--warning-yellow)]">
                       <CrmIcon type="iconicon_send" :size="16" color="var(--text-n10)" />
                     </div>
@@ -116,6 +116,7 @@
   import { NAlert, NButton, NScrollbar } from 'naive-ui';
 
   import { FormDesignKeyEnum } from '@lib/shared/enums/formDesignEnum';
+  import { ApprovalListTypeEnum, ApprovalResourceTypeEnum } from '@lib/shared/enums/process';
   import { PersonalEnum } from '@lib/shared/enums/systemEnum';
   import { useI18n } from '@lib/shared/hooks/useI18n';
 
@@ -191,10 +192,10 @@
   }
 
   // 待办
-  const pendingApprovalCount = ref(0);
+  const pendingApprovalCount = computed(() => appStore.todoStatistic.total);
   const showTaskDrawer = ref(false);
-  const activeTaskType = ref<'pending' | 'approved' | 'initiated' | 'copied'>('pending');
-  function openTaskDrawer(type: 'pending' | 'approved' | 'initiated' | 'copied') {
+  const activeTaskType = ref<ApprovalListTypeEnum>(ApprovalListTypeEnum.PENDING);
+  function openTaskDrawer(type: ApprovalListTypeEnum) {
     activeTaskType.value = type;
     showTaskDrawer.value = true;
   }
@@ -208,6 +209,7 @@
 
   onBeforeMount(() => {
     appStore.initMessage();
+    appStore.initTodoStatistic();
   });
 </script>
 

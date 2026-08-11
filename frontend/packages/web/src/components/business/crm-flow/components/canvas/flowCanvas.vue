@@ -54,6 +54,7 @@
     defineProps<{
       flow: FlowSchema;
       selection: NodeSelectionState;
+      readonly?: boolean;
     }>(),
     {}
   );
@@ -174,7 +175,11 @@
       showNodeDescription: viewMode.value === 'detail',
     });
 
-    const cellsWithSelection = (cells as any[]).map((cell) => {
+    const visibleCells = props.readonly
+      ? (cells as any[]).filter((cell) => !['add-node', 'add-condition'].includes(cell?.data?.kind))
+      : (cells as any[]);
+
+    const cellsWithSelection = visibleCells.map((cell) => {
       if (!cell?.data) {
         return cell;
       }
@@ -185,6 +190,8 @@
         data: {
           ...data,
           selected: resolveSelectedState(data),
+          readonly: Boolean(props.readonly),
+          isPanMode: isPanMode.value,
         },
       };
     });
@@ -192,7 +199,36 @@
     graphController.value.render(cellsWithSelection);
   }
 
-  function updateRenderedSelectionState() {
+  const canvasRef = ref<HTMLElement | null>(null);
+
+  function fitCanvasToContent() {
+    requestAnimationFrame(() => {
+      graphController.value?.fitToContent();
+    });
+  }
+
+  function refreshCanvas(fitToContent = false) {
+    nextTick(() => {
+      const graph = graphController.value?.getGraph();
+      const resizeTarget = flowCanvasRef.value ?? canvasRef.value;
+      if (!graph || !resizeTarget) {
+        return;
+      }
+
+      const { clientWidth, clientHeight } = resizeTarget;
+      // 抽屉/侧栏动画期间可能读到 0 尺寸；此时重绘 X6 会导致画布内容偶发消失。
+      if (!clientWidth || !clientHeight) {
+        return;
+      }
+      graph.resize(clientWidth, clientHeight);
+      renderFlow();
+      if (fitToContent) {
+        fitCanvasToContent();
+      }
+    });
+  }
+
+  function updateRenderedNodeState() {
     const graph = graphController.value?.getGraph();
     if (!graph) {
       return;
@@ -205,13 +241,17 @@
       }
 
       const nextSelected = resolveSelectedState(data);
-      if (data.selected === nextSelected) {
+      const nextPanMode = isPanMode.value;
+      const nextReadonly = Boolean(props.readonly);
+      if (data.selected === nextSelected && data.isPanMode === nextPanMode && data.readonly === nextReadonly) {
         return;
       }
 
       node.setData({
         ...data,
         selected: nextSelected,
+        readonly: nextReadonly,
+        isPanMode: nextPanMode,
       });
     });
   }
@@ -219,12 +259,16 @@
   watch(
     () => props.selection,
     () => {
-      updateRenderedSelectionState();
+      updateRenderedNodeState();
     },
     {
       deep: true,
     }
   );
+
+  watch(isPanMode, () => {
+    updateRenderedNodeState();
+  });
 
   function handleViewModeChange(mode: 'compact' | 'detail') {
     viewMode.value = mode;
@@ -232,19 +276,18 @@
   }
 
   let hasAutoFitted = false;
-  const canvasRef = ref<HTMLElement | null>(null);
 
   function fitAfterInit() {
     if (!graphController.value || !canvasRef.value || hasAutoFitted) {
       return;
     }
 
-    const { clientWidth, clientHeight } = canvasRef.value;
+    const { clientWidth, clientHeight } = flowCanvasRef.value ?? canvasRef.value;
     if (!clientWidth || !clientHeight) {
       return;
     }
 
-    graphController.value.fitToContent();
+    fitCanvasToContent();
     hasAutoFitted = true;
   }
 
@@ -260,6 +303,7 @@
 
     graphController.value = createGraph({
       container: canvasRef.value,
+      resizeTarget: flowCanvasRef.value ?? canvasRef.value,
     });
 
     const graph = graphController.value.getGraph();
@@ -289,6 +333,9 @@
         closeAddPopover();
 
         if (data.kind === 'add-condition' && data.groupId) {
+          if (props.readonly) {
+            return;
+          }
           emit('addConditionBranch', data.groupId);
           return;
         }
@@ -309,7 +356,7 @@
         }
       },
       onNodeDelete({ data }) {
-        if (isPanMode.value) {
+        if (isPanMode.value || props.readonly) {
           return;
         }
         if (data.kind === 'condition-branch' && data.groupId && data.branchId) {
@@ -363,6 +410,10 @@
     hasAutoFitted = false;
     graphController.value = null;
     closeAddPopover();
+  });
+
+  defineExpose({
+    refreshCanvas,
   });
 </script>
 

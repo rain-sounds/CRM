@@ -28,6 +28,12 @@ public class OpportunityQuotation extends BaseModel {
     @Schema(description = "审核状态")
     private String approvalStatus;
 
+	@Schema(description = "是否作废")
+	private Boolean invalid;
+
     @Schema(description = "组织ID")
     private String organizationId;
+
+    @Schema(description = "是否审批通过过")
+    private Boolean approved;
 }

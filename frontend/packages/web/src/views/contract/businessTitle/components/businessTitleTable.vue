@@ -21,7 +21,6 @@
         <CrmImportButton
           v-if="hasAnyPermission(['CONTRACT_BUSINESS_TITLE:IMPORT'])"
           :api-type="ImportTypeExcludeFormDesignEnum.CONTRACT_BUSINESS_TITLE_IMPORT"
-          showImportRadio
           :title="t('module.businessTitle')"
           @import-success="() => searchData()"
         />
@@ -217,6 +216,17 @@
       resizable: false,
       columnSelectorDisabled: true,
       render: (row: BusinessTitleItem, rowIndex: number) => rowIndex + 1,
+    },
+    {
+      title: t('contract.businessTitle.companyCode'),
+      key: 'companyNumber',
+      sortOrder: false,
+      sorter: true,
+      fixed: 'left',
+      ellipsis: {
+        tooltip: true,
+      },
+      width: 120,
     },
     {
       title: t('contract.businessTitle.companyName'),
@@ -582,6 +592,11 @@
     {
       title: t('common.remark'),
       dataIndex: 'remark',
+      type: FieldTypeEnum.INPUT,
+    },
+    {
+      title: t('contract.businessTitle.companyCode'),
+      dataIndex: 'companyNumber',
       type: FieldTypeEnum.INPUT,
     },
     ...baseFilterConfigList,

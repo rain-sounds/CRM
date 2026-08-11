@@ -5,7 +5,12 @@ export enum OpportunitySearchTypeEnum {
   OPPORTUNITY_SUCCESS = 'OPPORTUNITY_SUCCESS',
 }
 
-export enum QuotationStatusEnum {
-  NORMAL = 'NORMAL', // 正常
-  VOIDED = 'VOIDED', // 作废
+export enum CirculationTypeEnum {
+  NORMAL = 'NORMAL',
+  ADVANCED = 'ADVANCED',
+}
+
+export enum CirculationValueTypeEnum {
+  FIXED_VALUE = 'FIXED_VALUE',
+  FIELD_VALUE = 'FIELD_VALUE',
 }

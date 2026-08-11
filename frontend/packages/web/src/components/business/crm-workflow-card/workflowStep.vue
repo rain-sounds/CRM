@@ -1,107 +1,114 @@
 <template>
-  <div class="crm-workflow-step">
-    <n-button size="small" secondary class="crm-workflow-arrow" :disabled="!canScrollLeft" @click="scrollLeft">
-      <template #icon>
-        <CrmIcon type="iconicon_chevron_left" />
-      </template>
-    </n-button>
-    <div ref="scrollWrapperRef" class="crm-workflow-scroll-container">
-      <div class="crm-workflow-step-list" :style="scrollContentStyle">
-        <div
+  <n-scrollbar x-scrollable>
+    <div class="crm-workflow-step">
+      <div class="flex flex-1 gap-[16px]">
+        <n-tooltip
           v-for="(item, index) of workflowData"
           :key="item.value"
-          :class="`crm-workflow-item`"
-          @click="changeStage(item.value as string)"
+          trigger="hover"
+          :disabled="props.readonly || !isDisabledStage(item.value?.toString() || '') || currentStatus === item.value"
         >
-          <div class="crm-workflow-item-status" :class="statusClass(index, item)">
-            <CrmIcon
-              v-if="index < currentStatusIndex || item.value === failureStage"
-              :type="item.value === failureStage ? 'iconicon_close' : 'iconicon_check'"
-              :size="16"
-            />
-            <div v-else class="flex items-center justify-center">{{ index + 1 }} </div>
-          </div>
-          <div class="crm-workflow-item-name" :class="statusClass(index, item)">
-            {{
-              item.value === failureStage && props.failureReason
-                ? `${item.label}（${props.failureReason}）`
-                : item.label
-            }}
-          </div>
-          <div
-            v-if="index !== workflowData.length - 1"
-            class="crm-workflow-item-line"
-            :class="{
-              'in-progress': index < currentStatusIndex,
-            }"
-          >
-          </div>
-        </div>
+          <template #trigger>
+            <div :class="`crm-workflow-item`" @click="changeStage(item.value as string)">
+              <div class="crm-workflow-item-status" :class="statusClass(index, item)">
+                <CrmIcon
+                  v-if="index < currentStatusIndex || item.value === failureStage"
+                  :type="item.value === failureStage ? 'iconicon_close' : 'iconicon_check'"
+                  :size="16"
+                />
+                <div v-else class="flex items-center justify-center">{{ index + 1 }} </div>
+              </div>
+              <div class="crm-workflow-item-name" :class="statusClass(index, item)">
+                {{
+                  item.value === failureStage && props.failureReason
+                    ? `${item.label}（${props.failureReason}）`
+                    : item.label
+                }}
+              </div>
+              <div
+                v-if="index !== workflowData.length - 1"
+                class="crm-workflow-item-line"
+                :class="{
+                  'in-progress': index < currentStatusIndex,
+                }"
+              >
+              </div>
+            </div>
+          </template>
+          {{
+            t('crmStatusConfigDrawer.flowDisabledTip', {
+              f: props.workflowList[currentStatusIndex].label,
+              t: item.label,
+            })
+          }}
+        </n-tooltip>
       </div>
+      <slot
+        v-if="currentStatusIndex !== workflowData.length - 1"
+        name="action"
+        :current-status-index="currentStatusIndex"
+      >
+      </slot>
     </div>
-    <n-button size="small" secondary class="crm-workflow-arrow" :disabled="!canScrollRight" @click="scrollRight">
-      <template #icon>
-        <CrmIcon type="iconicon_chevron_right" />
-      </template>
-    </n-button>
-    <slot
-      v-if="currentStatusIndex !== workflowData.length - 1"
-      name="action"
-      :current-status-index="currentStatusIndex"
-    >
-    </slot>
-  </div>
+  </n-scrollbar>
 </template>
 
 <script setup lang="ts">
-  import { NButton, SelectOption } from 'naive-ui';
+  import { NScrollbar, NTooltip, SelectOption } from 'naive-ui';
 
-  import { StageConfigItem } from '@lib/shared/models/opportunity';
+  import { CirculationTypeEnum } from '@lib/shared/enums/opportunityEnum';
+  import { useI18n } from '@lib/shared/hooks/useI18n';
+  import { type OpportunityStageConfig } from '@lib/shared/models/opportunity';
 
-  import useHorizontalScrollArrows from '@/hooks/useHorizontalScrollArrows';
   import { hasAllPermission, hasAnyPermission } from '@/utils/permission';
 
   const props = defineProps<{
     workflowList: SelectOption[];
-    stageConfigList: StageConfigItem[]; // 阶段列表
+    stageConfig?: OpportunityStageConfig; // 阶段配置
     operationPermission?: string[];
     readonly?: boolean;
     isLimitBack?: boolean; // 是否限制状态往返
     backStagePermission?: string[];
     failureReason?: string;
-    afootRollBack?: boolean; // 是否允许从跟进中回退
-    endRollBack?: boolean; // 是否允许从成功或失败回退
-    isOrder?: boolean; // 是否是订单
+    isNoResignFlow?: boolean; // 是否是不区分成功失败、无反签逻辑的流程
   }>();
 
   const emit = defineEmits<{
     (e: 'change', value: string): void;
   }>();
 
+  const { t } = useI18n();
+
   const currentStatus = defineModel<string>('status', {
     required: true,
   });
 
-  const scrollWrapperRef = ref<HTMLElement | null>(null);
   const workflowData = computed(() => props.workflowList || []);
-  const scrollContentStyle = computed(() => ({
-    minWidth: `${Math.max(workflowData.value.length * 160, 960)}px`,
-  }));
-  const { canScrollLeft, canScrollRight, scrollLeft, scrollRight, updateScrollStatus } =
-    useHorizontalScrollArrows(scrollWrapperRef);
   const currentStatusIndex = computed(() => workflowData.value.findIndex((e) => e.value === currentStatus.value));
   const readonly = computed(() => props.readonly || !hasAnyPermission(props.operationPermission));
   const successStage = computed(
-    () => props.stageConfigList.find((e) => e.type === 'END' && e.rate === '100')?.id || ''
+    () => props.stageConfig?.stageConfigList.find((e) => e.type === 'END' && e.rate === '100')?.id || ''
   );
-  const failureStage = computed(() => props.stageConfigList.find((e) => e.type === 'END' && e.rate === '0')?.id || '');
+  const failureStage = computed(
+    () => props.stageConfig?.stageConfigList.find((e) => e.type === 'END' && e.rate === '0')?.id || ''
+  );
   // 订单没有rate 只判断type
-  const endStages = computed(() => props.stageConfigList.filter((e) => e.type === 'END').map((i) => i.id));
+  const endStages = computed(() => props.stageConfig?.stageConfigList.filter((e) => e.type === 'END').map((i) => i.id));
+  const currentStageConfig = computed(() =>
+    props.stageConfig?.advancedConfigs?.find((e) => e.originId === currentStatus.value)
+  );
 
   const isDisabledStage = (stage: string) => {
+    if (currentStatus.value === stage || readonly.value) {
+      return true;
+    }
+    const targetStage = currentStageConfig.value?.targets.find((e) => e.targetId === stage);
+    if (props.stageConfig?.circulationType === CirculationTypeEnum.ADVANCED && currentStageConfig) {
+      return !targetStage?.enable;
+    }
     const isSameStage = currentStatus.value === stage;
     const isFailureStage = stage === failureStage.value;
-    const isCurrentEndStage = endStages.value.includes(currentStatus.value);
+    const isCurrentEndStage = endStages.value?.includes(currentStatus.value);
     const hasPermission = props.backStagePermission && hasAllPermission(props.backStagePermission);
 
     // 获取当前阶段和目标阶段在流程中的索引
@@ -109,24 +116,24 @@
     const targetIndex = workflowData.value.findIndex((item) => item.value === stage);
     // 限制回退状态
     if (props.isLimitBack) {
-      if (!props.isOrder) {
+      if (!props.isNoResignFlow) {
         // 当前为成功状态，且目标为失败状态，需要返签权限
         if (currentStatus.value === successStage.value && isFailureStage) {
           return isSameStage || readonly.value || !hasPermission;
         }
         // 当前为完结状态，且目标是进行中状态，需要开启完结阶段回退
         if (currentStatus.value === successStage.value || currentStatus.value === failureStage.value) {
-          return isSameStage || readonly.value || !props.endRollBack;
+          return isSameStage || readonly.value || !props.stageConfig?.endRollBack;
         }
       } else if (isCurrentEndStage) {
-        // 订单没有反签
-        return isSameStage || readonly.value || !props.endRollBack;
+        // 这类流程没有反签，完结阶段统一按回退开关控制
+        return isSameStage || readonly.value || !props.stageConfig?.endRollBack;
       }
 
       // 当前处于进行中阶段时的处理逻辑
       if (!isCurrentEndStage) {
         // 开启则不限制
-        if (props.afootRollBack) {
+        if (props.stageConfig?.afootRollBack) {
           return isSameStage || readonly.value;
         }
         // 允许前进到当前阶段的后边的任意阶段 无论是进行中、成功或失败）
@@ -151,16 +158,6 @@
     if (isDisabledStage(stage)) return;
     emit('change', stage);
   }
-
-  watch(
-    () => workflowData.value.length,
-    () => {
-      nextTick(() => {
-        updateScrollStatus();
-      });
-    },
-    { immediate: true }
-  );
 </script>
 
 <style scoped lang="less">
@@ -168,35 +165,10 @@
     padding: 24px;
     border-radius: var(--border-radius-medium);
     background: var(--text-n9);
-    @apply flex items-center;
-
-    gap: 12px;
-    .crm-workflow-arrow {
-      flex: 0 0 auto;
-    }
-    .crm-workflow-scroll-container {
-      flex: 1;
-      overflow-x: auto;
-      overflow-y: hidden;
-      scrollbar-width: thin;
-    }
-    .crm-workflow-scroll-container::-webkit-scrollbar {
-      height: 6px;
-    }
-    .crm-workflow-scroll-container::-webkit-scrollbar-thumb {
-      border-radius: 999px;
-      background: rgb(0 0 0 / 20%);
-    }
-    .crm-workflow-step-list {
-      min-width: max-content;
-      @apply flex;
-
-      gap: 16px;
-    }
+    gap: 24px;
+    @apply flex;
     .crm-workflow-item {
       gap: 16px;
-      flex: 0 0 auto;
-      min-width: 130px;
       @apply flex flex-nowrap items-center;
       .crm-workflow-item-status {
         width: 24px;
@@ -223,7 +195,6 @@
       }
       .crm-workflow-item-name {
         font-size: 16px;
-        white-space: nowrap;
         color: var(--text-n4);
         @apply break-keep font-medium;
         &.current {
@@ -241,19 +212,21 @@
         }
       }
       .crm-workflow-item-line {
-        width: 50px;
-        min-width: 50px;
+        width: auto;
+        min-width: 18px;
         height: 2px;
         background: var(--text-n7);
-        flex: 0 0 auto;
+
+        @apply flex-1;
         &.in-progress {
           background: var(--primary-8);
         }
       }
+      &:first-child {
+        .crm-workflow-item-line {
+          width: 50px;
+        }
+      }
     }
-  }
-  :deep(.n-button.crm-workflow-arrow .n-button__border),
-  :deep(.n-button.crm-workflow-arrow .n-button__state-border) {
-    border-radius: 999px;
   }
 </style>

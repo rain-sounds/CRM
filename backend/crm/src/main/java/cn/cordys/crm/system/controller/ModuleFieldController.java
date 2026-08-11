@@ -15,24 +15,18 @@ import cn.cordys.context.OrganizationContext;
 import cn.cordys.crm.clue.dto.request.CluePageRequest;
 import cn.cordys.crm.clue.dto.response.ClueListResponse;
 import cn.cordys.crm.clue.service.ClueService;
-import cn.cordys.crm.contract.dto.request.BusinessTitlePageRequest;
-import cn.cordys.crm.contract.dto.request.ContractPageRequest;
-import cn.cordys.crm.contract.dto.request.ContractPaymentPlanPageRequest;
-import cn.cordys.crm.contract.dto.request.ContractPaymentRecordPageRequest;
-import cn.cordys.crm.contract.dto.response.BusinessTitleListResponse;
-import cn.cordys.crm.contract.dto.response.ContractListResponse;
-import cn.cordys.crm.contract.dto.response.ContractPaymentPlanListResponse;
-import cn.cordys.crm.contract.dto.response.ContractPaymentRecordResponse;
-import cn.cordys.crm.contract.service.BusinessTitleService;
-import cn.cordys.crm.contract.service.ContractPaymentPlanService;
-import cn.cordys.crm.contract.service.ContractPaymentRecordService;
-import cn.cordys.crm.contract.service.ContractService;
+import cn.cordys.crm.contract.dto.request.*;
+import cn.cordys.crm.contract.dto.response.*;
+import cn.cordys.crm.contract.service.*;
 import cn.cordys.crm.customer.dto.request.CustomerContactPageRequest;
 import cn.cordys.crm.customer.dto.request.CustomerPageRequest;
 import cn.cordys.crm.customer.dto.response.CustomerContactListResponse;
 import cn.cordys.crm.customer.dto.response.CustomerListResponse;
 import cn.cordys.crm.customer.service.CustomerContactService;
 import cn.cordys.crm.customer.service.CustomerService;
+import cn.cordys.crm.form.dto.request.CustomFormDataPageRequest;
+import cn.cordys.crm.form.dto.response.CustomFormDataListResponse;
+import cn.cordys.crm.form.service.CustomFormDataService;
 import cn.cordys.crm.opportunity.dto.request.OpportunityPageRequest;
 import cn.cordys.crm.opportunity.dto.request.OpportunityQuotationPageRequest;
 import cn.cordys.crm.opportunity.dto.response.OpportunityListResponse;
@@ -55,6 +49,7 @@ import cn.cordys.crm.system.dto.request.FieldResolveRequest;
 import cn.cordys.crm.system.dto.response.FieldRepeatCheckResponse;
 import cn.cordys.crm.system.dto.response.ModuleFormConfigDTO;
 import cn.cordys.crm.system.service.ModuleFieldService;
+import cn.cordys.crm.system.service.ModuleFormCacheService;
 import cn.cordys.crm.system.service.ModuleFormService;
 import cn.cordys.crm.system.service.ModuleService;
 import cn.cordys.security.SessionUtils;
@@ -62,7 +57,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
-import org.apache.commons.collections4.ListUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -82,6 +76,8 @@ public class ModuleFieldController {
     private ModuleFieldService moduleFieldService;
     @Resource
     private ModuleFormService moduleFormService;
+	@Resource
+	private ModuleFormCacheService formCacheService;
     @Resource
     private CustomerService customerService;
     @Resource
@@ -108,6 +104,10 @@ public class ModuleFieldController {
     private BusinessTitleService businessTitleService;
 	@Resource
 	private OrderService orderService;
+    @Resource
+    private CustomFormDataService customFormDataService;
+	@Resource
+	private ContractInvoiceService contractInvoiceService;
 
     @GetMapping("/dept/tree")
     @Operation(summary = "获取部门树")
@@ -117,8 +117,8 @@ public class ModuleFieldController {
 
     @GetMapping("/user/dept/tree")
     @Operation(summary = "获取部门用户树")
-    public List<DeptUserTreeNode> getDeptUserTree() {
-        return moduleService.getDeptUserTree(OrganizationContext.getOrganizationId());
+    public List<DeptUserTreeNode> getDeptUserTree(@RequestParam(required = false, defaultValue = "false") Boolean includeDisabled) {
+        return moduleService.getDeptUserTree(OrganizationContext.getOrganizationId(), includeDisabled);
     }
 
     @PostMapping("/source/lead")
@@ -129,6 +129,14 @@ public class ModuleFieldController {
         DeptDataPermissionDTO deptDataPermission = dataScopeService.getDeptDataPermission(SessionUtils.getUserId(), OrganizationContext.getOrganizationId(),
 				InternalUserView.ALL.name(), PermissionConstants.CLUE_MANAGEMENT_READ);
         return clueService.list(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId(), deptDataPermission, true);
+    }
+
+    @PostMapping("/source/custom-form-data")
+    @Operation(summary = "分页获取自定义表单数据")
+    public Pager<List<CustomFormDataListResponse>> sourceCustomFormDataPage(@Valid @RequestBody CustomFormDataPageRequest request) {
+        ConditionFilterUtils.parseCondition(request, request.getCustomFormId());
+        request.setCombineSearch(request.getCombineSearch().convert());
+        return customFormDataService.page(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId(), false);
     }
 
     @PostMapping("/source/account")
@@ -174,7 +182,6 @@ public class ModuleFieldController {
     @PostMapping("/source/contract")
     @Operation(summary = "分页获取合同")
     public Pager<List<ContractListResponse>> sourceContractPage(@Valid @RequestBody ContractPageRequest request) {
-		request.setFilters(ListUtils.union(contractService.getDefaultSourceFilters(), request.getFilters()));
         ConditionFilterUtils.parseCondition(request, FormKey.CONTRACT.getKey());
         request.setCombineSearch(request.getCombineSearch().convert());
         DeptDataPermissionDTO deptDataPermission = dataScopeService.getDeptDataPermission(SessionUtils.getUserId(), OrganizationContext.getOrganizationId(), InternalUserView.ALL.name(),
@@ -221,13 +228,28 @@ public class ModuleFieldController {
 	}
 
 	@PostMapping("/source/order")
-	@Operation(summary = "列表")
+	@Operation(summary = "分页获取订单列表")
 	public PagerWithOption<List<OrderListResponse>> list(@Validated @RequestBody OrderPageRequest request) {
         ConditionFilterUtils.parseCondition(request, FormKey.ORDER.getKey());
         request.setCombineSearch(request.getCombineSearch().convert());
 		DeptDataPermissionDTO deptDataPermission = dataScopeService.getDeptDataPermission(SessionUtils.getUserId(), OrganizationContext.getOrganizationId(),
 				InternalUserView.ALL.name(), PermissionConstants.ORDER_READ);
 		return orderService.list(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId(), deptDataPermission, false);
+	}
+
+	@PostMapping("/source/business-title")
+	@Operation(summary = "分页获取工商抬头信息")
+	public Pager<List<BusinessTitleListResponse>> sourceBusinessTitlePage(@Valid @RequestBody BusinessTitlePageRequest request) {
+		return businessTitleService.list(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
+	}
+
+	@PostMapping("/source/invoice")
+	@Operation(summary = "分页获取发票信息")
+	public PagerWithOption<List<ContractInvoiceListResponse>> list(@Validated @RequestBody ContractInvoicePageRequest request) {
+		ConditionFilterUtils.parseCondition(request, FormKey.INVOICE.getKey());
+		DeptDataPermissionDTO deptDataPermission = dataScopeService.getDeptDataPermission(SessionUtils.getUserId(),
+				OrganizationContext.getOrganizationId(), request.getViewId(), PermissionConstants.CONTRACT_INVOICE_READ);
+		return contractInvoiceService.list(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId(), deptDataPermission);
 	}
 
     @PostMapping("/check/repeat")
@@ -248,11 +270,11 @@ public class ModuleFieldController {
         return moduleFormService.getSourceDisplayFields(formKey, OrganizationContext.getOrganizationId());
     }
 
-    @PostMapping("/source/business-title")
-    @Operation(summary = "分页获取工商抬头信息")
-    public Pager<List<BusinessTitleListResponse>> sourceBusinessTitlePage(@Valid @RequestBody BusinessTitlePageRequest request) {
-        return businessTitleService.list(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
-    }
+	@GetMapping("/source/config/{formKey}")
+	@Operation(summary = "获取数据源表单配置")
+	public ModuleFormConfigDTO getSourceFormConfig(@PathVariable String formKey) {
+		return formCacheService.getBusinessFormConfig(formKey, OrganizationContext.getOrganizationId());
+	}
 
 	@PostMapping("/source/ref-detail")
 	@Operation(summary = "批量获取数据源引用详情")

@@ -44,6 +44,9 @@ export enum TableKeyEnum {
   CONTRACT_INVOICE_MATERIAL = 'contractInvoiceMaterial', // 开票资料
   // 审批流
   PROCESS = 'process',
+  // 自定义表单表格
+  CUSTOM_FORM = 'customForm',
+  CUSTOM_FORM_USER = 'customFormUser',
 }
 
 // 具有特殊功能的列

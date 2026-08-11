@@ -6,7 +6,6 @@ import {
 import { ProcessStatusEnum } from '@lib/shared/enums/process';
 import { useI18n } from '@lib/shared/hooks/useI18n';
 import { SaveBusinessTitleParams } from '@lib/shared/models/contract';
-import { ProcessStatusType } from '@lib/shared/models/system/process';
 
 const { t } = useI18n();
 
@@ -28,37 +27,6 @@ export const contractPaymentPlanStatus = {
     color: 'var(--success-green)',
   },
 };
-
-export const contractStatusOptions = [
-  {
-    value: ContractStatusEnum.PENDING_SIGNING,
-    label: t('contract.toBeSigned'),
-  },
-  {
-    value: ContractStatusEnum.SIGNED,
-    label: t('contract.signed'),
-  },
-  {
-    value: ContractStatusEnum.CHANGE,
-    label: t('contract.change'),
-  },
-  {
-    value: ContractStatusEnum.IN_PROGRESS,
-    label: t('contract.inProgress'),
-  },
-  {
-    value: ContractStatusEnum.COMPLETED_PERFORMANCE,
-    label: t('contract.completedPerformance'),
-  },
-  {
-    value: ContractStatusEnum.ARCHIVED,
-    label: t('contract.archive'),
-  },
-  {
-    value: ContractStatusEnum.VOID,
-    label: t('common.voided'),
-  },
-];
 
 export const contractPaymentPlanStatusOptions = Object.entries(contractPaymentPlanStatus).map(([key, value]) => ({
   label: value.label,
@@ -99,6 +67,10 @@ export const businessTitleFormConfigList: {
   label: string;
   value: keyof SaveBusinessTitleParams;
 }[] = [
+  {
+    label: t('contract.businessTitle.companyCode'),
+    value: 'companyNumber',
+  },
   {
     label: t('contract.businessTitle.taxpayerNumber'),
     value: 'identificationNumber',
@@ -164,11 +136,13 @@ export const allBusinessTitleFormConfigList: {
   ...businessTitleFormConfigList,
 ];
 
-export const deleteInvoiceContentMap: Record<ProcessStatusType, string> = {
+export const deleteInvoiceContentMap: Record<ProcessStatusEnum, string> = {
   [ProcessStatusEnum.APPROVING]: t('contract.deleteInvoiceUnderReviewContent'),
   [ProcessStatusEnum.APPROVED]: t('contract.deleteInvoiceApprovedContent'),
+  [ProcessStatusEnum.AUTO_APPROVED]: t('contract.deleteInvoiceApprovedContent'),
   [ProcessStatusEnum.REVOKED]: t('contract.deleteInvoiceRevokedContent'),
   [ProcessStatusEnum.UNAPPROVED]: t('contract.deleteInvoiceRejectedContent'),
+  [ProcessStatusEnum.AUTO_UNAPPROVED]: t('contract.deleteInvoiceRejectedContent'),
   [ProcessStatusEnum.PENDING]: t('contract.deleteInvoiceNoneContent'),
   [ProcessStatusEnum.NONE]: t('contract.deleteInvoiceNoneContent'),
 };

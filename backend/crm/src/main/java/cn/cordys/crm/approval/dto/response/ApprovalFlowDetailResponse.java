@@ -6,12 +6,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 public class ApprovalFlowDetailResponse {
 
     @Schema(description = "ID")
     private String id;
+
+    @Schema(description = "当前版本ID")
+    private String currentVersionId;
 
     @Schema(description = "流程编码")
     private String number;
@@ -22,8 +26,14 @@ public class ApprovalFlowDetailResponse {
     @Schema(description = "表单类型")
     private String formType;
 
-    @Schema(description = "执行时机")
-    private String executeTiming;
+    @Schema(description = "新建时执行")
+    private Boolean createExecute;
+
+    @Schema(description = "编辑时执行")
+    private Boolean updateExecute;
+
+    @Schema(description = "删除时执行")
+    private Boolean deleteExecute;
 
     @Schema(description = "启用状态")
     private Boolean enable;
@@ -49,12 +59,39 @@ public class ApprovalFlowDetailResponse {
     @Schema(description = "是否必须填写审批意见")
     private Boolean requireComment;
 
+    @Schema(description = "创建人名称")
+    private String createUserName;
+
+    @Schema(description = "更新人名称")
+    private String updateUserName;
+
+    @Schema(description = "创建时间")
+    private Long createTime;
+
+    @Schema(description = "更新时间")
+    private Long updateTime;
+
+    @Schema(description = "创建人")
+    private String createUser;
+
+    @Schema(description = "更新人")
+    private String updateUser;
+
     @Schema(description = "对应资源表单的权限列表")
     private List<OptionDTO> permissions;
 
     @Schema(description = "状态权限配置")
     private List<StatusPermissionDTO> statusPermissions;
 
-    @Schema(description = "节点配置列表")
-    private List<ApprovalNodeResponse> nodes;
+    @Schema(description = "新建时节点配置")
+    private ApprovalFlowNodeConfigResponse createNodeConfig;
+
+    @Schema(description = "编辑时节点配置")
+    private ApprovalFlowNodeConfigResponse updateNodeConfig;
+
+    @Schema(description = "删除时节点配置")
+    private ApprovalFlowNodeConfigResponse deleteNodeConfig;
+
+    @Schema(description = "条件节点字段选项映射")
+    private Map<String, List<OptionDTO>> optionMap;
 }

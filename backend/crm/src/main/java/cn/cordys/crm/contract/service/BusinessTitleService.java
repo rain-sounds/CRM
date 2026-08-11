@@ -14,18 +14,21 @@ import cn.cordys.common.service.BaseService;
 import cn.cordys.common.uid.IDGenerator;
 import cn.cordys.common.uid.utils.EnumUtils;
 import cn.cordys.common.util.BeanUtils;
-import cn.cordys.common.util.EncryptUtils;
+import cn.cordys.common.util.CodingUtils;
 import cn.cordys.common.util.JSON;
 import cn.cordys.common.util.Translator;
 import cn.cordys.common.utils.BeanCopyUtils;
+import cn.cordys.crm.approval.constants.ApprovalState;
 import cn.cordys.crm.contract.constants.BusinessTitleType;
 import cn.cordys.crm.contract.constants.ContractApprovalStatus;
 import cn.cordys.crm.contract.domain.BusinessTitle;
 import cn.cordys.crm.contract.domain.BusinessTitleConfig;
 import cn.cordys.crm.contract.domain.ContractInvoice;
-import cn.cordys.crm.contract.dto.request.*;
+import cn.cordys.crm.contract.dto.request.BusinessTitleAddRequest;
+import cn.cordys.crm.contract.dto.request.BusinessTitleApprovalRequest;
+import cn.cordys.crm.contract.dto.request.BusinessTitlePageRequest;
+import cn.cordys.crm.contract.dto.request.BusinessTitleUpdateRequest;
 import cn.cordys.crm.contract.dto.response.BusinessTitleListResponse;
-import cn.cordys.crm.contract.excel.constants.BusinessTitleImportType;
 import cn.cordys.crm.contract.excel.domain.BusinessTitleExcelDataFactory;
 import cn.cordys.crm.contract.excel.handler.BusinessTitleTemplateWriteHandler;
 import cn.cordys.crm.contract.excel.listener.BusinessTitleCheckEventListener;
@@ -33,12 +36,13 @@ import cn.cordys.crm.contract.excel.listener.BusinessTitleImportEventListener;
 import cn.cordys.crm.contract.mapper.ExtBusinessTitleMapper;
 import cn.cordys.crm.integration.common.dto.ThirdConfigBaseDTO;
 import cn.cordys.crm.integration.common.request.QccThirdConfigRequest;
-import cn.cordys.crm.integration.common.utils.HttpRequestUtil;
+import cn.cordys.crm.integration.common.utils.HttpClientUtils;
 import cn.cordys.crm.integration.qcc.constant.QccApiPaths;
 import cn.cordys.crm.integration.qcc.dto.*;
-import cn.cordys.crm.approval.constants.ApprovalState;
+import cn.cordys.crm.system.constants.ImportType;
 import cn.cordys.crm.system.constants.SheetKey;
 import cn.cordys.crm.system.dto.field.base.BaseField;
+import cn.cordys.crm.system.dto.request.ImportRequest;
 import cn.cordys.crm.system.dto.response.ImportResponse;
 import cn.cordys.crm.system.dto.response.ModuleFormConfigDTO;
 import cn.cordys.crm.system.excel.domain.UserExcelDataFactory;
@@ -63,6 +67,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -242,6 +247,7 @@ public class BusinessTitleService {
      */
     public BusinessTitleListResponse get(String id) {
         BusinessTitle businessTitle = businessTitleMapper.selectByPrimaryKey(id);
+        businessTitle.setCompanyNumber("CO.NO." + String.format("%08d", Long.parseLong(businessTitle.getCompanyNumber())));
         if (businessTitle == null) {
             throw new GenericException(Translator.get("business_title.not.exist"));
         }
@@ -258,27 +264,32 @@ public class BusinessTitleService {
      */
     public BusinessTitleListResponse getSimple(String id) {
         BusinessTitle businessTitle = businessTitleMapper.selectByPrimaryKey(id);
+        businessTitle.setCompanyNumber("CO.NO." + String.format("%08d", Long.parseLong(businessTitle.getCompanyNumber())));
         if (businessTitle == null) {
             return null;
         }
         return BeanUtils.copyBean(new BusinessTitleListResponse(), businessTitle);
     }
 
-	/**
-	 * 批量获取工商抬头详情 (用于数据源批量查询优化)
-	 * @param ids 抬头ID集合
-	 * @return 工商抬头详情列表
-	 */
-	public List<BusinessTitleListResponse> batchGetSimpleByIds(List<String> ids) {
-		if (CollectionUtils.isEmpty(ids)) {
-			return Collections.emptyList();
-		}
-		List<BusinessTitle> titles = businessTitleMapper.selectByIds(ids);
-		if (CollectionUtils.isEmpty(titles)) {
-			return Collections.emptyList();
-		}
-		return titles.stream().map(title -> BeanUtils.copyBean(new BusinessTitleListResponse(), title)).toList();
-	}
+    /**
+     * 批量获取工商抬头详情 (用于数据源批量查询优化)
+     *
+     * @param ids 抬头ID集合
+     * @return 工商抬头详情列表
+     */
+    public List<BusinessTitleListResponse> batchGetSimpleByIds(List<String> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            return Collections.emptyList();
+        }
+        List<BusinessTitle> titles = businessTitleMapper.selectByIds(ids);
+        if (CollectionUtils.isEmpty(titles)) {
+            return Collections.emptyList();
+        }
+        for (BusinessTitle title : titles) {
+            title.setCompanyNumber("CO.NO." + String.format("%08d", Long.parseLong(title.getCompanyNumber())));
+        }
+        return titles.stream().map(title -> BeanUtils.copyBean(new BusinessTitleListResponse(), title)).toList();
+    }
 
 
     /**
@@ -376,7 +387,7 @@ public class BusinessTitleService {
      * @param orgId
      * @return
      */
-    public ImportResponse importPreCheck(MultipartFile file, String orgId, BusinessTitleImportRequest request) {
+    public ImportResponse importPreCheck(MultipartFile file, String orgId, ImportRequest request) {
         if (file == null) {
             throw new GenericException(Translator.get("file_cannot_be_null"));
         }
@@ -391,7 +402,7 @@ public class BusinessTitleService {
      * @param orgId
      * @return
      */
-    private ImportResponse checkImportExcel(MultipartFile file, String orgId, BusinessTitleImportRequest request) {
+    private ImportResponse checkImportExcel(MultipartFile file, String orgId, ImportRequest request) {
         try {
             Class<?> clazz = new UserExcelDataFactory().getExcelDataByLocal();
             BusinessTitleCheckEventListener eventListener = new BusinessTitleCheckEventListener(clazz, getBusinessTitleConfig(orgId), orgId, getTemplateHead(), request);
@@ -413,17 +424,18 @@ public class BusinessTitleService {
      * @param orgId
      * @return
      */
-    public ImportResponse realImport(MultipartFile file, String userId, String orgId, BusinessTitleImportRequest request) {
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public ImportResponse realImport(MultipartFile file, String userId, String orgId, ImportRequest request) {
         if (file == null) {
             throw new GenericException(Translator.get("file_cannot_be_null"));
         }
         try {
             Class<?> clazz = new UserExcelDataFactory().getExcelDataByLocal();
 
-            BusinessTitleImportType businessTitleImportType = EnumUtils.valueOf(BusinessTitleImportType.class, request.getImportType());
+            ImportType businessTitleImportType = EnumUtils.valueOf(ImportType.class, request.getImportType());
             Consumer<List<BusinessTitle>> afterDto = null;
             switch (businessTitleImportType) {
-                case BusinessTitleImportType.ADD -> {
+                case ADD -> {
                     afterDto = (businessTitles) -> {
                         List<LogDTO> logs = new ArrayList<>();
                         businessTitles.forEach(title -> {
@@ -435,22 +447,19 @@ public class BusinessTitleService {
                         logService.batchAdd(logs);
                     };
                 }
-                case BusinessTitleImportType.UPDATE -> {
+                case UPDATE -> {
                     SqlSession sqlSession = sqlSessionFactory.openSession(ExecutorType.BATCH);
                     ExtBusinessTitleMapper mapper = sqlSession.getMapper(ExtBusinessTitleMapper.class);
                     afterDto = (businessTitles) -> {
-                        List<BusinessTitle> titleList = extBusinessTitleMapper.selectByNames(businessTitles.stream().map(BusinessTitle::getName).toList());
-                        Map<String, BusinessTitle> nameNap = titleList.stream().collect(Collectors.toMap(BusinessTitle::getName, Function.identity()));
+                        List<BusinessTitle> titleList = businessTitleMapper.selectByIds(businessTitles.stream().map(BusinessTitle::getId).toList());
+                        Map<String, BusinessTitle> idMap = titleList.stream().collect(Collectors.toMap(BusinessTitle::getId, Function.identity()));
                         List<LogDTO> logs = new ArrayList<>();
                         Set<String> titleSet = new HashSet<>();
                         businessTitles.removeIf(user -> !titleSet.add(user.getName()));
                         businessTitles.forEach(title -> {
-                            //1.通过name查询id
-                            //2.setId 并更新
-                            if (nameNap.containsKey(title.getName())) {
-                                BusinessTitle originTitle = nameNap.get(title.getName());
+                            if (idMap.containsKey(title.getId())) {
+                                BusinessTitle originTitle = idMap.get(title.getId());
                                 BeanCopyUtils.fillEmptyFields(title, originTitle);
-                                title.setId(originTitle.getId());
                                 title.setUpdateTime(System.currentTimeMillis());
                                 title.setUpdateUser(userId);
                                 mapper.updateById(title);
@@ -500,8 +509,8 @@ public class BusinessTitleService {
     private BusinessTitle getTitleInfo(String keyword, QccThirdConfigRequest qccConfig) {
         Map<String, String> headers = buildHeaders(qccConfig);
         try {
-            String url = HttpRequestUtil.urlTransfer(qccConfig.getQccAddress().concat(QccApiPaths.ENTERPRISE_INFO_VERIFY_API), qccConfig.getQccAccessKey(), keyword);
-            String json = HttpRequestUtil.sendGetRequest(url, headers);
+            String url = HttpClientUtils.urlTransfer(qccConfig.getQccAddress().concat(QccApiPaths.ENTERPRISE_INFO_VERIFY_API), qccConfig.getQccAccessKey(), keyword);
+            String json = HttpClientUtils.sendGetRequest(url, headers);
             QccEnterpriseInfo qccEnterpriseInfo = JSON.parseObject(json, QccEnterpriseInfo.class);
             if (!Strings.CI.equals("200", qccEnterpriseInfo.getStatus())) {
                 throw new GenericException(qccEnterpriseInfo.getMessage());
@@ -568,8 +577,8 @@ public class BusinessTitleService {
     private void getNameList(String keyword, QccThirdConfigRequest qccConfig, String pageIndex, Pager<List<String>> page) {
         Map<String, String> headers = buildHeaders(qccConfig);
         try {
-            String url = HttpRequestUtil.urlTransfer(qccConfig.getQccAddress().concat(QccApiPaths.FUZZY_SEARCH_LIST_API), qccConfig.getQccAccessKey(), keyword, pageIndex);
-            String json = HttpRequestUtil.sendGetRequest(url, headers);
+            String url = HttpClientUtils.urlTransfer(qccConfig.getQccAddress().concat(QccApiPaths.FUZZY_SEARCH_LIST_API), qccConfig.getQccAccessKey(), keyword, pageIndex);
+            String json = HttpClientUtils.sendGetRequest(url, headers);
             QccFuzzyQueryInfo queryInfo = JSON.parseObject(json, QccFuzzyQueryInfo.class);
             if (!Strings.CI.equals("200", queryInfo.getStatus())) {
                 throw new GenericException(queryInfo.getMessage());
@@ -597,7 +606,7 @@ public class BusinessTitleService {
 
     private Map<String, String> buildHeaders(QccThirdConfigRequest qccConfig) {
         long time = System.currentTimeMillis() / 1000;
-        String token = EncryptUtils.md5(qccConfig.getQccAccessKey() + time + qccConfig.getQccSecretKey()).toUpperCase();
+        String token = CodingUtils.md5(qccConfig.getQccAccessKey() + time + qccConfig.getQccSecretKey()).toUpperCase();
         Map<String, String> headers = new HashMap<>();
         headers.put("Token", token);
         headers.put("Timespan", String.valueOf(time));

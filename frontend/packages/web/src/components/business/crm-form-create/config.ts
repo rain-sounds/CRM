@@ -6,6 +6,7 @@ import {
 } from '@lib/shared/enums/formDesignEnum';
 import { useI18n } from '@lib/shared/hooks/useI18n';
 import type { CommonList } from '@lib/shared/models/common';
+import type { CustomFormDetail } from '@lib/shared/models/customForm';
 import type { FormDesignConfigDetailParams } from '@lib/shared/models/system/module';
 
 import {
@@ -17,6 +18,7 @@ import {
   addCustomerContact,
   addCustomerFollowPlan,
   addCustomerFollowRecord,
+  addCustomFormData,
   addFollowPlan,
   addFollowRecord,
   addInvoiced,
@@ -32,7 +34,6 @@ import {
   addQuotation,
   advancedSearchOptPage,
   ClueTransitionCustomer,
-  deleteOrder,
   geAdvancedCustomerList,
   getAdvancedCluePoolList,
   getAdvancedCustomerContactList,
@@ -65,6 +66,9 @@ import {
   getCustomerList,
   getCustomerOpportunityPage,
   getCustomerOrderList,
+  getCustomFormDataDetail,
+  getCustomFormDataPage,
+  getCustomFormDetail,
   getFollowPlanDetail,
   getFollowPLanPage,
   getFollowRecordDetail,
@@ -118,6 +122,7 @@ import {
   updateCustomerContact,
   updateCustomerFollowPlan,
   updateCustomerFollowRecord,
+  updateCustomFormData,
   updateFollowPlan,
   updateFollowRecord,
   updateInvoiced,
@@ -204,6 +209,11 @@ export const fullFormSettingList = [
     label: t('module.order'),
     dataSource: FieldDataSourceTypeEnum.ORDER,
     formKey: FormDesignKeyEnum.ORDER,
+  },
+  {
+    label: t('module.invoiceApproval'),
+    dataSource: FieldDataSourceTypeEnum.INVOICE,
+    formKey: FormDesignKeyEnum.INVOICE,
   },
   {
     label: t('module.businessTitle'),
@@ -729,7 +739,7 @@ export const rules: FormCreateFieldRule[] = [
   },
 ];
 
-export const showRulesMap: Record<FieldTypeEnum, FieldRuleEnum[]> = {
+export const showRulesMap: Partial<Record<FieldTypeEnum, FieldRuleEnum[]>> = {
   [FieldTypeEnum.INPUT]: [FieldRuleEnum.REQUIRED, FieldRuleEnum.UNIQUE],
   [FieldTypeEnum.TEXTAREA]: [FieldRuleEnum.REQUIRED],
   [FieldTypeEnum.INPUT_NUMBER]: [FieldRuleEnum.REQUIRED],
@@ -763,7 +773,10 @@ export const showRulesMap: Record<FieldTypeEnum, FieldRuleEnum[]> = {
   [FieldTypeEnum.INPUT_NUMBER_WITH_UNIT]: [],
 };
 
-export const getFormConfigApiMap: Record<FormDesignKeyEnum, (id?: string) => Promise<FormDesignConfigDetailParams>> = {
+export const getFormConfigApiMap: Record<
+  FormDesignKeyEnum,
+  (id?: string, approvalTaskId?: string) => Promise<FormDesignConfigDetailParams | CustomFormDetail>
+> = {
   [FormDesignKeyEnum.CUSTOMER]: getCustomerFormConfig,
   [FormDesignKeyEnum.BUSINESS]: getOptFormConfig,
   [FormDesignKeyEnum.CONTACT]: getCustomerContactFormConfig,
@@ -790,15 +803,15 @@ export const getFormConfigApiMap: Record<FormDesignKeyEnum, (id?: string) => Pro
   [FormDesignKeyEnum.SEARCH_ADVANCED_CLUE_POOL]: getClueFormConfig,
   [FormDesignKeyEnum.SEARCH_ADVANCED_OPPORTUNITY]: getOptFormConfig,
   [FormDesignKeyEnum.OPPORTUNITY_QUOTATION]: getQuotationFormConfig,
-  [FormDesignKeyEnum.OPPORTUNITY_QUOTATION_SNAPSHOT]: (id) => getQuotationSnapshotFormConfig(id),
-  [FormDesignKeyEnum.CONTRACT_SNAPSHOT]: (id) => getContractFormSnapshotConfig(id),
+  [FormDesignKeyEnum.OPPORTUNITY_QUOTATION_SNAPSHOT]: getQuotationSnapshotFormConfig,
+  [FormDesignKeyEnum.CONTRACT_SNAPSHOT]: getContractFormSnapshotConfig,
   [FormDesignKeyEnum.CONTRACT]: getContractFormConfig,
   [FormDesignKeyEnum.CONTRACT_PAYMENT]: getPaymentPlanFormConfig,
   [FormDesignKeyEnum.CONTRACT_CONTRACT_PAYMENT]: getPaymentPlanFormConfig,
   [FormDesignKeyEnum.PRICE]: getProductPriceFormConfig,
   [FormDesignKeyEnum.CONTRACT_PAYMENT_RECORD]: getPaymentRecordFormConfig,
   [FormDesignKeyEnum.INVOICE]: getInvoicedFormConfig,
-  [FormDesignKeyEnum.INVOICE_SNAPSHOT]: (id) => getInvoicedFormSnapshotConfig(id),
+  [FormDesignKeyEnum.INVOICE_SNAPSHOT]: getInvoicedFormSnapshotConfig,
   [FormDesignKeyEnum.CONTRACT_INVOICE]: getInvoicedFormConfig,
   [FormDesignKeyEnum.BUSINESS_TITLE]: getBusinessTitleModuleForm,
   [FormDesignKeyEnum.ORDER]: getOrderFormConfig,
@@ -806,6 +819,8 @@ export const getFormConfigApiMap: Record<FormDesignKeyEnum, (id?: string) => Pro
   [FormDesignKeyEnum.CUSTOMER_ORDER]: getOrderFormConfig,
   [FormDesignKeyEnum.ORDER_SNAPSHOT]: (id) => getOrderFormSnapshotConfig(id),
   [FormDesignKeyEnum.OUTSOURCING]: getOutsourcingFormConfig,
+  [FormDesignKeyEnum.ORDER_SNAPSHOT]: getOrderFormSnapshotConfig,
+  [FormDesignKeyEnum.CUSTOM_FORM]: getCustomFormDetail,
 };
 
 export const createFormApi: Record<FormDesignKeyEnum, (data: any) => Promise<any>> = {
@@ -851,6 +866,7 @@ export const createFormApi: Record<FormDesignKeyEnum, (data: any) => Promise<any
   [FormDesignKeyEnum.CONTRACT_ORDER]: async () => ({}),
   [FormDesignKeyEnum.CUSTOMER_ORDER]: async () => ({}),
   [FormDesignKeyEnum.OUTSOURCING]: addOutsourcing,
+  [FormDesignKeyEnum.CUSTOM_FORM]: addCustomFormData,
 };
 
 export const updateFormApi: Record<FormDesignKeyEnum, (data: any) => Promise<any>> = {
@@ -879,26 +895,29 @@ export const updateFormApi: Record<FormDesignKeyEnum, (data: any) => Promise<any
   [FormDesignKeyEnum.SEARCH_ADVANCED_PUBLIC]: async () => ({}),
   [FormDesignKeyEnum.SEARCH_ADVANCED_CLUE_POOL]: async () => ({}),
   [FormDesignKeyEnum.SEARCH_ADVANCED_OPPORTUNITY]: updateOpportunity,
-  [FormDesignKeyEnum.OPPORTUNITY_QUOTATION]: updateQuotation,
-  [FormDesignKeyEnum.OPPORTUNITY_QUOTATION_SNAPSHOT]: updateQuotation,
-  [FormDesignKeyEnum.CONTRACT]: updateContract,
-  [FormDesignKeyEnum.CONTRACT_SNAPSHOT]: updateContract,
+  [FormDesignKeyEnum.OPPORTUNITY_QUOTATION]: (data) => updateQuotation(data, data.approvalTaskId),
+  [FormDesignKeyEnum.OPPORTUNITY_QUOTATION_SNAPSHOT]: (data) => updateQuotation(data, data.approvalTaskId),
+  [FormDesignKeyEnum.CONTRACT]: (data) => updateContract(data, data.approvalTaskId),
+  [FormDesignKeyEnum.CONTRACT_SNAPSHOT]: (data) => updateContract(data, data.approvalTaskId),
   [FormDesignKeyEnum.CONTRACT_PAYMENT]: updatePaymentPlan,
   [FormDesignKeyEnum.CONTRACT_CONTRACT_PAYMENT]: updatePaymentPlan,
   [FormDesignKeyEnum.PRICE]: updateProductPrice,
   [FormDesignKeyEnum.CONTRACT_PAYMENT_RECORD]: updatePaymentRecord,
-  [FormDesignKeyEnum.INVOICE]: updateInvoiced,
-  [FormDesignKeyEnum.INVOICE_SNAPSHOT]: updateInvoiced,
+  [FormDesignKeyEnum.INVOICE]: (data) => updateInvoiced(data, data.approvalTaskId),
+  [FormDesignKeyEnum.INVOICE_SNAPSHOT]: (data) => updateInvoiced(data, data.approvalTaskId),
   [FormDesignKeyEnum.CONTRACT_INVOICE]: async () => ({}),
   [FormDesignKeyEnum.BUSINESS_TITLE]: async () => ({}),
-  [FormDesignKeyEnum.ORDER]: updateOrder,
-  [FormDesignKeyEnum.ORDER_SNAPSHOT]: updateOrder,
+  [FormDesignKeyEnum.ORDER]: (data) => updateOrder(data, data.approvalTaskId),
+  [FormDesignKeyEnum.ORDER_SNAPSHOT]: (data) => updateOrder(data, data.approvalTaskId),
   [FormDesignKeyEnum.CONTRACT_ORDER]: async () => ({}),
   [FormDesignKeyEnum.CUSTOMER_ORDER]: async () => ({}),
   [FormDesignKeyEnum.OUTSOURCING]: updateOutsourcing,
+  [FormDesignKeyEnum.CUSTOM_FORM]: updateCustomFormData,
 };
 
-export const getFormDetailApiMap: Partial<Record<FormDesignKeyEnum, (id: string) => Promise<FormDetail>>> = {
+export const getFormDetailApiMap: Partial<
+  Record<FormDesignKeyEnum, (id: string, approvalTaskId?: string) => Promise<FormDetail>>
+> = {
   [FormDesignKeyEnum.CUSTOMER]: getCustomer,
   [FormDesignKeyEnum.BUSINESS]: getOpportunityDetail,
   [FormDesignKeyEnum.CONTACT]: getCustomerContact,
@@ -937,6 +956,7 @@ export const getFormDetailApiMap: Partial<Record<FormDesignKeyEnum, (id: string)
   [FormDesignKeyEnum.CUSTOMER_ORDER]: getOrderDetailSnapshot,
   [FormDesignKeyEnum.ORDER_SNAPSHOT]: getOrderDetailSnapshot,
   [FormDesignKeyEnum.OUTSOURCING]: getOutsourcingDetail,
+  [FormDesignKeyEnum.CUSTOM_FORM]: getCustomFormDataDetail,
 };
 
 export const getFormListApiMap: Partial<Record<FormDesignKeyEnum, (data: any) => Promise<CommonList<any>>>> = {
@@ -971,6 +991,7 @@ export const getFormListApiMap: Partial<Record<FormDesignKeyEnum, (data: any) =>
   [FormDesignKeyEnum.CONTRACT_ORDER]: getOrderInContractList,
   [FormDesignKeyEnum.CUSTOMER_ORDER]: getCustomerOrderList,
   [FormDesignKeyEnum.OUTSOURCING]: getOutsourcingList,
+  [FormDesignKeyEnum.CUSTOM_FORM]: getCustomFormDataPage,
 };
 
 export const dataSourceFilterFormKeyMap: Partial<Record<FieldDataSourceTypeEnum, FormDesignKeyEnum>> = {
@@ -985,4 +1006,5 @@ export const dataSourceFilterFormKeyMap: Partial<Record<FieldDataSourceTypeEnum,
   [FieldDataSourceTypeEnum.CONTRACT_PAYMENT_RECORD]: FormDesignKeyEnum.CONTRACT_PAYMENT_RECORD,
   [FieldDataSourceTypeEnum.QUOTATION]: FormDesignKeyEnum.OPPORTUNITY_QUOTATION,
   [FieldDataSourceTypeEnum.ORDER]: FormDesignKeyEnum.ORDER,
+  [FieldDataSourceTypeEnum.INVOICE]: FormDesignKeyEnum.INVOICE,
 };

@@ -1,7 +1,8 @@
-import { computed, ref } from 'vue';
+import { computed, type Ref, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 
 import { FieldTypeEnum, FormDesignKeyEnum } from '@lib/shared/enums/formDesignEnum';
+import { CirculationTypeEnum } from '@lib/shared/enums/opportunityEnum';
 import { useI18n } from '@lib/shared/hooks/useI18n';
 import { getGenerateId } from '@lib/shared/method';
 import type { StageConfigItem } from '@lib/shared/models/opportunity';
@@ -20,7 +21,7 @@ function buildRollbackParams(form: StatusFormModel) {
   };
 }
 
-export default function useStageConfig(type: StatusBizType): UseStatusConfigReturn {
+export default function useStageConfig(type: Ref<StatusBizType>): UseStatusConfigReturn {
   const { t } = useI18n();
   const message = useMessage();
 
@@ -78,11 +79,18 @@ export default function useStageConfig(type: StatusBizType): UseStatusConfigRetu
     }
     return baseModel;
   });
+  const textConfig = computed(() => textConfigMap[type.value]);
+  const apiConfig = computed(() => apiConfigMap[type.value]);
+  const strategyConfig = computed(() => strategyConfigMap[type.value]);
+  const formItemModel = computed(() => strategyConfig.value.formItemModel);
 
   const form = ref<StatusFormModel>({
     runningStageRollback: true,
     completedStageRollback: false,
     list: [],
+    circulationType: CirculationTypeEnum.NORMAL,
+    advancedConfigs: [],
+    optionMap: {},
   });
 
   function createEmptyRow(): StatusRowItem {
@@ -105,6 +113,18 @@ export default function useStageConfig(type: StatusBizType): UseStatusConfigRetu
       return [
         { label: t('module.businessManage.insetBefore'), key: 'before' },
         { label: t('module.businessManage.insetAfter'), key: 'after' },
+      ];
+    }
+
+    if (form.value.list.length === 15) {
+      return [
+        {
+          label: t('common.delete'),
+          key: 'delete',
+          danger: true,
+          disabled: element.stageHasData,
+          tooltipContent: element.stageHasData ? textConfig.value.stageHasDataTip : '',
+        },
       ];
     }
 
@@ -138,6 +158,9 @@ export default function useStageConfig(type: StatusBizType): UseStatusConfigRetu
         draggable: item.type !== 'END',
         ...(strategyConfig.value.normalizeItem?.(item) || {}),
       })),
+      circulationType: res.circulationType,
+      advancedConfigs: res.advancedConfigs,
+      optionMap: res.optionMap,
     };
   }
 

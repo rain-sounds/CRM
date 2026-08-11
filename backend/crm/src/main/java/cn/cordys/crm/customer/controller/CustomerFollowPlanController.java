@@ -1,12 +1,14 @@
 package cn.cordys.crm.customer.controller;
 
 import cn.cordys.common.constants.FormKey;
+import cn.cordys.common.constants.ModuleKey;
 import cn.cordys.common.constants.PermissionConstants;
 import cn.cordys.common.pager.PagerWithOption;
+import cn.cordys.common.permission.CsPermission;
+import cn.cordys.common.util.BeanUtils;
 import cn.cordys.common.utils.ConditionFilterUtils;
 import cn.cordys.context.OrganizationContext;
 import cn.cordys.crm.follow.domain.FollowUpPlan;
-import cn.cordys.crm.follow.dto.CustomerDataDTO;
 import cn.cordys.crm.follow.dto.request.FollowUpPlanAddRequest;
 import cn.cordys.crm.follow.dto.request.FollowUpPlanPageRequest;
 import cn.cordys.crm.follow.dto.request.FollowUpPlanStatusRequest;
@@ -18,7 +20,6 @@ import cn.cordys.security.SessionUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,59 +34,61 @@ public class CustomerFollowPlanController {
     private FollowUpPlanService followUpPlanService;
 
     @PostMapping("/add")
-    @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_UPDATE)
     @Operation(summary = "添加客户跟进计划")
     public FollowUpPlan add(@Validated @RequestBody FollowUpPlanAddRequest request) {
+        followUpPlanService.checkPlanPermission(BeanUtils.copyBean(new FollowUpPlan(), request),
+                OrganizationContext.getOrganizationId(), SessionUtils.getUserId(), false);
         return followUpPlanService.add(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
 
     @PostMapping("/update")
-    @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_UPDATE)
     @Operation(summary = "更新客户跟进计划")
     public FollowUpPlan update(@Validated @RequestBody FollowUpPlanUpdateRequest request) {
+        followUpPlanService.checkUpdatePermission(request.getId(), SessionUtils.getUserId());
         return followUpPlanService.update(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
 
     @PostMapping("/page")
-    @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_READ)
+    @CsPermission(PermissionConstants.CUSTOMER_MANAGEMENT_READ)
     @Operation(summary = "客户跟进计划列表")
     public PagerWithOption<List<FollowUpPlanListResponse>> list(@Validated @RequestBody FollowUpPlanPageRequest request) {
+        FollowUpPlan followPlanRecord = new FollowUpPlan();
+        followPlanRecord.setCustomerId(request.getSourceId());
+        followPlanRecord.setType(ModuleKey.CUSTOMER.name());
+        followUpPlanService.checkPlanPermission(followPlanRecord, OrganizationContext.getOrganizationId(), SessionUtils.getUserId(), true);
         ConditionFilterUtils.parseCondition(request, FormKey.FOLLOW_PLAN.getKey());
-        CustomerDataDTO customerData = followUpPlanService.getCustomerPermission(SessionUtils.getUserId(),
-                request.getSourceId(), PermissionConstants.CUSTOMER_MANAGEMENT_READ);
-        return followUpPlanService.list(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId(), "CUSTOMER", "CUSTOMER", customerData);
+        return followUpPlanService.list(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId(), "CUSTOMER", "CUSTOMER");
     }
 
     @GetMapping("/get/{id}")
-    @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_READ)
     @Operation(summary = "客户跟进计划详情")
     public FollowUpPlanDetailResponse get(@PathVariable String id) {
+        followUpPlanService.checkPlanPermission(id, OrganizationContext.getOrganizationId(), SessionUtils.getUserId(), true);
         return followUpPlanService.get(id, OrganizationContext.getOrganizationId());
     }
 
-
     @GetMapping("/cancel/{id}")
-    @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_UPDATE)
     @Operation(summary = "取消客户跟进计划")
     public void cancelPlan(@PathVariable String id) {
+        followUpPlanService.checkUpdatePermission(id, SessionUtils.getUserId());
         followUpPlanService.cancelPlan(id, SessionUtils.getUserId());
     }
 
 
     @GetMapping("/delete/{id}")
     @Operation(summary = "客户删除跟进计划")
-    @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_UPDATE)
     public void deletePlan(@PathVariable String id) {
+        followUpPlanService.checkUpdatePermission(id, SessionUtils.getUserId());
         followUpPlanService.delete(id);
     }
 
 
     @PostMapping("/status/update")
-    @RequiresPermissions(PermissionConstants.CUSTOMER_MANAGEMENT_UPDATE)
     @Operation(summary = "客户更新跟进计划状态")
     public void updateStatus(@Validated @RequestBody FollowUpPlanStatusRequest request) {
+        followUpPlanService.checkUpdatePermission(request.getId(), SessionUtils.getUserId());
         followUpPlanService.updateStatus(request, SessionUtils.getUserId());
     }
 }

@@ -35,6 +35,7 @@ export enum FormDesignKeyEnum {
   CONTRACT_ORDER = 'contractOrder', // 合同下的订单
   CUSTOMER_ORDER = 'customerOrder', // 客户下的订单
   OUTSOURCING = 'outsourcing', // 外包
+  CUSTOM_FORM = 'customForm', // 自定义表单
   // 全局搜索
   SEARCH_ADVANCED_CLUE = 'searchAdvancedClue', // 线索
   SEARCH_ADVANCED_CUSTOMER = 'searchAdvancedCustomer', // 客户
@@ -100,6 +101,7 @@ export enum FieldDataSourceTypeEnum {
   CONTRACT_PAYMENT_RECORD = 'CONTRACT_PAYMENT_RECORD', // 回款记录
   BUSINESS_TITLE = 'BUSINESS_TITLE', // 工商抬头
   ORDER = 'ORDER', // 订单
+  INVOICE = 'INVOICE', // 发票
 }
 
 export enum FormLinkScenarioEnum {

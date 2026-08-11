@@ -46,7 +46,8 @@ public class SseService {
     public Flux<String> addClient(String userId, String clientId) {
         log.info("当前在线用户数: {} ", userClients.size());
 
-        if (StringUtils.isAnyBlank(userId, clientId)) {
+        // 过滤掉默认 admin 用户
+        if (StringUtils.isAnyBlank(userId, clientId) || "admin".equals(userId)) {
             log.info("User ID or Client ID is blank, cannot add client.");
             return null;
         }
@@ -155,12 +156,18 @@ public class SseService {
                 .map(val -> stringRedisTemplate.opsForValue().get(prefix + val))
                 .filter(StringUtils::isNotBlank)
                 .map(json -> {
-                    Notification notification = JSON.parseObject(json, Notification.class);
-                    NotificationDTO dto = new NotificationDTO();
-                    BeanUtils.copyBean(dto, notification);
-                    dto.setContentText(new String(notification.getContent()));
-                    return dto;
+                    try {
+                        Notification notification = JSON.parseObject(json, Notification.class);
+                        NotificationDTO dto = new NotificationDTO();
+                        BeanUtils.copyBean(dto, notification);
+                        dto.setContentText(new String(notification.getContent()));
+                        return dto;
+                    } catch (Exception e) {
+                        log.warn("Failed to parse notification from Redis: {}", e.getMessage());
+                        return null;
+                    }
                 })
+                .filter(Objects::nonNull)
                 .sorted(Comparator.comparing(NotificationDTO::getCreateTime).reversed())
                 .toList();
     }

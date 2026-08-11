@@ -24,8 +24,8 @@
       v-model:value="value"
       :rows="props.fieldConfig.initialOptions"
       :multiple="fieldConfig.type === FieldTypeEnum.DATA_SOURCE_MULTIPLE"
-      :data-source-type="props.fieldConfig.dataSourceType || FieldDataSourceTypeEnum.CUSTOMER"
-      :disabled="props.fieldConfig.editable === false || !!props.fieldConfig.resourceFieldId"
+      :data-source-type="(props.fieldConfig.dataSourceType || FieldDataSourceTypeEnum.CUSTOMER) as DataSourceType"
+      :disabled="props.fieldConfig.editable === false || props.disabled || !!props.fieldConfig.resourceFieldId"
       :filter-params="getParams()"
       :fieldConfig="props.fieldConfig"
       :disabled-selection="props.disabledSelection"
@@ -41,7 +41,7 @@
   import { NDivider, NFormItem } from 'naive-ui';
 
   import { OperatorEnum } from '@lib/shared/enums/commonEnum';
-  import { FieldDataSourceTypeEnum, FieldTypeEnum, type FormDesignKeyEnum } from '@lib/shared/enums/formDesignEnum';
+  import { FieldDataSourceTypeEnum, FieldTypeEnum, FormDesignKeyEnum } from '@lib/shared/enums/formDesignEnum';
   import { transformData } from '@lib/shared/method/formCreate';
   import type { FormConfig } from '@lib/shared/models/system/module';
 
@@ -49,11 +49,13 @@
   import useTable from '@/components/pure/crm-table/useTable';
   import { formKeyMap, sourceApi } from '@/components/business/crm-data-source-select/config';
   import CrmDataSource from '@/components/business/crm-data-source-select/index.vue';
+  import { getDataSourceFormKey, isCustomDataSourceType } from '@/components/business/crm-data-source-select/utils';
 
+  import { getFieldCustomFormList } from '@/api/modules';
   import useFormCreateApi from '@/hooks/useFormCreateApi';
 
   import { multipleValueTypeList } from '../../config';
-  import { FormCreateField } from '../../types';
+  import { DataSourceType, FormCreateField } from '../../types';
 
   const props = defineProps<{
     fieldConfig: FormCreateField;
@@ -66,6 +68,7 @@
     isDescriptionRender?: boolean; // 是否是描述渲染
     feedback?: string;
     hideChildTag?: boolean;
+    disabled?: boolean;
     disabledSelection?: (row: Record<string, any>) => boolean;
   }>();
   const emit = defineEmits<{
@@ -76,6 +79,17 @@
   const value = defineModel<(string | number)[]>('value', {
     default: [],
   });
+
+  function normalizeSelectedIds(defaultValue?: string | number | (string | number)[]) {
+    let defaultIds: (string | number)[] = [];
+    if (Array.isArray(defaultValue)) {
+      defaultIds = defaultValue;
+    } else if (defaultValue !== undefined && defaultValue !== null && defaultValue !== '') {
+      defaultIds = [defaultValue];
+    }
+    const currentValueIds = Array.isArray(value.value) ? value.value : [];
+    return [...new Set([...defaultIds, ...currentValueIds])];
+  }
 
   function getParams(): FilterResult {
     const conditions = props.fieldConfig.combineSearch?.conditions
@@ -95,14 +109,25 @@
     };
   }
 
+  const dataSourceType = computed(() => props.fieldConfig.dataSourceType || FieldDataSourceTypeEnum.CUSTOMER);
+  const isCustomForm = computed(() => isCustomDataSourceType(dataSourceType.value));
+  const formKey = computed<FormDesignKeyEnum>(
+    () => getDataSourceFormKey(dataSourceType.value, formKeyMap) as FormDesignKeyEnum
+  );
+  const isDatasourceFormConfig = computed(() => dataSourceType.value !== FieldDataSourceTypeEnum.BUSINESS_TITLE);
+
   const { fieldList, initFormConfig } = useFormCreateApi({
-    formKey: computed(
-      () => formKeyMap[props.fieldConfig.dataSourceType || FieldDataSourceTypeEnum.CUSTOMER] as FormDesignKeyEnum
-    ),
+    formKey,
+    customFormId: computed(() => (isCustomForm.value ? dataSourceType.value : undefined)),
+    isDatasource: isDatasourceFormConfig.value,
   });
 
+  const listApi = isCustomForm.value
+    ? getFieldCustomFormList
+    : sourceApi[dataSourceType.value as FieldDataSourceTypeEnum];
+
   const { propsRes, loadList, setLoadListParams, setAdvanceFilter } = useTable(
-    sourceApi[props.fieldConfig.dataSourceType || FieldDataSourceTypeEnum.CUSTOMER],
+    listApi,
     {
       columns: [],
       showSetting: false,
@@ -127,13 +152,17 @@
         setAdvanceFilter(getParams());
         setLoadListParams({
           keyword: val?.[0]?.name || '',
+          customFormId: isCustomForm.value ? (dataSourceType.value as string | undefined) : undefined,
         });
         await loadList();
-        const newRows = propsRes.value.data.filter(
-          (item) => props.fieldConfig.defaultValue?.includes(item.id) || value.value.includes(item.id)
-        );
-        value.value = newRows.map((e) => e.id) as (string | number)[];
-        emit('change', value.value, newRows, fieldList.value);
+        const selectedIds = normalizeSelectedIds(props.fieldConfig.defaultValue);
+        const newRows = propsRes.value.data.filter((item) => selectedIds.includes(item.id));
+        const fallbackRows = val.filter((item) => selectedIds.includes(item.id));
+
+        // 如果补全请求未查到目标项，仍需保留初始化值，避免出现先带入后被清空的问题
+        const mergedRows = [...newRows, ...fallbackRows.filter((item) => !newRows.some((row) => row.id === item.id))];
+        value.value = selectedIds;
+        emit('change', value.value, mergedRows, fieldList.value);
       } else if (val?.some((e) => e.isFormLinkFilled)) {
         // 这里将表单联动填充的初始化选项 emit 出去，触发 change  让数据源显示字段回显
         emit('change', value.value, val, fieldList.value);

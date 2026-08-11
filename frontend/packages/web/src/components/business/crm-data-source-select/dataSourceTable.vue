@@ -24,11 +24,7 @@
         <CrmSearchInput
           v-model:value="keyword"
           class="crm-data-source-search-input !w-[240px]"
-          :placeholder="
-            props.sourceType === FieldDataSourceTypeEnum.CONTACT
-              ? t('common.searchByNamePhone')
-              : t('common.searchByName')
-          "
+          :placeholder="searchPlaceholder"
           @search="searchData"
         />
       </template>
@@ -40,9 +36,8 @@
   import { DataTableRowKey, NImage, NImageGroup, NSwitch } from 'naive-ui';
 
   import { PreviewPictureUrl } from '@lib/shared/api/requrls/system/module';
-  import { ContractPaymentPlanEnum, ContractStatusEnum } from '@lib/shared/enums/contractEnum';
+  import { ContractPaymentPlanEnum } from '@lib/shared/enums/contractEnum';
   import { FieldDataSourceTypeEnum, FieldTypeEnum, FormDesignKeyEnum } from '@lib/shared/enums/formDesignEnum';
-  import { QuotationStatusEnum } from '@lib/shared/enums/opportunityEnum';
   import { ProcessStatusEnum } from '@lib/shared/enums/process';
   import { useI18n } from '@lib/shared/hooks/useI18n';
   import { transformData } from '@lib/shared/method/formCreate';
@@ -58,25 +53,28 @@
   import { CrmDataTableColumn } from '@/components/pure/crm-table/type';
   import useTable from '@/components/pure/crm-table/useTable';
   import CrmTag from '@/components/pure/crm-tag/index.vue';
-  import CrmApprovalPopover from '@/components/business/crm-approval-popover/index.vue';
-  import { ApprovalPopoverFormKeyType } from '@/components/business/crm-approval-popover/useApprovalPopoverDetail';
+  import CrmApprovalPopover, {
+    ApprovalPopoverFormKeyType,
+  } from '@/components/business/crm-approval/components/crm-approval-popover.vue';
   import CrmBusinessNamePrefix from '@/components/business/crm-business-name-prefix/index.vue';
   import StatusTagSelect from '@/components/business/crm-follow-detail/statusTagSelect.vue';
   import ContractStatus from '@/views/contract/contractPaymentPlan/components/contractPaymentStatus.vue';
 
-  import { getOpportunityStageConfig, getOrderStatusConfig } from '@/api/modules';
-  import { contractPaymentPlanStatusOptions, contractStatusOptions } from '@/config/contract';
+  import { getFieldCustomFormList, getOpportunityStageConfig, getOrderStatusConfig } from '@/api/modules';
+  import { contractPaymentPlanStatusOptions } from '@/config/contract';
   import useFormCreateApi from '@/hooks/useFormCreateApi';
   import useFormCreateSystemColumns from '@/hooks/useFormCreateSystemColumns';
   import { FormKey } from '@/hooks/useFormCreateTable';
+  import useUserStore from '@/store/modules/user';
 
-  import type { FormCreateField } from '../crm-form-create/types';
+  import type { DataSourceType, FormCreateField } from '../crm-form-create/types';
   import { formKeyMap, sourceApi } from './config';
-  import { InternalRowData, RowData } from 'naive-ui/es/data-table/src/interface';
+  import { getDataSourceFormKey, isCustomDataSourceType } from './utils';
+  import type { InternalRowData, RowData } from 'naive-ui/es/data-table/src/interface';
 
   const props = withDefaults(
     defineProps<{
-      sourceType: FieldDataSourceTypeEnum;
+      sourceType: DataSourceType;
       multiple?: boolean;
       disabledSelection?: (row: RowData) => boolean;
       filterParams?: FilterResult;
@@ -95,6 +93,7 @@
   }>();
 
   const { t } = useI18n();
+  const userStore = useUserStore();
 
   const selectedKeys = defineModel<DataTableRowKey[]>('selectedKeys', {
     required: true,
@@ -103,16 +102,33 @@
     default: [],
   });
 
+  const isCustomForm = computed(() => isCustomDataSourceType(props.sourceType));
+  const formKey = computed<FormDesignKeyEnum>(
+    () => getDataSourceFormKey(props.sourceType, formKeyMap) as FormDesignKeyEnum
+  );
+
+  const searchPlaceholder = computed(() => {
+    if (isCustomForm.value) {
+      return t('crmDataSourceSelect.customForm.searchPlaceholder');
+    }
+    return props.sourceType === FieldDataSourceTypeEnum.CONTACT
+      ? t('common.searchByNamePhone')
+      : t('common.searchByName');
+  });
   const crmTableRef = ref<InstanceType<typeof CrmTable>>();
+
+  const isDatasourceFormConfig = computed(() => props.sourceType !== FieldDataSourceTypeEnum.BUSINESS_TITLE);
   const { fieldList, initFormConfig } = useFormCreateApi({
-    formKey: computed(() => formKeyMap[props.sourceType] as FormDesignKeyEnum),
+    formKey,
+    customFormId: computed(() => (isCustomForm.value ? (props.sourceType as string | undefined) : undefined)),
+    isDatasource: isDatasourceFormConfig.value,
   });
   const subField = computed(() =>
     fieldList.value.find((field) => [FieldTypeEnum.SUB_PRICE, FieldTypeEnum.SUB_PRODUCT].includes(field.type))
   );
   // 计算子表格字段的key
   const subFieldKey = computed(() => {
-    if (formKeyMap[props.sourceType] === FormDesignKeyEnum.PRICE && props.isSubTableRender) {
+    if (formKey.value === FormDesignKeyEnum.PRICE && props.isSubTableRender) {
       const field = fieldList.value.find((e) => e.type === FieldTypeEnum.SUB_PRODUCT);
       return field?.businessKey || field?.id;
     }
@@ -141,35 +157,30 @@
       approvalStatus: (row: QuotationItem) =>
         h(CrmApprovalPopover, {
           status: row.approvalStatus,
-          formKey: formKeyMap[props.sourceType] as ApprovalPopoverFormKeyType,
+          formKey: formKey.value as ApprovalPopoverFormKeyType,
           disabled: row.approvalStatus !== ProcessStatusEnum.UNAPPROVED,
           showMore: false,
         }),
-      status: (row: QuotationItem) =>
+      invalid: (row: QuotationItem) =>
         h(
           CrmTag,
           {
-            type: row.status === QuotationStatusEnum.VOIDED ? 'default' : 'info',
+            type: row.invalid ? 'default' : 'info',
             theme: 'light',
           },
           {
-            default: () => (row.status === QuotationStatusEnum.VOIDED ? t('common.voided') : t('common.normal')),
+            default: () => (row.invalid ? t('common.voided') : t('common.normal')),
           }
         ),
     },
     [FieldDataSourceTypeEnum.CONTRACT]: {
       stage: (row: ContractItem) => {
-        return h(StatusTagSelect, {
-          status: row.stage as ContractStatusEnum,
-          noRender: true,
-          disabled: true,
-          statusOptions: contractStatusOptions,
-        });
+        return row.stageName || '-';
       },
       approvalStatus: (row: ContractItem) =>
         h(CrmApprovalPopover, {
           status: row.approvalStatus,
-          formKey: formKeyMap[props.sourceType] as ApprovalPopoverFormKeyType,
+          formKey: formKey.value as ApprovalPopoverFormKeyType,
           disabled: row.approvalStatus !== ProcessStatusEnum.UNAPPROVED,
           showMore: false,
         }),
@@ -205,7 +216,7 @@
       approvalStatus: (row: ContractItem) =>
         h(CrmApprovalPopover, {
           status: row.approvalStatus,
-          formKey: formKeyMap[props.sourceType] as ApprovalPopoverFormKeyType,
+          formKey: formKey.value as ApprovalPopoverFormKeyType,
           disabled: row.approvalStatus !== ProcessStatusEnum.UNAPPROVED,
           showMore: false,
         }),
@@ -213,11 +224,21 @@
     [FieldDataSourceTypeEnum.CUSTOMER_OPTIONS]: {},
     [FieldDataSourceTypeEnum.USER_OPTIONS]: {},
     [FieldDataSourceTypeEnum.BUSINESS_TITLE]: {},
+    [FieldDataSourceTypeEnum.INVOICE]: {
+      approvalStatus: (row: ContractItem) =>
+        h(CrmApprovalPopover, {
+          status: row.approvalStatus,
+          formKey: formKey.value as ApprovalPopoverFormKeyType,
+          disabled: row.approvalStatus !== ProcessStatusEnum.UNAPPROVED,
+          showMore: false,
+        }),
+    },
   };
 
   const stageConfig = ref<OpportunityStageConfig>();
 
   async function initStageConfig() {
+    if (isCustomForm.value) return;
     try {
       if (props.sourceType === FieldDataSourceTypeEnum.ORDER) {
         stageConfig.value = await getOrderStatusConfig();
@@ -230,7 +251,22 @@
     }
   }
 
-  const formKey = computed(() => formKeyMap[props.sourceType] as FormDesignKeyEnum);
+  const stageColumnConfig = computed(() => {
+    if (isCustomForm.value) {
+      return {};
+    }
+    if (props.sourceType === FieldDataSourceTypeEnum.ORDER) {
+      return {
+        orderStage: stageConfig.value?.stageConfigList || [],
+      };
+    }
+    if (props.sourceType === FieldDataSourceTypeEnum.BUSINESS) {
+      return {
+        opportunityStage: stageConfig.value?.stageConfigList || [],
+      };
+    }
+    return {};
+  });
 
   await initStageConfig();
 
@@ -238,12 +274,9 @@
     formKey: formKey.value as FormKey,
     containerClass: '',
     specialRender: {
-      ...dataSourceSpecialRenderMap[props.sourceType],
+      ...(!isCustomForm.value ? dataSourceSpecialRenderMap[props.sourceType as FieldDataSourceTypeEnum] || {} : {}),
     },
-    ...{
-      [props.sourceType === FieldDataSourceTypeEnum.ORDER ? 'orderStage' : 'opportunityStage']:
-        stageConfig.value?.stageConfigList || [],
-    },
+    ...stageColumnConfig.value,
   });
 
   const defaultInternalNameKeyMap: Record<string, string> = {
@@ -259,6 +292,7 @@
     [FormDesignKeyEnum.CONTRACT_PAYMENT_RECORD]: 'contractPaymentRecordName',
     [FormDesignKeyEnum.PRICE]: 'priceName',
     [FormDesignKeyEnum.BUSINESS_TITLE]: 'name',
+    [FormDesignKeyEnum.CUSTOM_FORM]: 'customFormDataName',
   };
 
   function mapColumnKey(columnKey: string): string {
@@ -270,6 +304,7 @@
       contractId: 'contractName',
       paymentPlanId: 'paymentPlanName',
       opportunityId: 'opportunityName',
+      businessTitleId: 'businessTitleName',
     };
     return keyMap[columnKey] || columnKey;
   }
@@ -283,7 +318,7 @@
   }
 
   const defaultInternalKey = computed(() => {
-    return defaultInternalNameKeyMap[formKeyMap[props.sourceType] as FormDesignKeyEnum];
+    return defaultInternalNameKeyMap[formKey.value as FormDesignKeyEnum];
   });
 
   const defaultDisplayField = computed<FormCreateField | undefined>(() => {
@@ -292,7 +327,9 @@
 
   const selectedDisplayFields = computed<string[]>(() => {
     const defaultFormColumn =
-      formKey.value === FormDesignKeyEnum.BUSINESS_TITLE ? [] : internalColumnMap[formKey.value] || [];
+      props.fieldConfig?.dataSourceType === FieldDataSourceTypeEnum.BUSINESS_TITLE
+        ? []
+        : internalColumnMap[formKey.value] || [];
     const fixedFieldIds = [...defaultFormColumn, ...staticColumns].map((column) => String(column.key));
     const allFields = [...fieldList.value.map((e) => e.id), ...fixedFieldIds];
     const savedFieldIds = props.fieldConfig?.listDisplayFields || [];
@@ -370,7 +407,7 @@
                       ? (row[columnKey] || []).map((_key: string) =>
                           h(NImage, {
                             class: 'h-[40px] w-[40px] mr-[4px]',
-                            src: `${PreviewPictureUrl}/${_key}`,
+                            src: `${PreviewPictureUrl}/${_key}?userId=${userStore.userInfo.id}`,
                           })
                         )
                       : '-',
@@ -426,7 +463,7 @@
                           ? (Array.isArray(row[columnKey]) ? row[columnKey] : []).map((_key: string) =>
                               h(NImage, {
                                 class: 'h-[40px] w-[40px] mr-[4px]',
-                                src: `${PreviewPictureUrl}/${_key}`,
+                                src: `${PreviewPictureUrl}/${_key}?userId=${userStore.userInfo.id}`,
                               })
                             )
                           : '-',
@@ -500,8 +537,12 @@
     return [selectionColumn, ...visibleColumns.value, ...subColumns];
   });
 
+  const listApi = computed(() => {
+    return isCustomForm.value ? getFieldCustomFormList : sourceApi[props.sourceType as FieldDataSourceTypeEnum];
+  });
+
   const { propsRes, propsEvent, loadList, setAdvanceFilter, setLoadListParams } = useTable(
-    sourceApi[props.sourceType],
+    listApi.value,
     {
       columns: columns.value,
       showSetting: false,
@@ -542,7 +583,10 @@
     if (props.filterParams) {
       setAdvanceFilter(props.filterParams);
     }
-    setLoadListParams({ keyword: _keyword !== undefined ? _keyword : keyword.value });
+    setLoadListParams({
+      keyword: _keyword !== undefined ? _keyword : keyword.value,
+      customFormId: isCustomForm.value ? (props.sourceType as string | undefined) : undefined,
+    });
     loadList();
     crmTableRef.value?.scrollTo({ top: 0 });
   }

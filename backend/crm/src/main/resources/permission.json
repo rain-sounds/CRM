@@ -131,20 +131,20 @@
         ]
       },
       {
-        "id": "APPROVAL_FLOW",
-        "name": "permission.approval_flow.name",
+        "id": "PROCESS_SETTING",
+        "name": "permission.process_setting.name",
         "permissions": [
           {
-            "id": "APPROVAL_FLOW:READ"
+            "id": "PROCESS_SETTING:READ"
           },
           {
-            "id": "APPROVAL_FLOW:ADD"
+            "id": "PROCESS_SETTING:ADD"
           },
           {
-            "id": "APPROVAL_FLOW:UPDATE"
+            "id": "PROCESS_SETTING:UPDATE"
           },
           {
-            "id": "APPROVAL_FLOW:DELETE"
+            "id": "PROCESS_SETTING:DELETE"
           }
         ]
       }
@@ -208,6 +208,9 @@
           },
           {
             "id": "CUSTOMER_MANAGEMENT_POOL:DELETE"
+          },
+          {
+            "id": "CUSTOMER_MANAGEMENT_POOL:IMPORT"
           },
           {
             "id": "CUSTOMER_MANAGEMENT_POOL:EXPORT"
@@ -297,6 +300,9 @@
             "id": "CLUE_MANAGEMENT_POOL:DELETE"
           },
           {
+            "id": "CLUE_MANAGEMENT_POOL:IMPORT"
+          },
+          {
             "id": "CLUE_MANAGEMENT_POOL:EXPORT"
           }
         ]
@@ -359,9 +365,6 @@
             "name": "permission.opportunity_management.opportunity_quotation.download"
           },
           {
-            "id": "OPPORTUNITY_QUOTATION:APPROVAL"
-          },
-          {
             "id": "OPPORTUNITY_QUOTATION:VOIDED"
           }
         ]
@@ -390,6 +393,9 @@
           },
           {
             "id": "PRODUCT_MANAGEMENT:IMPORT"
+          },
+          {
+            "id": "PRODUCT_MANAGEMENT:EXPORT"
           }
         ]
       },
@@ -557,10 +563,6 @@
             "license": false
           },
           {
-            "id": "CONTRACT:APPROVAL",
-            "license": false
-          },
-          {
             "id": "CONTRACT:PAYMENT"
           }
         ]
@@ -580,6 +582,9 @@
           },
           {
             "id": "CONTRACT_PAYMENT_PLAN:DELETE"
+          },
+          {
+            "id": "CONTRACT_PAYMENT_PLAN:IMPORT"
           },
           {
             "id": "CONTRACT_PAYMENT_PLAN:EXPORT"
@@ -657,11 +662,11 @@
             "id": "CONTRACT_INVOICE:DELETE"
           },
           {
-            "id": "CONTRACT_INVOICE:EXPORT"
+            "id": "CONTRACT_INVOICE:IMPORT"
           },
           {
-            "id": "CONTRACT_INVOICE:APPROVAL"
-           }
+            "id": "CONTRACT_INVOICE:EXPORT"
+          }
         ]
       },
       {
@@ -735,6 +740,24 @@
           },
           {
             "id": "OUTSOURCING:EXPORT"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "CUSTOM_FORM",
+    "name": "permission.custom_form.name",
+    "children": [
+      {
+        "id": "CUSTOM_FORM",
+        "name": "permission.custom_form.name",
+        "permissions": [
+          {
+            "id": "CUSTOM_FORM:READ"
+          },
+          {
+            "id": "CUSTOM_FORM:ADD"
           }
         ]
       }

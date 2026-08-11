@@ -1,11 +1,13 @@
 import type { FormDesignKeyEnum } from '@lib/shared/enums/formDesignEnum';
+import type { CirculationTypeEnum } from '@lib/shared/enums/opportunityEnum';
+import type { CirculationSetting, OpportunityStageConfig } from '@lib/shared/models/opportunity';
 
 import type { ActionsItem } from '@/components/pure/crm-more-action/type';
 import type { FormItemModel } from '@/components/business/crm-batch-form/types';
 
 import type { Ref } from 'vue';
 
-export type StatusBizType = FormDesignKeyEnum.BUSINESS | FormDesignKeyEnum.ORDER;
+export type StatusBizType = FormDesignKeyEnum.BUSINESS | FormDesignKeyEnum.ORDER | FormDesignKeyEnum.CONTRACT;
 
 export interface StatusRowItem {
   id?: string;
@@ -22,6 +24,9 @@ export interface StatusFormModel {
   runningStageRollback: boolean;
   completedStageRollback: boolean;
   list: StatusRowItem[];
+  circulationType: CirculationTypeEnum;
+  advancedConfigs: CirculationSetting[];
+  optionMap?: Record<string, any[]>;
 }
 
 export interface StatusSwitchConfigItem {
@@ -40,7 +45,7 @@ export interface StatusTextConfig {
 }
 
 export interface StatusApiConfig {
-  load: () => Promise<any>;
+  load: () => Promise<OpportunityStageConfig>;
   create: (params: any) => Promise<any>;
   update: (params: any) => Promise<any>;
   remove: (id: string) => Promise<any>;

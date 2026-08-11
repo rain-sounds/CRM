@@ -9,6 +9,12 @@
     @confirm="handleSave"
     @cancel="handleCancel"
   >
+    <n-alert v-if="props.showApprovalTip" type="warning" class="mb-[16px] mr-[8px]">
+      <template #icon>
+        <CrmIcon type="iconicon_info_circle_filled" :size="20" />
+      </template>
+      {{ props.showApprovalTip }}
+    </n-alert>
     <n-scrollbar class="max-h-[60vh] pr-[8px]">
       <n-form
         ref="formRef"
@@ -153,19 +159,22 @@
       </n-form>
     </n-scrollbar>
   </CrmModal>
+  <batchOperationResultModal v-model:visible="resultVisible" :result="batchResult" :name="batchOperationName" />
 </template>
 
 <script setup lang="ts">
   import { ref } from 'vue';
-  import { FormInst, NForm, NFormItem, NInput, NScrollbar, NSelect, useMessage } from 'naive-ui';
+  import { FormInst, NAlert, NForm, NFormItem, NInput, NScrollbar, NSelect, useMessage } from 'naive-ui';
   import { cloneDeep } from 'lodash-es';
 
   import { FieldTypeEnum, FormDesignKeyEnum } from '@lib/shared/enums/formDesignEnum';
   import { useI18n } from '@lib/shared/hooks/useI18n';
   import { getNormalFieldValue, getRuleType } from '@lib/shared/method/formCreate';
-  import { BatchUpdatePoolAccountParams } from '@lib/shared/models/customer';
+  import { BatchOperationResult } from '@lib/shared/models/opportunity';
 
+  import CrmIcon from '@/components/pure/crm-icon-font/index.vue';
   import CrmModal from '@/components/pure/crm-modal/index.vue';
+  import batchOperationResultModal from '@/components/business/crm-batch-edit-modal/components/batchOperationResultModal.vue';
   // 高级组件
   import dataSource from '@/components/business/crm-form-create/components/advanced/dataSource.vue';
   import Industry from '@/components/business/crm-form-create/components/advanced/industry.vue';
@@ -189,6 +198,7 @@
     batchUpdateCluePool,
     batchUpdateContact,
     batchUpdateContract,
+    batchUpdateCustomFormData,
     batchUpdateLead,
     batchUpdateOpenSeaCustomer,
     batchUpdateOpportunity,
@@ -218,7 +228,10 @@
       | FormDesignKeyEnum.PRICE
       | FormDesignKeyEnum.CONTRACT
       | FormDesignKeyEnum.OPPORTUNITY_QUOTATION
-      | FormDesignKeyEnum.ORDER;
+      | FormDesignKeyEnum.ORDER
+      | FormDesignKeyEnum.CUSTOM_FORM;
+    showApprovalTip?: string;
+    otherSaveParams?: Record<string, any>;
   }>();
 
   const emit = defineEmits<{
@@ -232,7 +245,19 @@
     required: true,
   });
 
-  const saveApiMap: Record<string, (params: BatchUpdatePoolAccountParams) => Promise<any>> = {
+  const resultVisible = ref(false);
+  const initBatchResult = {
+    success: 0,
+    fail: 0,
+    errorMessages: '',
+  };
+
+  const batchResult = ref<BatchOperationResult>({
+    ...initBatchResult,
+  });
+  const batchOperationName = ref(t('common.batchEdit'));
+
+  const saveApiMap: Record<string, (params: any) => Promise<any>> = {
     [FormDesignKeyEnum.CLUE_POOL]: batchUpdateCluePool,
     [FormDesignKeyEnum.CUSTOMER_OPEN_SEA]: batchUpdateOpenSeaCustomer,
     [FormDesignKeyEnum.BUSINESS]: batchUpdateOpportunity,
@@ -244,6 +269,7 @@
     [FormDesignKeyEnum.CONTRACT]: batchUpdateContract,
     [FormDesignKeyEnum.OPPORTUNITY_QUOTATION]: batchUpdateQuotation,
     [FormDesignKeyEnum.ORDER]: batchUpdateOrder,
+    [FormDesignKeyEnum.CUSTOM_FORM]: batchUpdateCustomFormData,
   };
 
   const initForm = {
@@ -380,14 +406,21 @@
             // 去空格
             result.fieldValue = result.fieldValue.replace(/[\s\uFEFF\xA0]+/g, '');
           }
-          await saveApiMap[props.formKey]({
+          const res = await saveApiMap[props.formKey]({
             ids: props.ids,
             ...result,
+            ...props.otherSaveParams,
             fieldValue: !currentForm.value.businessKey
               ? getNormalFieldValue(currentForm.value, result.fieldValue)
               : result.fieldValue ?? '',
           });
-          Message.success(t('common.updateSuccess'));
+          batchResult.value = { ...initBatchResult };
+          if (props.showApprovalTip) {
+            batchResult.value = res;
+            resultVisible.value = true;
+          } else {
+            Message.success(t('common.updateSuccess'));
+          }
           handleCancel();
           emit('refresh');
         } catch (error) {

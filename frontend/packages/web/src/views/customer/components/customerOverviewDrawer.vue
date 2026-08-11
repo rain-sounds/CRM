@@ -10,6 +10,7 @@
     :source-id="props.sourceId"
     :formViewSize="formViewSize"
     show-tab-setting
+    @button-pop-update="handleTransferPopUpdate"
     @button-select="handleButtonSelect"
     @saved="handleSaved"
   >
@@ -31,6 +32,7 @@
           :column="layout === 'vertical' ? 3 : undefined"
           :label-width="layout === 'vertical' ? 'auto' : undefined"
           :value-align="layout === 'vertical' ? 'start' : undefined"
+          :readonly="!hasAnyPermission(['CUSTOMER_MANAGEMENT:UPDATE'])"
           @init="handleDescriptionInit"
         />
       </div>
@@ -112,6 +114,7 @@
             :formKey="FormDesignKeyEnum.CUSTOMER_ORDER"
             :sourceId="props.sourceId"
             isCustomerTab
+            :readonly="collaborationType === 'READ_ONLY' || props.readonly"
             @open-contract-drawer="handleOpenContractDrawer"
           />
         </CrmCard>
@@ -321,6 +324,19 @@
     belongToPublicPool: null,
   });
 
+  function resetTransferForm() {
+    transferForm.value = {
+      owner: null,
+      belongToPublicPool: null,
+    };
+  }
+
+  function handleTransferPopUpdate(key: string, visible: boolean) {
+    if (key === 'transfer' && visible) {
+      resetTransferForm();
+    }
+  }
+
   // 转移
   async function transfer() {
     try {
@@ -330,6 +346,7 @@
         owner: transferForm.value.owner,
       });
       Message.success(t('common.transferSuccess'));
+      resetTransferForm();
       descriptionRef.value?.initFormDescription();
       emit('transfer');
     } catch (error) {

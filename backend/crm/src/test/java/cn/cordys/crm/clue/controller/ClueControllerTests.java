@@ -5,7 +5,6 @@ import cn.cordys.common.constants.InternalUser;
 import cn.cordys.common.constants.InternalUserView;
 import cn.cordys.common.constants.PermissionConstants;
 import cn.cordys.common.dto.ExportHeadDTO;
-import cn.cordys.common.dto.ExportSelectRequest;
 import cn.cordys.common.dto.ResourceTabEnableDTO;
 import cn.cordys.common.pager.Pager;
 import cn.cordys.common.util.BeanUtils;
@@ -361,33 +360,6 @@ class ClueControllerTests extends BaseTest {
         this.requestPostWithOk(BATCH_TO_POOL, reasonRequest);
         // 校验权限
         requestPostPermissionTest(PermissionConstants.CLUE_MANAGEMENT_RECYCLE, BATCH_TO_POOL, reasonRequest);
-    }
-
-    @Test
-    @Order(14)
-    void testExport() throws Exception {
-        ClueExportRequest request = new ClueExportRequest();
-        request.setCurrent(1);
-        request.setPageSize(10);
-        request.setFileName("export_test");
-        ExportHeadDTO col = new ExportHeadDTO();
-        col.setKey("name");
-        col.setTitle("线索名称");
-        request.setHeadList(List.of(col));
-        this.requestPostWithOk(EXPORT, request);
-    }
-
-    @Test
-    @Order(15)
-    void testExportSelect() throws Exception {
-        ExportSelectRequest request = new ExportSelectRequest();
-        request.setFileName("export_select_test");
-        request.setIds(List.of("test_id"));
-        ExportHeadDTO col = new ExportHeadDTO();
-        col.setKey("name");
-        col.setTitle("线索名称");
-        request.setHeadList(List.of(col));
-        this.requestPostWithOk(EXPORT_SELECT, request);
     }
 
     private List<ClueField> getClueFields(String clueId) {

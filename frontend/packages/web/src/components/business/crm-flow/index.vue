@@ -1,8 +1,11 @@
 <template>
   <div class="crm-flow relative flex h-full w-full">
     <div class="crm-flow__main relative flex-1 overflow-hidden">
+      <!-- canvasFlow 只影响画布展示；右侧表单和保存仍然使用 model 原始数据。 -->
       <FlowCanvas
-        :flow="flow"
+        ref="flowCanvasRef"
+        :readonly="props.readonly"
+        :flow="props.canvasFlow ?? flow"
         :selection="selection"
         @node-click="handleNodeClick"
         @branch-click="handleBranchClick"
@@ -17,15 +20,14 @@
       </FlowCanvas>
     </div>
 
-    <div v-if="hasRightContentSlot" class="crm-flow__sidebar">
+    <div v-if="showRightContent" class="crm-flow__sidebar">
       <slot name="rightContent" :selection="selection" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed, ref, useSlots, watch } from 'vue';
-  import { cloneDeep } from 'lodash-es';
+  import { computed, nextTick, ref, useSlots, watch } from 'vue';
 
   import { useI18n } from '@lib/shared/hooks/useI18n';
 
@@ -36,13 +38,20 @@
   import useNodeSelection from './composables/useNodeSelection';
   import { deleteConditionBranch, deleteNodeById } from './dsl/actions';
   import type { BranchClickPayload, NodeClickPayload } from './graph/types';
-  import type { FlowSchema } from './types';
+  import type { FlowSchema, NodeSelectionState } from './types';
 
   const emit = defineEmits<{
     (event: 'addConditionBranch', groupId: string): void;
+    (event: 'branchClick', payload: BranchClickPayload): void;
   }>();
 
-  const model = defineModel<FlowSchema>('model', {
+  const props = defineProps<{
+    canvasFlow?: FlowSchema;
+    rightContentVisible?: (selection: NodeSelectionState) => boolean;
+    readonly?: boolean;
+  }>();
+
+  const flow = defineModel<FlowSchema>('model', {
     required: true,
   });
 
@@ -50,39 +59,17 @@
   const hasInsertNodeContentSlot = computed(() => Boolean(slots.insertNodeContent));
   const hasRightContentSlot = computed(() => Boolean(slots.rightContent));
 
-  const flow = ref<FlowSchema>(model.value);
   const { selection, selectNode, selectBranch, clearSelection } = useNodeSelection(flow);
   const { t } = useI18n();
   const { openModal } = useModal();
 
-  const syncingFromProps = ref(false);
-
-  watch(
-    model,
-    (value) => {
-      if (value) {
-        syncingFromProps.value = true;
-        flow.value = cloneDeep(value);
-      }
-    },
-    {
-      deep: true,
+  const showRightContent = computed(() => {
+    if (!hasRightContentSlot.value) {
+      return false;
     }
-  );
 
-  watch(
-    flow,
-    (value) => {
-      if (syncingFromProps.value) {
-        syncingFromProps.value = false;
-        return;
-      }
-      model.value = value;
-    },
-    {
-      deep: true,
-    }
-  );
+    return props.rightContentVisible?.(selection.value);
+  });
 
   function handleNodeClick(payload: NodeClickPayload) {
     selectNode(payload.nodeId);
@@ -90,18 +77,28 @@
 
   function handleBranchClick(payload: BranchClickPayload) {
     selectBranch(payload.branchId);
+    emit('branchClick', payload);
   }
 
   function handleAddConditionBranch(groupId: string) {
+    if (props.readonly) {
+      return;
+    }
     emit('addConditionBranch', groupId);
   }
 
   function handleNodeDelete(payload: { nodeId: string }) {
+    if (props.readonly) {
+      return;
+    }
     deleteNodeById(flow.value, payload.nodeId);
     clearSelection();
   }
 
   function handleBranchDelete(payload: { groupId: string; branchId: string }) {
+    if (props.readonly) {
+      return;
+    }
     openModal({
       type: 'error',
       title: t('common.deleteConfirm'),
@@ -120,8 +117,22 @@
     });
   }
 
+  const flowCanvasRef = ref<InstanceType<typeof FlowCanvas> | null>(null);
+
+  function refreshCanvas(fitToContent = false) {
+    flowCanvasRef.value?.refreshCanvas(fitToContent);
+  }
+
+  watch(showRightContent, () => {
+    nextTick(() => {
+      refreshCanvas(true);
+    });
+  });
+
   defineExpose({
     flow,
+    selectNode,
+    refreshCanvas,
   });
 </script>
 
@@ -130,7 +141,7 @@
     background: var(--text-n9);
   }
   .crm-flow__sidebar {
-    overflow: auto;
+    overflow: hidden;
     width: 400px;
     background: var(--text-n10);
   }

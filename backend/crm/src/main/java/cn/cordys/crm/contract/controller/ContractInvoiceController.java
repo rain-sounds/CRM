@@ -2,32 +2,41 @@ package cn.cordys.crm.contract.controller;
 
 import cn.cordys.aspectj.constants.LogModule;
 import cn.cordys.common.constants.FormKey;
+import cn.cordys.common.constants.FormKeyConstants;
 import cn.cordys.common.constants.PermissionConstants;
 import cn.cordys.common.dto.DeptDataPermissionDTO;
 import cn.cordys.common.dto.ExportDTO;
 import cn.cordys.common.dto.ExportSelectRequest;
 import cn.cordys.common.dto.ResourceTabEnableDTO;
 import cn.cordys.common.pager.PagerWithOption;
+import cn.cordys.common.permission.CsBatchPermission;
+import cn.cordys.common.permission.CsPermission;
 import cn.cordys.common.service.DataScopeService;
 import cn.cordys.common.utils.ConditionFilterUtils;
 import cn.cordys.context.OrganizationContext;
 import cn.cordys.crm.contract.domain.ContractInvoice;
-import cn.cordys.crm.contract.dto.request.*;
+import cn.cordys.crm.contract.dto.request.ContractInvoiceAddRequest;
+import cn.cordys.crm.contract.dto.request.ContractInvoiceExportRequest;
+import cn.cordys.crm.contract.dto.request.ContractInvoicePageRequest;
+import cn.cordys.crm.contract.dto.request.ContractInvoiceUpdateRequest;
 import cn.cordys.crm.contract.dto.response.ContractInvoiceGetResponse;
 import cn.cordys.crm.contract.dto.response.ContractInvoiceListResponse;
 import cn.cordys.crm.contract.service.ContractInvoiceExportService;
 import cn.cordys.crm.contract.service.ContractInvoiceService;
 import cn.cordys.crm.system.constants.ExportConstants;
+import cn.cordys.crm.system.dto.request.ImportRequest;
+import cn.cordys.crm.system.dto.response.ImportResponse;
 import cn.cordys.crm.system.dto.response.ModuleFormConfigDTO;
 import cn.cordys.security.SessionUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -44,14 +53,14 @@ public class ContractInvoiceController {
     private DataScopeService dataScopeService;
 
     @GetMapping("/module/form")
-    @RequiresPermissions(PermissionConstants.CONTRACT_INVOICE_READ)
+    @CsPermission(PermissionConstants.CONTRACT_INVOICE_READ)
     @Operation(summary = "获取表单配置")
     public ModuleFormConfigDTO getModuleFormConfig() {
         return contractInvoiceService.getBusinessFormConfig(OrganizationContext.getOrganizationId());
     }
 
     @PostMapping("/page")
-    @RequiresPermissions(PermissionConstants.CONTRACT_INVOICE_READ)
+    @CsPermission(PermissionConstants.CONTRACT_INVOICE_READ)
     @Operation(summary = "列表")
     public PagerWithOption<List<ContractInvoiceListResponse>> list(@Validated @RequestBody ContractInvoicePageRequest request) {
         ConditionFilterUtils.parseCondition(request, FormKey.INVOICE.getKey());
@@ -61,49 +70,49 @@ public class ContractInvoiceController {
     }
 
     @GetMapping("/get/snapshot/{id}")
-    @RequiresPermissions(PermissionConstants.CONTRACT_INVOICE_READ)
+    @CsPermission(value = PermissionConstants.CONTRACT_INVOICE_READ, resourceId = "{#id}", formType = FormKeyConstants.CONTRACT_INVOICE)
     @Operation(summary = "获取详情快照")
     public ContractInvoiceGetResponse getSnapshot(@PathVariable("id") String id) {
-        return contractInvoiceService.getSnapshotWithDataPermissionCheck(id, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
+        return contractInvoiceService.getSnapshot(id, OrganizationContext.getOrganizationId());
     }
 
     @GetMapping("/get/{id}")
-    @RequiresPermissions(PermissionConstants.CONTRACT_INVOICE_READ)
+    @CsPermission(value = PermissionConstants.CONTRACT_INVOICE_READ, resourceId = "{#id}", formType = FormKeyConstants.CONTRACT_INVOICE)
     @Operation(summary = "详情")
     public ContractInvoiceGetResponse get(@PathVariable("id") String id) {
-        return contractInvoiceService.getWithDataPermissionCheck(id, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
+        return contractInvoiceService.get(id, OrganizationContext.getOrganizationId());
     }
 
     @PostMapping("/add")
-    @RequiresPermissions(PermissionConstants.CONTRACT_INVOICE_ADD)
+    @CsPermission(PermissionConstants.CONTRACT_INVOICE_ADD)
     @Operation(summary = "创建")
     public ContractInvoice add(@Validated @RequestBody ContractInvoiceAddRequest request) {
         return contractInvoiceService.add(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
     @PostMapping("/update")
-    @RequiresPermissions(PermissionConstants.CONTRACT_INVOICE_UPDATE)
+    @CsPermission(value = PermissionConstants.CONTRACT_INVOICE_UPDATE, resourceId = "{#request.id}", formType = FormKeyConstants.CONTRACT_INVOICE)
     @Operation(summary = "更新")
     public ContractInvoice update(@Validated @RequestBody ContractInvoiceUpdateRequest request) {
         return contractInvoiceService.update(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
     @GetMapping("/delete/{id}")
-    @RequiresPermissions(PermissionConstants.CONTRACT_INVOICE_DELETE)
+    @CsPermission(value = PermissionConstants.CONTRACT_INVOICE_DELETE, resourceId = "{#id}", formType = FormKeyConstants.CONTRACT_INVOICE)
     @Operation(summary = "删除")
     public void delete(@PathVariable("id") String id) {
-        contractInvoiceService.delete(id, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
+        contractInvoiceService.deleteWithApprovalCheck(id, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
     @GetMapping("/module/form/snapshot/{id}")
-    @RequiresPermissions(PermissionConstants.CONTRACT_INVOICE_READ)
+    @CsPermission(value = PermissionConstants.CONTRACT_INVOICE_READ, resourceId = "{#id}", formType = FormKeyConstants.CONTRACT_INVOICE)
     @Operation(summary = "获取表单快照配置")
     public ModuleFormConfigDTO getFormSnapshot(@PathVariable("id") String id) {
         return contractInvoiceService.getFormSnapshot(id, OrganizationContext.getOrganizationId());
     }
 
     @GetMapping("/tab")
-    @RequiresPermissions(PermissionConstants.CONTRACT_INVOICE_READ)
+    @CsPermission(PermissionConstants.CONTRACT_INVOICE_READ)
     @Operation(summary = "tab是否显示")
     public ResourceTabEnableDTO getTabEnableConfig() {
         return contractInvoiceService.getTabEnableConfig(SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
@@ -111,7 +120,7 @@ public class ContractInvoiceController {
 
     @PostMapping("/export-select")
     @Operation(summary = "导出选中发票")
-    @RequiresPermissions(PermissionConstants.CONTRACT_INVOICE_EXPORT)
+    @CsBatchPermission(value = PermissionConstants.CONTRACT_INVOICE_EXPORT, resourceId = "{#request.ids}", formType = FormKeyConstants.CONTRACT_INVOICE)
     public String exportSelect(@Validated @RequestBody ExportSelectRequest request) {
         DeptDataPermissionDTO deptDataPermission = dataScopeService.getDeptDataPermission(SessionUtils.getUserId(),
                 OrganizationContext.getOrganizationId(), PermissionConstants.CONTRACT_INVOICE_READ);
@@ -133,7 +142,7 @@ public class ContractInvoiceController {
 
     @PostMapping("/export-all")
     @Operation(summary = "导出全部合同")
-    @RequiresPermissions(PermissionConstants.CONTRACT_INVOICE_EXPORT)
+    @CsPermission(PermissionConstants.CONTRACT_INVOICE_EXPORT)
     public String exportAll(@Validated @RequestBody ContractInvoiceExportRequest request) {
         ConditionFilterUtils.parseCondition(request, FormKey.INVOICE.getKey());
         DeptDataPermissionDTO deptDataPermission = dataScopeService.getDeptDataPermission(SessionUtils.getUserId(),
@@ -154,22 +163,31 @@ public class ContractInvoiceController {
     }
 
     @PostMapping("/batch/delete")
-    @RequiresPermissions(PermissionConstants.CONTRACT_INVOICE_DELETE)
+    @CsBatchPermission(value = PermissionConstants.CONTRACT_INVOICE_DELETE, resourceId = "{#ids}", formType = FormKeyConstants.CONTRACT_INVOICE)
     @Operation(summary = "批量删除客户")
     public void batchDelete(@RequestBody @NotNull List<String> ids) {
         contractInvoiceService.batchDelete(ids, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
-    @PostMapping("/approval")
-    @RequiresPermissions(PermissionConstants.CONTRACT_INVOICE_APPROVAL)
-    @Operation(summary = "审核通过/不通过")
-    public void approval(@Validated @RequestBody ContractInvoiceApprovalRequest request) {
-        contractInvoiceService.approvalContractInvoice(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
+
+    @GetMapping("/template/download")
+    @CsPermission(PermissionConstants.CONTRACT_INVOICE_IMPORT)
+    @Operation(summary = "下载导入模板")
+    public void downloadImportTpl(HttpServletResponse response) {
+        contractInvoiceService.downloadImportTpl(response, OrganizationContext.getOrganizationId());
     }
 
-    @GetMapping("/revoke/{id}")
-    @Operation(summary = "撤销审批")
-    public String revoke(@PathVariable("id") String id) {
-        return contractInvoiceService.revoke(id, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
+    @PostMapping("/import/pre-check")
+    @Operation(summary = "导入检查")
+    @CsPermission(PermissionConstants.CONTRACT_INVOICE_IMPORT)
+    public ImportResponse preCheck(@Validated @RequestPart("request") ImportRequest request, @RequestPart(value = "file") MultipartFile file) {
+        return contractInvoiceService.importPreCheck(file, request.getImportType(), OrganizationContext.getOrganizationId());
+    }
+
+    @PostMapping("/import")
+    @Operation(summary = "导入")
+    @CsPermission(PermissionConstants.CONTRACT_INVOICE_IMPORT)
+    public ImportResponse realImport(@Validated @RequestPart("request") ImportRequest request, @RequestPart(value = "file") MultipartFile file) {
+        return contractInvoiceService.realImport(file, request, OrganizationContext.getOrganizationId(), SessionUtils.getUserId());
     }
 }

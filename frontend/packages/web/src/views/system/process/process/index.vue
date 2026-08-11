@@ -12,14 +12,20 @@
     >
       <template #tableTop>
         <div class="flex items-center justify-between">
-          <n-button v-permission="['APPROVAL_FLOW:ADD']" type="primary" @click="handleAdd">
+          <n-button v-permission="['PROCESS_SETTING:ADD']" type="primary" @click="handleAdd">
             {{ t('process.process.newProcess') }}
           </n-button>
           <CrmSearchInput v-model:value="keyword" class="!w-[240px]" @search="searchData" />
         </div>
       </template>
     </CrmTable>
-    <addProcessDrawer v-model:visible="showProcessDrawer" :sourceId="activeSourceId" />
+    <addProcessDrawer
+      v-model:visible="showProcessDrawer"
+      :sourceId="activeSourceId"
+      :is-detail="isDetail"
+      @refresh="initData"
+      @cancel="handleCancel"
+    />
   </CrmCard>
 </template>
 
@@ -29,7 +35,7 @@
   import { SpecialColumnEnum, TableKeyEnum } from '@lib/shared/enums/tableEnum';
   import { useI18n } from '@lib/shared/hooks/useI18n';
   import { characterLimit } from '@lib/shared/method';
-  import type { AnnouncementItemDetail } from '@lib/shared/models/system/message';
+  import { ApprovalProcessItem } from '@lib/shared/models/system/process';
 
   import CrmCard from '@/components/pure/crm-card/index.vue';
   import CrmNameTooltip from '@/components/pure/crm-name-tooltip/index.vue';
@@ -42,7 +48,15 @@
   import CrmOperationButton from '@/components/business/crm-operation-button/index.vue';
   import addProcessDrawer from './components/addProcessDrawer.vue';
 
-  import { getAnnouncementList } from '@/api/modules';
+  import {
+    approvalProcessDetail,
+    deleteApprovalProcess,
+    getApprovalProcessList,
+    toggleApprovalProcess,
+    updateApprovalProcess,
+  } from '@/api/modules';
+  import { businessTypeOptions } from '@/config/process';
+  import { clearApprovalConfigCache } from '@/hooks/useApprovalConfigCache';
   import useModal from '@/hooks/useModal';
   import { hasAnyPermission } from '@/utils/permission';
 
@@ -56,30 +70,38 @@
   const activeSourceId = ref();
 
   const showProcessDrawer = ref(false);
-
+  const isDetail = ref(false);
   // 添加
   function handleAdd() {
     showProcessDrawer.value = true;
+    isDetail.value = false;
   }
 
-  async function deleteHandler(row: any, done?: () => void) {
+  function handleCancel() {
+    showProcessDrawer.value = false;
+    activeSourceId.value = '';
+    isDetail.value = false;
+  }
+
+  async function deleteHandler(row: ApprovalProcessItem) {
     const enabled = row.enable;
     const content = enabled ? t('process.process.deleteEnabledContent') : t('process.process.deleteContent');
     const positiveText = enabled ? t('common.gotIt') : t('common.confirm');
+    const type = enabled ? 'default' : 'error';
     openModal({
-      type: 'error',
+      type,
       title: t('common.deleteConfirmTitle', { name: characterLimit(row.name) }),
       content,
       positiveText,
       negativeText: t('common.cancel'),
       onPositiveClick: async () => {
-        if (!enabled) {
-          deleteHandler(row, done);
-        }
         try {
-          // todo
-          tableRefreshId.value += 1;
-          Message.success(t('common.deleteSuccess'));
+          if (!row.enable) {
+            await deleteApprovalProcess(row.id);
+            clearApprovalConfigCache(row.formType);
+            tableRefreshId.value += 1;
+            Message.success(t('common.deleteSuccess'));
+          }
         } catch (error) {
           // eslint-disable-next-line no-console
           console.log(error);
@@ -88,11 +110,12 @@
     });
   }
 
-  function handleActionSelect(row: any, actionKey: string) {
+  function handleActionSelect(row: ApprovalProcessItem, actionKey: string) {
     switch (actionKey) {
       case 'edit':
         activeSourceId.value = row.id;
         showProcessDrawer.value = true;
+        isDetail.value = false;
         break;
       case 'delete':
         deleteHandler(row);
@@ -102,12 +125,12 @@
     }
   }
 
-  async function handleToggleStatus(row: any) {
-    const enable = !row.enable;
+  async function handleToggleStatus(row: ApprovalProcessItem) {
     try {
-      // todo
+      await toggleApprovalProcess(row.id, !row.enable);
+      clearApprovalConfigCache(row.formType);
+      Message.success(t(!row.enable ? 'common.enableSuccess' : 'common.closeSuccess'));
       tableRefreshId.value += 1;
-      Message.success(t(enable ? 'common.enableSuccess' : 'common.closeSuccess'));
     } catch (error) {
       // eslint-disable-next-line no-console
       console.log(error);
@@ -116,7 +139,11 @@
 
   async function handleChangeName(id: string, name: string) {
     try {
-      // todo
+      const result = await approvalProcessDetail(id);
+      await updateApprovalProcess({
+        ...result,
+        name,
+      });
       Message.success(t('common.updateSuccess'));
       return Promise.resolve(true);
     } catch (e) {
@@ -138,7 +165,7 @@
     },
     {
       title: 'ID',
-      key: 'id',
+      key: 'number',
       width: 200,
       sortOrder: false,
       sorter: true,
@@ -150,27 +177,27 @@
     },
     {
       title: t('process.process.processType'),
-      key: 'type',
+      key: 'formType',
       width: 200,
-      ellipsis: {
-        tooltip: true,
-      },
+      filter: true,
+      filterOptions: businessTypeOptions,
+      render: (row: ApprovalProcessItem) =>
+        h(CrmNameTooltip, {
+          text: businessTypeOptions.find((item) => item.value === row.formType)?.label ?? '',
+        }),
     },
     {
       title: t('process.process.name'),
       key: 'name',
       sortOrder: false,
       sorter: true,
-      ellipsis: {
-        tooltip: true,
-      },
       width: 200,
-      render: (row: any) => {
+      render: (row: ApprovalProcessItem) => {
         return h(
           CrmEditableText,
           {
             value: row.name ?? '',
-            permission: ['APPROVAL_FLOW:UPDATE'],
+            permission: ['PROCESS_SETTING:UPDATE'],
             onHandleEdit: async (val: string, done?: () => void) => {
               const res = await handleChangeName(row.id, val);
               if (res) {
@@ -184,17 +211,25 @@
               h(
                 'div',
                 {
-                  class: 'max-w-[calc(100%-24px)] w-[fit-content]',
+                  class: 'flex min-w-0 max-w-full items-center',
                 },
                 h(
-                  CrmTableButton,
+                  'div',
                   {
-                    onClick: () => {
-                      activeSourceId.value = row.id;
-                      showProcessDrawer.value = true;
-                    },
+                    class: 'one-line-text inline-block min-w-0 max-w-full',
                   },
-                  { default: () => row.name, trigger: () => row.name }
+                  h(
+                    CrmTableButton,
+                    {
+                      class: 'inline-block max-w-full',
+                      onClick: () => {
+                        activeSourceId.value = row.id;
+                        showProcessDrawer.value = true;
+                        isDetail.value = true;
+                      },
+                    },
+                    { default: () => row.name, trigger: () => row.name }
+                  )
                 )
               ),
           }
@@ -203,7 +238,7 @@
     },
     {
       title: t('common.status'),
-      key: 'status',
+      key: 'enable',
       sortOrder: false,
       sorter: true,
       ellipsis: {
@@ -212,16 +247,16 @@
       filter: true,
       filterOptions: [
         {
-          value: '1',
+          value: true,
           label: t('common.enable'),
         },
         {
-          value: '0',
+          value: false,
           label: t('common.disable'),
         },
       ],
       width: 200,
-      render: (row: any) =>
+      render: (row: ApprovalProcessItem) =>
         h(
           NTooltip,
           {
@@ -233,9 +268,9 @@
                 size: 'small',
                 rubberBand: false,
                 value: row.enable,
-                disabled: !hasAnyPermission(['APPROVAL_FLOW:UPDATE']),
+                disabled: !hasAnyPermission(['PROCESS_SETTING:UPDATE']),
                 onClick: () => {
-                  if (!hasAnyPermission(['APPROVAL_FLOW:UPDATE'])) return;
+                  if (!hasAnyPermission(['PROCESS_SETTING:UPDATE'])) return;
                   handleToggleStatus(row);
                 },
               });
@@ -246,10 +281,17 @@
     },
     {
       title: t('process.executionTiming'),
-      key: 'executionTiming',
+      key: 'executeTiming',
       width: 200,
-      ellipsis: {
-        tooltip: true,
+      render: (row: ApprovalProcessItem) => {
+        const executionTimingLabels = [
+          row.createExecute ? t('common.create') : '',
+          row.updateExecute ? t('common.edit') : '',
+          row.deleteExecute ? t('common.delete') : '',
+        ].filter(Boolean);
+        return h(CrmNameTooltip, {
+          text: executionTimingLabels.join('/') || '-',
+        });
       },
     },
     {
@@ -258,7 +300,7 @@
       sortOrder: false,
       sorter: true,
       width: 200,
-      render: (row: any) => {
+      render: (row: ApprovalProcessItem) => {
         return h(CrmNameTooltip, { text: row.createUserName });
       },
     },
@@ -278,7 +320,7 @@
       width: 200,
       sortOrder: false,
       sorter: true,
-      render: (row: AnnouncementItemDetail) => {
+      render: (row: ApprovalProcessItem) => {
         return h(CrmNameTooltip, { text: row.updateUserName });
       },
     },
@@ -296,26 +338,26 @@
       key: 'operation',
       width: 110,
       fixed: 'right',
-      render: (row: AnnouncementItemDetail) =>
+      render: (row: ApprovalProcessItem) =>
         h(CrmOperationButton, {
           groupList: [
             {
               label: t('common.edit'),
               key: 'edit',
-              permission: ['APPROVAL_FLOW:UPDATE'],
+              permission: ['PROCESS_SETTING:UPDATE'],
             },
             {
               label: t('common.delete'),
               key: 'delete',
-              permission: ['APPROVAL_FLOW:DELETE'],
+              permission: ['PROCESS_SETTING:DELETE'],
             },
           ],
           onSelect: (key: string) => handleActionSelect(row, key),
         }),
     },
   ];
-  // todo xinxinwu
-  const { propsRes, propsEvent, loadList, setLoadListParams } = useTable(getAnnouncementList, {
+
+  const { propsRes, propsEvent, loadList, setLoadListParams } = useTable(getApprovalProcessList, {
     tableKey: TableKeyEnum.PROCESS,
     showSetting: true,
     columns,
@@ -331,10 +373,17 @@
     crmTableRef.value?.scrollTo({ top: 0 });
   }
 
-  function searchData(val: string) {
-    keyword.value = val;
+  function searchData(val?: string) {
+    keyword.value = val ?? keyword.value;
     initData();
   }
+
+  watch(
+    () => tableRefreshId.value,
+    () => {
+      searchData();
+    }
+  );
 
   onBeforeMount(() => {
     initData();

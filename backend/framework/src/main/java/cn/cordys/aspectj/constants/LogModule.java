@@ -157,5 +157,14 @@ public class LogModule {
      */
     public static final String OUTSOURCING = "OUTSOURCING";
 
-    public static final String APPROVAL_FLOW = "APPROVAL_FLOW";
+    public static final String APPROVAL_FLOW = "SYSTEM_PROCESS_APPROVAL";
+
+    /**
+     * 自定义表单
+     */
+    public static final String CUSTOM_FORM = "CUSTOM_FORM_INDEX";
+    /**
+     * 自定义表单数据
+     */
+    public static final String CUSTOM_FORM_DATA = "CUSTOM_FORM_DATA";
 }

@@ -13,7 +13,10 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
+import org.springframework.data.util.ReflectionUtils;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
@@ -62,29 +65,34 @@ public abstract class BaseResourceService {
      * @param value     值
      * @param <K>       资源类型
      */
-    protected <K> void setResourceFieldValue(K resource, String fieldName, Object value) {
-        Class<?> clazz = resource.getClass();
-        // 设置字段值
+    public <K> void setResourceFieldValue(K resource, String fieldName, Object value) {
         try {
             if (value != null) {
-                Class<?> valueClass = value.getClass();
-                switch (value) {
-                    case List<?> ignored -> valueClass = List.class;
-                    case Map<?, ?> ignored -> valueClass = Map.class;
-                    case Integer i -> {
-                        Class<?> type = clazz.getDeclaredField(fieldName).getType();
+                Class<?> clazz = resource.getClass();
+                // 使用 ReflectionUtils 递归查找父类字段
+                Field field = ReflectionUtils.findField(clazz, f -> Strings.CS.equals(f.getName(), fieldName));
+                if (field != null) {
+                    field.setAccessible(true);
+                    // 数值类型转换
+                    if (value instanceof String strValue) {
+                        Class<?> type = field.getType();
                         if (type.equals(BigDecimal.class)) {
-                            value = BigDecimal.valueOf(i);
+                            value = new BigDecimal(strValue);
                         } else if (type.equals(Long.class)) {
+                            value = Long.valueOf(strValue);
+                        } else if (type.equals(Integer.class)) {
+                            value = Integer.valueOf(strValue);
+                        }
+                    } else if (value instanceof Integer i) {
+                        if (field.getType().equals(BigDecimal.class)) {
+                            value = BigDecimal.valueOf(i);
+                        } else if (field.getType().equals(Long.class)) {
                             value = Long.valueOf(i);
                         }
-                        valueClass = value.getClass();
                     }
-                    default -> {
-                    }
+                    // 通过 Field 直接设置值，支持父类字段
+                    field.set(resource, value);
                 }
-                clazz.getMethod("set" + CaseFormatUtils.capitalizeFirstLetter(fieldName), valueClass)
-                        .invoke(resource, value);
             }
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -161,8 +169,9 @@ public abstract class BaseResourceService {
                 .map(resource -> {
                     Object id = getResourceFieldValue(resource, "id");
                     Object name = getResourceFieldValue(resource, "name");
+					Object customFormId = getResourceFieldValue(resource, "customFormId");
 
-                    BaseResourceField baseResourceField = fieldMap.get(id.toString());
+					BaseResourceField baseResourceField = fieldMap.get(id.toString());
                     Map originResource = new HashMap();
                     if (baseResourceField != null && isNotBlank(baseResourceField.getFieldValue())) {
                         // 获取字段解析器
@@ -177,6 +186,11 @@ public abstract class BaseResourceService {
                     if (isNotBlank(request.getFieldValue())) {
                         modifiedResource.put(request.getFieldId(), request.getFieldValue());
                     }
+
+					if (customFormId != null) {
+						originResource.put("customFormId", customFormId);
+						modifiedResource.put("customFormId", customFormId);
+					}
 
                     LogDTO logDTO = new LogDTO(orgId, id.toString(), userId, LogType.UPDATE, logModule, name.toString());
                     logDTO.setOriginalValue(originResource);

@@ -4,6 +4,7 @@ import cn.cordys.aspectj.annotation.OperationLog;
 import cn.cordys.aspectj.constants.LogModule;
 import cn.cordys.aspectj.constants.LogType;
 import cn.cordys.aspectj.context.OperationLogContext;
+import cn.cordys.aspectj.dto.LogContextInfo;
 import cn.cordys.aspectj.dto.LogDTO;
 import cn.cordys.common.constants.BusinessModuleField;
 import cn.cordys.common.constants.FormKey;
@@ -11,21 +12,40 @@ import cn.cordys.common.constants.PermissionConstants;
 import cn.cordys.common.domain.BaseModuleFieldValue;
 import cn.cordys.common.dto.*;
 import cn.cordys.common.dto.condition.BaseCondition;
+import cn.cordys.common.dto.stage.CirculationFieldValue;
+import cn.cordys.common.dto.stage.StageConfigResponse;
+import cn.cordys.common.dto.stage.StageSortRequest;
 import cn.cordys.common.exception.GenericException;
 import cn.cordys.common.pager.PageUtils;
 import cn.cordys.common.pager.PagerWithOption;
 import cn.cordys.common.permission.PermissionCache;
 import cn.cordys.common.permission.PermissionUtils;
+import cn.cordys.common.resolver.field.AbstractModuleFieldResolver;
+import cn.cordys.common.resolver.field.ModuleFieldResolverFactory;
 import cn.cordys.common.response.result.CrmHttpResultCode;
 import cn.cordys.common.service.BaseService;
-import cn.cordys.common.service.DataScopeService;
 import cn.cordys.common.uid.IDGenerator;
 import cn.cordys.common.util.BeanUtils;
+import cn.cordys.common.util.CommonBeanFactory;
 import cn.cordys.common.util.JSON;
 import cn.cordys.common.util.Translator;
+import cn.cordys.context.OrganizationContext;
+import cn.cordys.crm.approval.annotation.HitApproval;
+import cn.cordys.crm.approval.constants.ApprovalFormTypeEnum;
+import cn.cordys.crm.approval.constants.ApprovalResourceUpdateType;
+import cn.cordys.crm.approval.constants.ApprovalStatus;
+import cn.cordys.crm.approval.constants.ExecuteTimingEnum;
+import cn.cordys.crm.approval.dto.ResourceApprovalFieldUpdateParam;
+import cn.cordys.crm.approval.dto.ResourceApprovalPostUpdateParam;
+import cn.cordys.crm.approval.dto.ResourceSnapshotApprovalParam;
+import cn.cordys.crm.approval.handler.ApprovalResourceHandler;
+import cn.cordys.crm.approval.service.ApprovalFlowService;
+import cn.cordys.crm.approval.service.ApprovalResourceService;
 import cn.cordys.crm.contract.domain.Contract;
 import cn.cordys.crm.customer.domain.Customer;
 import cn.cordys.crm.order.domain.Order;
+import cn.cordys.crm.order.domain.OrderField;
+import cn.cordys.crm.order.domain.OrderFieldBlob;
 import cn.cordys.crm.order.domain.OrderSnapshot;
 import cn.cordys.crm.order.dto.request.OrderAddRequest;
 import cn.cordys.crm.order.dto.request.OrderPageRequest;
@@ -33,23 +53,31 @@ import cn.cordys.crm.order.dto.request.OrderStageRequest;
 import cn.cordys.crm.order.dto.request.OrderUpdateRequest;
 import cn.cordys.crm.order.dto.response.OrderGetResponse;
 import cn.cordys.crm.order.dto.response.OrderListResponse;
-import cn.cordys.crm.order.dto.response.OrderStageConfigResponse;
 import cn.cordys.crm.order.dto.response.OrderStatisticResponse;
 import cn.cordys.crm.order.mapper.ExtOrderMapper;
 import cn.cordys.crm.order.mapper.ExtOrderStageConfigMapper;
+import cn.cordys.crm.system.constants.CirculationFieldValueTypeEnum;
+import cn.cordys.crm.system.constants.CirculationTypeEnum;
+import cn.cordys.crm.system.domain.StageAdvancedConfig;
 import cn.cordys.crm.system.dto.field.base.BaseField;
 import cn.cordys.crm.system.dto.request.ResourceBatchEditRequest;
+import cn.cordys.crm.system.dto.response.BatchAffectReasonResponse;
 import cn.cordys.crm.system.dto.response.ModuleFormConfigDTO;
+import cn.cordys.crm.system.mapper.ExtStageAdvancedConfigMapper;
 import cn.cordys.crm.system.service.LogService;
 import cn.cordys.crm.system.service.ModuleFormCacheService;
 import cn.cordys.crm.system.service.ModuleFormService;
+import cn.cordys.crm.system.service.StageAdvancedConfigService;
 import cn.cordys.mybatis.BaseMapper;
 import cn.cordys.mybatis.lambda.LambdaQueryWrapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,7 +87,8 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class OrderService {
+@Slf4j
+public class OrderService implements ApprovalResourceHandler {
 
     @Resource
     private OrderFieldService orderFieldService;
@@ -84,13 +113,18 @@ public class OrderService {
     @Resource
     private LogService logService;
     @Resource
-    private DataScopeService dataScopeService;
-    @Resource
     private ExtOrderStageConfigMapper extOrderStageConfigMapper;
     @Resource
     private BaseMapper<Customer> customerBaseMapper;
+    @Resource
+    private ApprovalFlowService approvalFlowService;
+    @Resource
+    private StageAdvancedConfigService stageAdvancedConfigService;
+    @Resource
+    private ExtStageAdvancedConfigMapper extStageAdvancedConfigMapper;
 
     private static final BigDecimal MAX_AMOUNT = new BigDecimal("9999999999");
+    public static final Long DEFAULT_POS = 1L;
 
     /**
      * 新建订单
@@ -101,26 +135,28 @@ public class OrderService {
      * @return
      */
     @OperationLog(module = LogModule.ORDER_INDEX, type = LogType.ADD)
+    @HitApproval(formKey = FormKey.ORDER, executeType = ExecuteTimingEnum.CREATE, operatorId = "{#operatorId}")
     public Order add(OrderAddRequest request, String operatorId, String orgId) {
         List<BaseModuleFieldValue> moduleFields = request.getModuleFields();
         ModuleFormConfigDTO moduleFormConfigDTO = request.getModuleFormConfigDTO();
-        if (CollectionUtils.isEmpty(moduleFields)) {
-            throw new GenericException(Translator.get("order.field.required"));
-        }
         if (moduleFormConfigDTO == null) {
             throw new GenericException(Translator.get("order.form.config.required"));
         }
-        List<OrderStageConfigResponse> stageConfigList = extOrderStageConfigMapper.getStageConfigList(orgId);
+        List<StageConfigResponse> stageConfigList = extOrderStageConfigMapper.getStageConfigList(orgId);
+        Long nextPos = getNextPos(orgId, stageConfigList.getFirst().getId());
         ModuleFormConfigDTO saveModuleFormConfigDTO = JSON.parseObject(JSON.toJSONString(moduleFormConfigDTO), ModuleFormConfigDTO.class);
         Order order = new Order();
         BeanUtils.copyBean(order, request);
         order.setId(IDGenerator.nextStr());
         order.setStage(stageConfigList.getFirst().getId());
+        order.setPos(nextPos);
+        order.setApprovalStatus(ApprovalStatus.NONE.name());
         order.setOrganizationId(orgId);
         order.setCreateTime(System.currentTimeMillis());
         order.setCreateUser(operatorId);
         order.setUpdateTime(System.currentTimeMillis());
         order.setUpdateUser(operatorId);
+        order.setApproved(false);
 
         //判断总金额
         setAmount(request.getAmount(), order);
@@ -139,6 +175,11 @@ public class OrderService {
         return order;
     }
 
+
+    private Long getNextPos(String orgId, String stage) {
+        Long pos = extOrderMapper.selectNextPos(orgId, stage);
+        return pos == null ? 1 : pos + 1;
+    }
 
     /**
      * 保存订单快照
@@ -159,24 +200,6 @@ public class OrderService {
         snapshot.setOrderProp(JSON.toJSONString(moduleFormConfigDTO));
         snapshot.setOrderValue(JSON.toJSONString(response));
         snapshotBaseMapper.insert(snapshot);
-    }
-
-    public OrderGetResponse getWithDataPermissionCheck(String id, String userId, String orgId) {
-        OrderGetResponse getResponse = get(id);
-        if (getResponse == null) {
-            throw new GenericException(CrmHttpResultCode.NOT_FOUND);
-        }
-        dataScopeService.checkDataPermission(userId, orgId, getResponse.getOwner(), PermissionConstants.ORDER_READ);
-        return getResponse;
-    }
-
-    public OrderGetResponse getSnapshotWithDataPermissionCheck(String id, String userId, String orgId) {
-        OrderGetResponse getResponse = getSnapshot(id);
-        if (getResponse == null) {
-            throw new GenericException(CrmHttpResultCode.NOT_FOUND);
-        }
-        dataScopeService.checkDataPermission(userId, orgId, getResponse.getOwner(), PermissionConstants.ORDER_READ);
-        return getResponse;
     }
 
     private OrderGetResponse get(Order order, List<BaseModuleFieldValue> orderFields, ModuleFormConfigDTO orderFormConfig) {
@@ -200,8 +223,8 @@ public class OrderService {
         Contract contract = contractMapper.selectByPrimaryKey(order.getContractId());
 
         Map<String, String> stageNameMap = extOrderStageConfigMapper.getStageConfigList(order.getOrganizationId()).stream()
-                .collect(Collectors.toMap(OrderStageConfigResponse::getId,
-                        OrderStageConfigResponse::getName));
+                .collect(Collectors.toMap(StageConfigResponse::getId,
+                        StageConfigResponse::getName));
         orderGetResponse.setStageName(stageNameMap.get(order.getStage()));
 
         if (customer != null) {
@@ -235,52 +258,87 @@ public class OrderService {
      * @param id
      * @return
      */
-    public OrderGetResponse get(String id) {
+    public OrderGetResponse get(String id, String orgId) {
         Order order = orderMapper.selectByPrimaryKey(id);
         // 获取模块字段
         ModuleFormConfigDTO orderFormConfig = getFormConfig(order.getOrganizationId());
         List<BaseModuleFieldValue> orderFields = orderFieldService.getModuleFieldValuesByResourceId(id);
-        return get(order, orderFields, orderFormConfig);
+        OrderGetResponse getResponse = get(order, orderFields, orderFormConfig);
+        if (Strings.CI.equals(getResponse.getApprovalStatus(), ApprovalStatus.APPROVING.name())) {
+            Map<String, Boolean> firstNodeApproved = baseService.getApprovingResourceFirstNodeApproved(List.of(getResponse.getId()), orgId);
+            getResponse.setFirstApproved(firstNodeApproved.get(getResponse.getId()));
+        }
+        return getResponse;
     }
 
-	/**
-	 * 获取订单详情（⚠️反射调用; 勿修改入参, 返回, 方法名!）
-	 * @param id 订单ID
-	 * @return 订单详情
-	 */
-	public OrderGetResponse getSimple(String id) {
-		Order order = orderMapper.selectByPrimaryKey(id);
-		if (order == null) {
-			return null;
-		}
-		OrderGetResponse response = BeanUtils.copyBean(new OrderGetResponse(), order);
-		List<BaseModuleFieldValue> fvs = orderFieldService.getModuleFieldValuesByResourceId(id);
-		ModuleFormConfigDTO orderFormConfig = getFormConfig(order.getOrganizationId());
-		moduleFormService.processBusinessFieldValues(response, fvs, orderFormConfig);
-		return response;
-	}
+    /**
+     * 获取订单详情（⚠️反射调用; 勿修改入参, 返回, 方法名!）
+     *
+     * @param id 订单ID
+     * @return 订单详情
+     */
+    public OrderGetResponse getSimple(String id) {
+        Order order = orderMapper.selectByPrimaryKey(id);
+        if (order == null) {
+            return null;
+        }
+        OrderGetResponse response = BeanUtils.copyBean(new OrderGetResponse(), order);
+        List<BaseModuleFieldValue> fvs = orderFieldService.getModuleFieldValuesByResourceId(id);
+        ModuleFormConfigDTO orderFormConfig = getFormConfig(order.getOrganizationId());
+        moduleFormService.processBusinessFieldValues(response, fvs, orderFormConfig);
+        return response;
+    }
 
-	/**
-	 * 批量获取订单详情 (用于数据源批量查询优化)
-	 * @param ids 订单ID集合
-	 * @return 订单详情列表
-	 */
-	public List<OrderGetResponse> batchGetSimpleByIds(List<String> ids) {
-		if (CollectionUtils.isEmpty(ids)) {
-			return Collections.emptyList();
-		}
-		List<Order> orders = orderMapper.selectByIds(ids);
-		if (CollectionUtils.isEmpty(orders)) {
-			return Collections.emptyList();
-		}
-		Map<String, List<BaseModuleFieldValue>> fieldValueMap = orderFieldService.getResourceFieldMap(ids, true);
+    /**
+     * 获取字段详情 (⚠️反射调用; 勿修改入参, 返回, 方法名!)
+     *
+     * @param id 订单ID
+     * @return 订单详情
+     */
+    public OrderGetResponse getFieldValues(String id) {
+        OrderGetResponse response = new OrderGetResponse();
+        Order order = orderMapper.selectByPrimaryKey(id);
+        if (order == null) {
+            return null;
+        }
+        LambdaQueryWrapper<OrderSnapshot> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OrderSnapshot::getOrderId, id);
+        OrderSnapshot snapshot = snapshotBaseMapper.selectListByLambda(wrapper).stream().findFirst().orElse(null);
+        if (snapshot != null) {
+            response = JSON.parseObject(snapshot.getOrderValue(), OrderGetResponse.class);
+            if (StringUtils.isNotBlank(order.getCustomerId())) {
+                Customer customer = customerBaseMapper.selectByPrimaryKey(order.getCustomerId());
+                if (customer != null) {
+                    response.setInCustomerPool(customer.getInSharedPool());
+                    response.setPoolId(customer.getPoolId());
+                }
+            }
+        }
+        return response;
+    }
 
-		return orders.stream().map(order -> {
-			OrderGetResponse response = BeanUtils.copyBean(new OrderGetResponse(), order);
-			response.setModuleFields(fieldValueMap.get(order.getId()));
-			return response;
-		}).toList();
-	}
+    /**
+     * 批量获取订单详情 (用于数据源批量查询优化)
+     *
+     * @param ids 订单ID集合
+     * @return 订单详情列表
+     */
+    public List<OrderGetResponse> batchGetSimpleByIds(List<String> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            return Collections.emptyList();
+        }
+        List<Order> orders = orderMapper.selectByIds(ids);
+        if (CollectionUtils.isEmpty(orders)) {
+            return Collections.emptyList();
+        }
+        Map<String, List<BaseModuleFieldValue>> fieldValueMap = orderFieldService.getResourceFieldMap(ids, true);
+
+        return orders.stream().map(order -> {
+            OrderGetResponse response = BeanUtils.copyBean(new OrderGetResponse(), order);
+            response.setModuleFields(fieldValueMap.get(order.getId()));
+            return response;
+        }).toList();
+    }
 
     /**
      * 编辑订单
@@ -291,13 +349,11 @@ public class OrderService {
      * @return
      */
     @OperationLog(module = LogModule.ORDER_INDEX, type = LogType.UPDATE, resourceId = "{#request.id}")
+    @HitApproval(formKey = FormKey.ORDER, executeType = ExecuteTimingEnum.UPDATE, resourceId = "{#request.id}", updateType = "{#request.updateType}", operatorId = "{#userId}", comment = "{#request.comment}")
     public Order update(OrderUpdateRequest request, String userId, String orgId) {
         Order oldOrder = orderMapper.selectByPrimaryKey(request.getId());
         List<BaseModuleFieldValue> moduleFields = request.getModuleFields();
         ModuleFormConfigDTO moduleFormConfigDTO = request.getModuleFormConfigDTO();
-        if (CollectionUtils.isEmpty(moduleFields)) {
-            throw new GenericException(Translator.get("order.field.required"));
-        }
         if (moduleFormConfigDTO == null) {
             throw new GenericException(Translator.get("order.form.config.required"));
         }
@@ -313,6 +369,7 @@ public class OrderService {
             order.setCreateUser(oldOrder.getCreateUser());
             order.setCreateTime(oldOrder.getCreateTime());
             order.setStage(oldOrder.getStage());
+            order.setApprovalStatus(oldOrder.getApprovalStatus());
             //判断总金额
             setAmount(request.getAmount(), order);
             updateFields(moduleFields, order, orgId, userId);
@@ -378,8 +435,9 @@ public class OrderService {
      *
      * @param id 订单ID
      */
+    @Override
     @OperationLog(module = LogModule.ORDER_INDEX, type = LogType.DELETE, resourceId = "{#id}")
-    public void delete(String id) {
+    public void delete(String id, String userId, String orgId) {
         Order order = orderMapper.selectByPrimaryKey(id);
         if (order == null) {
             throw new GenericException(CrmHttpResultCode.NOT_FOUND);
@@ -396,6 +454,18 @@ public class OrderService {
         OperationLogContext.setResourceName(order.getName());
     }
 
+    @HitApproval(formKey = FormKey.ORDER, executeType = ExecuteTimingEnum.DELETE, resourceId = "{#id}", operatorId = "{#userId}")
+    public void deleteWithApprovalCheck(String id, String userId, String orgId) {
+        // 校验审批流
+        delete(id, userId, orgId);
+    }
+
+
+    @Override
+    public FormKey getFormKey() {
+        return FormKey.ORDER;
+    }
+
 
     /**
      * ⚠️反射调用; 勿修改入参, 返回, 方法名!
@@ -403,7 +473,7 @@ public class OrderService {
      * @param id 订单ID
      * @return 订单详情
      */
-    public OrderGetResponse getSnapshot(String id) {
+    public OrderGetResponse getSnapshot(String id, String orgId) {
         OrderGetResponse response = new OrderGetResponse();
         Order order = orderMapper.selectByPrimaryKey(id);
         if (order == null) {
@@ -421,8 +491,182 @@ public class OrderService {
                     response.setPoolId(customer.getPoolId());
                 }
             }
+            if (Strings.CI.equals(response.getApprovalStatus(), ApprovalStatus.APPROVING.name())) {
+                Map<String, Boolean> firstNodeApproved = baseService.getApprovingResourceFirstNodeApproved(List.of(response.getId()), orgId);
+                response.setFirstApproved(firstNodeApproved.get(response.getId()));
+            }
         }
+        response.setApproved(order.getApproved());
         return response;
+    }
+
+    /**
+     * ⚠️反射调用: 由审批执行操作统一调用, 勿修改
+     *
+     * @param param 参数
+     */
+    public void updateSnapshotApprovalStatus(ResourceSnapshotApprovalParam param) {
+        OrderSnapshot snapshotCriteria = new OrderSnapshot();
+        snapshotCriteria.setOrderId(param.getResourceId());
+        OrderSnapshot snapshot = snapshotBaseMapper.selectOne(snapshotCriteria);
+        if (snapshot != null) {
+            OrderGetResponse response = JSON.parseObject(snapshot.getOrderValue(), OrderGetResponse.class);
+            response.setApprovalStatus(param.getApprovalStatus());
+            snapshot.setOrderValue(JSON.toJSONString(response));
+            snapshotBaseMapper.update(snapshot);
+        }
+    }
+
+    /**
+     * ⚠️反射调用: 由审批执行后置操作统一调用, 勿修改
+     *
+     * @param postFieldParam 参数
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public void updateApprovalPostField(ResourceApprovalPostUpdateParam postFieldParam) {
+        ModuleFormConfigDTO formConfig = getFormConfig(OrganizationContext.getOrganizationId());
+        List<BaseField> fields = formConfig.getFields();
+        Map<String, BaseField> fieldConfigMap = fields.stream().collect(Collectors.toMap(BaseField::getId, f -> f));
+        Order order = orderMapper.selectByPrimaryKey(postFieldParam.getResourceId());
+        // 保存原始数据用于日志记录
+        Order originOrder = BeanUtils.copyBean(new Order(), order);
+        List<BaseModuleFieldValue> originFields = orderFieldService.getModuleFieldValuesByResourceId(postFieldParam.getResourceId());
+        List<OrderField> orderFields = new ArrayList<>();
+        List<OrderFieldBlob> orderFieldBlobs = new ArrayList<>();
+        OrderSnapshot snapshotCriteria = new OrderSnapshot();
+        snapshotCriteria.setOrderId(postFieldParam.getResourceId());
+        OrderSnapshot snapshot = snapshotBaseMapper.selectOne(snapshotCriteria);
+        OrderGetResponse response = new OrderGetResponse();
+        if (snapshot != null) {
+            response = JSON.parseObject(snapshot.getOrderValue(), OrderGetResponse.class);
+        }
+
+        ResourceApprovalFieldUpdateParam stageField = postFieldParam.getFields().stream().filter(param -> Strings.CS.equals(param.getFieldId(), "stage") && param.getFieldValue() != null).findFirst().orElse(null);
+        boolean stageFlag = handleStageSetting(stageField, order, postFieldParam);
+
+        for (ResourceApprovalFieldUpdateParam fieldUpdateParam : postFieldParam.getFields()) {
+            if (Strings.CS.equals(fieldUpdateParam.getFieldId(), "stage") && fieldUpdateParam.getFieldValue() != null && stageFlag) {
+                orderFieldService.setResourceFieldValue(order, "stage", fieldUpdateParam.getFieldValue());
+                continue;
+            }
+            if (!fieldConfigMap.containsKey(fieldUpdateParam.getFieldId()) || fieldUpdateParam.getFieldValue() == null) {
+                continue;
+            }
+            BaseField fieldConfig = fieldConfigMap.get(fieldUpdateParam.getFieldId());
+            AbstractModuleFieldResolver customFieldResolver = ModuleFieldResolverFactory.getResolver(fieldConfig.getType());
+            if (fieldConfig.hasBusinessKey()) {
+                // 业务主表字段
+                orderFieldService.setResourceFieldValue(order, fieldConfig.getBusinessKey(), fieldUpdateParam.getFieldValue());
+            } else {
+                // 自定义字段
+                Optional<BaseModuleFieldValue> findField = response.getModuleFields().stream().filter(fieldValue -> Strings.CI.equals(fieldValue.getFieldId(), fieldUpdateParam.getFieldId())).findAny();
+                if (findField.isPresent()) {
+                    findField.get().setFieldValue(fieldUpdateParam.getFieldValue());
+                } else {
+                    BaseModuleFieldValue fv = new BaseModuleFieldValue();
+                    fv.setFieldId(fieldUpdateParam.getFieldId());
+                    fv.setFieldValue(fieldUpdateParam.getFieldValue());
+                    response.getModuleFields().add(fv);
+                }
+                if (fieldConfig.isBlob()) {
+                    // 自定义大表
+                    orderFieldService.getResourceFieldBlobMapper().deleteByLambda(new LambdaQueryWrapper<OrderFieldBlob>()
+                            .eq(OrderFieldBlob::getFieldId, fieldUpdateParam.getFieldId()).eq(OrderFieldBlob::getResourceId, postFieldParam.getResourceId()));
+                    OrderFieldBlob field = new OrderFieldBlob();
+                    field.setId(IDGenerator.nextStr());
+                    field.setResourceId(postFieldParam.getResourceId());
+                    field.setFieldId(fieldUpdateParam.getFieldId());
+                    field.setFieldValue(customFieldResolver.convertToString(fieldConfig, fieldUpdateParam.getFieldValue()));
+                    orderFieldBlobs.add(field);
+                } else {
+                    // 自定义表
+                    orderFieldService.getResourceFieldMapper().deleteByLambda(new LambdaQueryWrapper<OrderField>()
+                            .eq(OrderField::getFieldId, fieldUpdateParam.getFieldId()).eq(OrderField::getResourceId, postFieldParam.getResourceId()));
+                    OrderField field = new OrderField();
+                    field.setId(IDGenerator.nextStr());
+                    field.setResourceId(postFieldParam.getResourceId());
+                    field.setFieldId(fieldUpdateParam.getFieldId());
+                    field.setFieldValue(customFieldResolver.convertToString(fieldConfig, fieldUpdateParam.getFieldValue()));
+                    orderFields.add(field);
+                }
+            }
+        }
+        orderMapper.updateById(order);
+        if (CollectionUtils.isNotEmpty(orderFields)) {
+            orderFieldService.getResourceFieldMapper().batchInsert(orderFields);
+        }
+        if (CollectionUtils.isNotEmpty(orderFieldBlobs)) {
+            orderFieldService.getResourceFieldBlobMapper().batchInsert(orderFieldBlobs);
+        }
+        // 更新快照
+        if (snapshot != null) {
+            OrderGetResponse snapshotRes = get(order, response.getModuleFields(), formConfig);
+            snapshot.setOrderValue(JSON.toJSONString(snapshotRes));
+            snapshotBaseMapper.update(snapshot);
+        }
+        // 记录审批后置字段更新日志
+        baseService.handleUpdateLogWithSubTable(originOrder, order, originFields, orderFieldService.getModuleFieldValuesByResourceId(postFieldParam.getResourceId()),
+                postFieldParam.getResourceId(), order.getName(), Translator.get("products_info"), formConfig);
+        // 从 OperationLogContext 中获取日志信息并手动记录
+        LogContextInfo contextInfo = OperationLogContext.getContext();
+        if (contextInfo != null) {
+            String orgId = OrganizationContext.getOrganizationId();
+            LogDTO logDTO = new LogDTO(orgId, postFieldParam.getResourceId(), postFieldParam.getOperator(), LogType.UPDATE, LogModule.ORDER_INDEX, order.getName());
+            logDTO.setOriginalValue(contextInfo.getOriginalValue());
+            logDTO.setModifiedValue(contextInfo.getModifiedValue());
+            logService.add(logDTO);
+            OperationLogContext.clear();
+        }
+    }
+
+
+    /**
+     * 审批后置操作更新阶段配置
+     *
+     * @param stageField
+     * @param originOrder
+     * @param postFieldParam
+     */
+    private boolean handleStageSetting(ResourceApprovalFieldUpdateParam stageField, Order originOrder, ResourceApprovalPostUpdateParam postFieldParam) {
+        if (stageField == null) {
+            return true;
+        }
+        try {
+            if (!stageAdvancedConfigService.checkStage(originOrder.getStage(), stageField.getFieldValue().toString(), FormKey.ORDER.getKey())) {
+                return true;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+        StageConfigResponse first = extOrderStageConfigMapper.getStageConfigList(originOrder.getOrganizationId()).getFirst();
+        if (Strings.CI.equals(first.getCirculationType(), CirculationTypeEnum.ADVANCED.name())) {
+            StageAdvancedConfig config = extStageAdvancedConfigMapper.getConfigByOriginAndTarget(originOrder.getStage(), stageField.getFieldValue().toString(), FormKey.ORDER.name());
+            if (config == null || config.getFieldConfig() == null) {
+                return true;
+            }
+            List<CirculationFieldValue> circulationFieldValues = JSON.parseObject(config.getFieldConfig(), new TypeReference<List<CirculationFieldValue>>() {
+            });
+            List<ResourceApprovalFieldUpdateParam> fields = new ArrayList<>();
+            circulationFieldValues.forEach(field -> {
+                if (Strings.CI.equals(field.getValueType(), CirculationFieldValueTypeEnum.FIXED_VALUE.name())) {
+                    if (field.getFieldValue() != null) {
+                        ResourceApprovalFieldUpdateParam param = new ResourceApprovalFieldUpdateParam();
+                        param.setEnable(true);
+                        param.setFieldId(field.getFieldId());
+                        param.setFieldValue(field.getFieldValue());
+                        fields.add(param);
+                    }
+                }
+            });
+            List<ResourceApprovalFieldUpdateParam> newFields =
+                    Optional.ofNullable(postFieldParam.getFields())
+                            .map(ArrayList::new)
+                            .orElseGet(ArrayList::new);
+            newFields.addAll(fields);
+            postFieldParam.setFields(newFields);
+
+        }
+        return true;
     }
 
 
@@ -480,8 +724,11 @@ public class OrderService {
         Map<String, UserDeptDTO> userDeptMap = baseService.getUserDeptMapByUserIds(ownerIds, orgId);
 
         Map<String, String> stageNameMap = extOrderStageConfigMapper.getStageConfigList(orgId).stream()
-                .collect(Collectors.toMap(OrderStageConfigResponse::getId,
-                        OrderStageConfigResponse::getName));
+                .collect(Collectors.toMap(StageConfigResponse::getId,
+                        StageConfigResponse::getName));
+
+        List<String> approvingResourceIds = list.stream().filter(item -> Strings.CI.contains(item.getApprovalStatus(), ApprovalStatus.APPROVING.name())).map(OrderListResponse::getId).toList();
+        Map<String, Boolean> firstNodeApprovedMap = baseService.getApprovingResourceFirstNodeApproved(approvingResourceIds, orgId);
 
         list.forEach(item -> {
             UserDeptDTO userDeptDTO = userDeptMap.get(item.getOwner());
@@ -493,6 +740,7 @@ public class OrderService {
             // 获取自定义字段
             List<BaseModuleFieldValue> orderFields = resolvefieldValueMap.get(item.getId());
             item.setModuleFields(orderFields);
+            item.setFirstApproved(firstNodeApprovedMap.get(item.getId()));
         });
         return baseService.setCreateUpdateOwnerUserName(list);
     }
@@ -546,29 +794,63 @@ public class OrderService {
         return orderMapper.selectByPrimaryKey(id);
     }
 
+
+    @OperationLog(module = LogModule.ORDER_INDEX, type = LogType.UPDATE, resourceId = "{#request.id}")
     public void updateStage(OrderStageRequest request, String userId, String orgId) {
         Order order = orderMapper.selectByPrimaryKey(request.getId());
         if (order == null) {
             throw new GenericException(CrmHttpResultCode.NOT_FOUND);
         }
 
-        Map<String, String> oldMap = new HashMap<>();
-        oldMap.put("orderStage", Translator.get("order.stage." + order.getStage().toLowerCase()));
+        List<StageConfigResponse> stageConfigList = extOrderStageConfigMapper.getStageConfigList(orgId);
+        Map<String, String> stageMap = stageConfigList.stream()
+                .collect(Collectors.toMap(StageConfigResponse::getId, StageConfigResponse::getName));
+        final Map<String, String> originalVal = new HashMap<>(1);
+        originalVal.put("orderStage", stageMap.get(order.getStage()));
 
+        if (!stageAdvancedConfigService.checkStage(order.getStage(), request.getStage(), FormKey.ORDER.getKey())) {
+            return;
+        }
         order.setStage(request.getStage());
-
-        order.setUpdateTime(System.currentTimeMillis());
-        order.setUpdateUser(userId);
         orderMapper.update(order);
 
-        updateStageSnapshot(request.getId(), request.getStage());
+        updateFieldAndSnapshot(order, request.getFields(), userId);
 
-        LogDTO logDTO = new LogDTO(orgId, request.getId(), userId, LogType.UPDATE, LogModule.ORDER_INDEX, order.getName());
-        Map<String, String> newMap = new HashMap<>();
-        newMap.put("orderStage", Translator.get("order.stage." + request.getStage().toLowerCase()));
-        logDTO.setOriginalValue(oldMap);
-        logDTO.setModifiedValue(newMap);
-        logService.add(logDTO);
+        final Map<String, String> modifiedVal = new HashMap<>(1);
+        modifiedVal.put("orderStage", stageMap.get(request.getStage()));
+        OperationLogContext.setContext(
+                LogContextInfo.builder()
+                        .resourceName(order.getName())
+                        .originalValue(originalVal)
+                        .modifiedValue(modifiedVal)
+                        .build()
+        );
+    }
+
+    private void updateFieldAndSnapshot(Order order, List<BaseModuleFieldValue> requestFields, String userId) {
+        if (CollectionUtils.isNotEmpty(requestFields)) {
+            ModuleFormConfigDTO businessFormConfig = moduleFormCacheService.getBusinessFormConfig(FormKey.ORDER.getKey(), order.getOrganizationId());
+            List<BaseField> fields = businessFormConfig.getFields();
+            requestFields.forEach(field -> {
+                BaseField baseField = fields.stream().filter(customField -> customField.getId().equals(field.getFieldId())).findFirst().orElse(null);
+                ResourceBatchEditRequest updateRequest = new ResourceBatchEditRequest();
+                updateRequest.setIds(List.of(order.getId()));
+                updateRequest.setFieldId(field.getFieldId());
+                updateRequest.setFieldValue(field.getFieldValue());
+                orderFieldService.batchUpdate(updateRequest, baseField, List.of(order), Order.class, LogModule.ORDER_INDEX, extOrderMapper::batchUpdate, userId, order.getOrganizationId());
+            });
+        }
+        OrderSnapshot snapshotCriteria = new OrderSnapshot();
+        snapshotCriteria.setOrderId(order.getId());
+        OrderSnapshot snapshot = snapshotBaseMapper.selectOne(snapshotCriteria);
+        if (snapshot != null) {
+            ModuleFormConfigDTO orderFormConfig = getFormConfig(order.getOrganizationId());
+            List<BaseModuleFieldValue> orderFields = orderFieldService.getModuleFieldValuesByResourceId(order.getId());
+            Order newOrder = orderMapper.selectByPrimaryKey(order.getId());
+            OrderGetResponse snapshotRes = get(newOrder, orderFields, orderFormConfig);
+            snapshot.setOrderValue(JSON.toJSONString(snapshotRes));
+            snapshotBaseMapper.update(snapshot);
+        }
     }
 
     /**
@@ -578,30 +860,59 @@ public class OrderService {
      * @param userId  当前用户ID
      * @param orgId   当前组织ID
      */
-    public void batchUpdate(ResourceBatchEditRequest request, String userId, String orgId) {
+    public BatchAffectReasonResponse batchUpdate(ResourceBatchEditRequest request, String userId, String orgId) {
         BaseField field = orderFieldService.getAndCheckField(request.getFieldId(), orgId);
         moduleFormService.setFieldBusinessParam(field);
         List<Order> originOrders = orderMapper.selectByIds(request.getIds());
-        orderFieldService.batchUpdate(request, field, originOrders, Order.class, LogModule.ORDER_INDEX, extOrderMapper::batchUpdate, userId, orgId);
+        if (CollectionUtils.isEmpty(originOrders)) {
+            return BatchAffectReasonResponse.builder().success(0).fail(0).skip(0).errorMessages(Translator.get("order_not_exist")).build();
+        }
+
+        // 校验状态权限，过滤出有权限操作的订单
+        List<String> permittedIds = approvalFlowService.filterResourcesWithPermission(
+                ApprovalFormTypeEnum.ORDER.getValue(),
+                originOrders,
+                PermissionConstants.ORDER_UPDATE,
+                orgId,
+                Order::getId,
+                Order::getApprovalStatus
+        );
+
+        if (CollectionUtils.isEmpty(permittedIds)) {
+            return BatchAffectReasonResponse.builder().success(0).fail(originOrders.size()).skip(0).errorMessages(Translator.get("no.operation.permission")).build();
+        }
+        ApprovalResourceService approvalResourceService = CommonBeanFactory.getBean(ApprovalResourceService.class);
+        approvalResourceService.batchEditTriggerApproval(permittedIds, request.getFieldId(), FormKey.ORDER, orgId, userId, field.getName(), request.getFieldValue());
+
+        List<Order> permittedOrders = originOrders.stream()
+                .filter(o -> permittedIds.contains(o.getId()))
+                .collect(Collectors.toList());
+
+        ResourceBatchEditRequest filteredRequest = new ResourceBatchEditRequest();
+        filteredRequest.setIds(permittedIds);
+        filteredRequest.setFieldId(request.getFieldId());
+        filteredRequest.setFieldValue(request.getFieldValue());
+
+        orderFieldService.batchUpdate(filteredRequest, field, permittedOrders, Order.class, LogModule.ORDER_INDEX, extOrderMapper::batchUpdate, userId, orgId);
 
         ModuleFormConfigDTO moduleFormConfigDTO = getFormConfig(orgId);
         ModuleFormConfigDTO saveModuleFormConfigDTO = JSON.parseObject(JSON.toJSONString(moduleFormConfigDTO), ModuleFormConfigDTO.class);
 
         LambdaQueryWrapper<OrderSnapshot> delWrapper = new LambdaQueryWrapper<>();
-        delWrapper.in(OrderSnapshot::getOrderId, request.getIds());
+        delWrapper.in(OrderSnapshot::getOrderId, permittedIds);
         snapshotBaseMapper.deleteByLambda(delWrapper);
 
-        List<Order> latestOrders = orderMapper.selectByIds(request.getIds());
+        List<Order> latestOrders = orderMapper.selectByIds(permittedIds);
         Map<String, Order> latestOrderMap = latestOrders.stream().collect(Collectors.toMap(Order::getId, item -> item));
-        Map<String, List<BaseModuleFieldValue>> fieldMap = orderFieldService.getResourceFieldMap(request.getIds(), true);
+        Map<String, List<BaseModuleFieldValue>> fieldMap = orderFieldService.getResourceFieldMap(permittedIds, true);
 
         List<OrderSnapshot> snapshots = new ArrayList<>();
-        for (String id : request.getIds()) {
+        for (String id : permittedIds) {
             Order order = latestOrderMap.get(id);
             if (order == null) {
                 continue;
             }
-            List<BaseModuleFieldValue> orderFields = fieldMap.getOrDefault(id, Collections.emptyList());
+            List<BaseModuleFieldValue> orderFields = fieldMap.getOrDefault(id, new ArrayList<>());
             List<BaseModuleFieldValue> resolveFieldValues = moduleFormService.resolveSnapshotFields(orderFields, moduleFormConfigDTO, orderFieldService, id);
             OrderGetResponse response = get(order, resolveFieldValues, moduleFormConfigDTO);
             if (CollectionUtils.isNotEmpty(response.getModuleFields())) {
@@ -621,10 +932,12 @@ public class OrderService {
         if (CollectionUtils.isNotEmpty(snapshots)) {
             snapshotBaseMapper.batchInsert(snapshots);
         }
+
+        return BatchAffectReasonResponse.builder().success(permittedIds.size()).fail(originOrders.size() - permittedIds.size()).skip(0).errorMessages(Translator.get("batch.update.reason")).build();
     }
 
     public void download(String id, String userId, String organizationId) {
-        OrderGetResponse getResponse = get(id);
+        OrderGetResponse getResponse = get(id, organizationId);
         if (getResponse == null) {
             throw new GenericException(Translator.get("order_not_exist"));
         }
@@ -687,5 +1000,88 @@ public class OrderService {
             return order.getName();
         }
         return null;
+    }
+
+
+    /**
+     * 阶段看板排序
+     *
+     * @param request
+     * @param userId
+     */
+    public void sort(StageSortRequest request, String userId) {
+        //拖拽节点
+        Order order = orderMapper.selectByPrimaryKey(request.getDragNodeId());
+        if (order == null) {
+            throw new GenericException(Translator.get("order_not_exist"));
+        }
+        Long pos = DEFAULT_POS;
+        if (StringUtils.isNotBlank(request.getDropNodeId())) {
+            //放入节点
+            Order dropNode = orderMapper.selectByPrimaryKey(request.getDropNodeId());
+            pos = dropNode.getPos();
+            if (request.getDropPosition() == -1) {
+
+                extOrderMapper.moveUpStageOrder(pos, request.getStage(), DEFAULT_POS);
+                pos = pos + 1;
+            } else {
+                extOrderMapper.moveDownStageOrder(pos, request.getStage(), DEFAULT_POS);
+            }
+        }
+
+        if (!stageAdvancedConfigService.checkStage(order.getStage(), request.getStage(), FormKey.ORDER.getKey())) {
+            return;
+        }
+
+        order.setPos(pos);
+        order.setStage(request.getStage());
+        orderMapper.updateById(order);
+        updateFieldAndSnapshot(order, request.getFields(), userId);
+
+    }
+
+    /**
+     * 处理旧版本审批状态 (APPROVING => NONE)
+     */
+    public void handleOldApprovalData() {
+        List<Order> orders = orderMapper.selectListByLambda(new LambdaQueryWrapper<Order>().eq(Order::getApprovalStatus, ApprovalStatus.APPROVING.name()));
+        orders.forEach(order -> {
+            ResourceSnapshotApprovalParam param = ResourceSnapshotApprovalParam
+                    .builder()
+                    .resourceId(order.getId())
+                    .approvalStatus(ApprovalStatus.NONE.name())
+                    .build();
+            updateSnapshotApprovalStatus(param);
+        });
+        extOrderMapper.updateOldApprovalStatusNone();
+    }
+
+    @Override
+    public String getPreUpdateSnapshotData(String resourceId, String userId, String orgId) {
+        Order order = orderMapper.selectByPrimaryKey(resourceId);
+        if (order == null) {
+            return null;
+        }
+        List<BaseModuleFieldValue> orderFields = orderFieldService.getModuleFieldValuesByResourceId(resourceId);
+        OrderUpdateRequest snapshotReq = BeanUtils.copyBean(new OrderUpdateRequest(), order);
+        snapshotReq.setAmount(order.getAmount() != null ? order.getAmount().toString() : null);
+        snapshotReq.setUpdateType(ApprovalResourceUpdateType.APPROVAL.getValue());
+        ModuleFormConfigDTO orderFormConfig = getFormConfig(order.getOrganizationId());
+        snapshotReq.setModuleFormConfigDTO(orderFormConfig);
+        moduleFormService.processBusinessFieldValues(snapshotReq, orderFields, orderFormConfig);
+        return JSON.toJSONString(snapshotReq);
+    }
+
+    @Override
+    public void revertToSnapshot(String resourceId, String userId, String orgId, String snapshotData) {
+        try {
+            OrderUpdateRequest request = JSON.parseObject(snapshotData, OrderUpdateRequest.class);
+            if (request == null) {
+                return;
+            }
+            CommonBeanFactory.getBean(OrderService.class).update(request, userId, orgId);
+        } catch (Exception e) {
+            log.error("审批回退还原业务数据失败, resourceId:{}", resourceId, e);
+        }
     }
 }

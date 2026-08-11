@@ -11,6 +11,7 @@
     :form-key="FormDesignKeyEnum.CLUE"
     :show-tab-setting="false"
     :formViewSize="formViewSize"
+    @button-pop-update="handleTransferPopUpdate"
     @button-select="handleSelect"
     @saved="
       (res) => {
@@ -29,6 +30,7 @@
           :column="layout === 'vertical' ? 3 : undefined"
           :label-width="layout === 'vertical' ? 'auto' : undefined"
           :value-align="layout === 'vertical' ? 'start' : undefined"
+          :readonly="!hasAnyPermission(['CLUE_MANAGEMENT:UPDATE'])"
           @init="handleDescriptionInit"
           @open-customer-detail="emit('openCustomerDrawer', $event)"
         />
@@ -37,21 +39,6 @@
     <template #transferPopContent>
       <TransferForm ref="transferFormRef" v-model:form="transferForm" class="mt-[16px] w-[320px]" />
     </template>
-    <!-- TODO 先不要了 -->
-    <!-- <template #rightTop>
-      <CrmWorkflowCard
-        v-model:stage="currentStatus"
-        v-model:last-stage="lastStage"
-        class="mb-[16px]"
-        show-error-btn
-        :readonly="isConverted"
-        :base-steps="workflowList"
-        :source-id="sourceId"
-        :update-api="updateClueStatus"
-        :operation-permission="['CLUE_MANAGEMENT:UPDATE']"
-        @load-detail="loadDetail"
-      />
-    </template> -->
     <template #right>
       <div class="h-full pt-[16px]">
         <FollowDetail
@@ -81,9 +68,15 @@
     :reason-key="ReasonTypeEnum.CLUE_POOL_RS"
     :source-id="sourceId"
     :name="sourceName"
+    type="warning"
     @refresh="handleMovedSuccess"
   />
-  <convertClueModal v-model:show="showConvertClueModal" :clue-id="sourceId" @success="emit('remove')" />
+  <convertClueModal
+    v-model:show="showConvertClueModal"
+    :clue-id="sourceId"
+    @success="emit('remove')"
+    @finish="show = false"
+  />
 </template>
 
 <script setup lang="ts">
@@ -150,6 +143,17 @@
 
   // 转移
   const transferFormRef = ref<InstanceType<typeof TransferForm>>();
+
+  function resetTransferForm() {
+    transferForm.value = { ...defaultTransferForm };
+  }
+
+  function handleTransferPopUpdate(key: string, visible: boolean) {
+    if (key === 'transfer' && visible) {
+      resetTransferForm();
+    }
+  }
+
   function handleTransfer() {
     transferFormRef.value?.formRef?.validate(async (error) => {
       if (!error) {
@@ -160,7 +164,7 @@
             ids: [sourceId.value],
           });
           Message.success(t('common.transferSuccess'));
-          transferForm.value = { ...defaultTransferForm };
+          resetTransferForm();
           closeAndRefresh();
         } catch (e) {
           // eslint-disable-next-line no-console

@@ -78,6 +78,7 @@ import type {
   ChartResponseDataItem,
   CommonList,
   GenerateChartParams,
+  ImportUploadParams,
   TableDraggedParams,
   TableExportParams,
   TableExportSelectedParams,
@@ -103,10 +104,10 @@ import type {
   BatchOperationResult,
   BatchUpdateQuotationStatusParams,
   BatchVoidQuotationStatusParams,
-  OpportunityBillboardDraggedParams,
+  StageBoardPageQueryParams,
+  StageBoardDraggedParams,
   OpportunityDetail,
   OpportunityItem,
-  OpportunityPageQueryParams,
   OpportunityStageConfig,
   QuotationItem,
   QuotationQueryParams,
@@ -124,6 +125,8 @@ import type { ViewItem, ViewParams } from '@lib/shared/models/view';
 export default function useProductApi(CDR: CordysAxios) {
   // 项目列表
   function getOpportunityList(data: OpportunityPageQueryParams) {
+  // 商机列表
+  function getOpportunityList(data: StageBoardPageQueryParams) {
     return CDR.post<CommonList<OpportunityItem>>({ url: OptPageUrl, data }, { ignoreCancelToken: true });
   }
 
@@ -144,6 +147,8 @@ export default function useProductApi(CDR: CordysAxios) {
 
   // 项目看板拖拽排序
   function sortOpportunity(data: OpportunityBillboardDraggedParams) {
+  // 商机看板拖拽排序
+  function sortOpportunity(data: StageBoardDraggedParams) {
     return CDR.post({ url: SortOpportunityUrl, data });
   }
 
@@ -337,8 +342,8 @@ export default function useProductApi(CDR: CordysAxios) {
     return CDR.post<CommonList<OpportunityItem>>({ url: AdvancedSearchOptDetailUrl, data });
   }
 
-  function preCheckImportOpt(file: File) {
-    return CDR.uploadFile<{ data: ValidateInfo }>({ url: PreCheckOptImportUrl }, { fileList: [file] }, 'file');
+  function preCheckImportOpt(params: ImportUploadParams) {
+    return CDR.uploadFile<{ data: ValidateInfo }>({ url: PreCheckOptImportUrl }, params, 'file');
   }
 
   function downloadOptTemplate() {
@@ -351,8 +356,8 @@ export default function useProductApi(CDR: CordysAxios) {
     );
   }
 
-  function importOpportunity(file: File) {
-    return CDR.uploadFile({ url: ImportOpportunityUrl }, { fileList: [file] }, 'file');
+  function importOpportunity(params: ImportUploadParams) {
+    return CDR.uploadFile({ url: ImportOpportunityUrl }, params, 'file');
   }
 
   // 批量更新项目
@@ -410,18 +415,18 @@ export default function useProductApi(CDR: CordysAxios) {
   }
 
   // 更新报价
-  function updateQuotation(data: UpdateQuotationParams) {
-    return CDR.post({ url: UpdateQuotationUrl, data });
+  function updateQuotation(data: UpdateQuotationParams, approvalTaskId?: string) {
+    return CDR.post({ url: UpdateQuotationUrl, data, params: { approvalTaskId } });
   }
 
   // 报价详情
-  function getQuotationDetail(id: string) {
-    return CDR.get<QuotationItem>({ url: `${GetQuotationDetailUrl}/${id}` });
+  function getQuotationDetail(id: string, approvalTaskId?: string) {
+    return CDR.get<QuotationItem>({ url: `${GetQuotationDetailUrl}/${id}`, params: { approvalTaskId } });
   }
 
   // 报价单快照详情
-  function getQuotationSnapshotDetail(id: string) {
-    return CDR.get<QuotationItem>({ url: `${GetQuotationSnapshotDetailUrl}/${id}` });
+  function getQuotationSnapshotDetail(id: string, approvalTaskId?: string) {
+    return CDR.get<QuotationItem>({ url: `${GetQuotationSnapshotDetailUrl}/${id}`, params: { approvalTaskId } });
   }
 
   // 获取报价表单配置
@@ -430,8 +435,11 @@ export default function useProductApi(CDR: CordysAxios) {
   }
 
   // 获取报价表单快照配置
-  function getQuotationSnapshotFormConfig(id?: string) {
-    return CDR.get<FormDesignConfigDetailParams>({ url: `${GetQuotationSnapshotFormConfigUrl}/${id}` });
+  function getQuotationSnapshotFormConfig(id?: string, approvalTaskId?: string) {
+    return CDR.get<FormDesignConfigDetailParams>({
+      url: `${GetQuotationSnapshotFormConfigUrl}/${id}`,
+      params: { approvalTaskId },
+    });
   }
 
   // 删除报价

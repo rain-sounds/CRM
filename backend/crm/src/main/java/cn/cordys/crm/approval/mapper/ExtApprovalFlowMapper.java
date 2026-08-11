@@ -17,19 +17,4 @@ public interface ExtApprovalFlowMapper {
     List<ApprovalFlowListResponse> list(
             @Param("request") ApprovalFlowPageRequest request,
             @Param("organizationId") String organizationId);
-
-    /**
-     * 校验同一表单是否存在启用的审批流
-     */
-    boolean checkEnableFlowExists(
-            @Param("formType") String formType,
-            @Param("organizationId") String organizationId);
-
-    /**
-     * 校验同一表单是否存在启用的审批流（排除指定ID）
-     */
-    boolean checkEnableFlowExistsExcludeId(
-            @Param("formType") String formType,
-            @Param("organizationId") String organizationId,
-            @Param("excludeId") String excludeId);
 }

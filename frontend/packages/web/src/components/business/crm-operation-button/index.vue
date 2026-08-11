@@ -1,19 +1,28 @@
 <template>
   <!-- 按钮组 -->
-  <CrmButtonGroup :list="buttonGroupList" @select="handleSelect" @cancel="emit('cancel')">
+  <CrmButtonGroup
+    :list="buttonGroupList"
+    :not-show-divider="props.notShowDivider"
+    @select="handleSelect"
+    @cancel="emit('cancel')"
+    @pop-update="(key: string, show: boolean) => emit('popUpdate', key, show)"
+  >
     <template v-if="props.moreList?.length" #more>
       <!-- 更多操作 -->
       <CrmMoreAction
         :options="props.moreList"
         placement="bottom"
         @pop-cancel="emit('cancel')"
+        @pop-update="(key: string, show: boolean) => emit('popUpdate', key, show)"
         @pop-select="handleSelect"
         @select="handleMoreSelect"
       >
         <template #default>
-          <n-button text type="primary">
-            {{ t('common.more') }}
-          </n-button>
+          <slot name="more">
+            <n-button text type="primary">
+              {{ t('common.more') }}
+            </n-button>
+          </slot>
         </template>
         <template v-for="group in hasMorePopContentSlot" :key="group.key" #[group.popSlotContent]="{ key }">
           <slot :key="key" :name="group.popSlotContent"></slot>
@@ -41,11 +50,13 @@
   const props = defineProps<{
     groupList: ActionsItem[]; // 按钮组数据
     moreList?: ActionsItem[]; // 更多操作下拉选项
+    notShowDivider?: boolean; // 不显示分割线
   }>();
 
   const emit = defineEmits<{
     (e: 'select', key: string, done?: () => void): void;
     (e: 'cancel'): void;
+    (e: 'popUpdate', key: string, show: boolean): void;
   }>();
 
   const { t } = useI18n();

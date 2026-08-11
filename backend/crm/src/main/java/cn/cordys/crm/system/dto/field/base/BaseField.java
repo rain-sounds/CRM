@@ -109,6 +109,11 @@ public abstract class BaseField {
 	@Schema(description = "该字段所属子表格ID, 仅子表格字段使用, 用来区分该字段是外层字段还是子表格字段")
 	private String subTableFieldId;
 
+	/**
+	 * 是否系统字段 (后端)
+	 */
+	private boolean isSys;
+
     @JsonIgnore
     public static boolean isBlob(String type) {
         return Strings.CS.equalsAny(type, FieldType.TEXTAREA.name(), FieldType.INPUT_MULTIPLE.name(),
@@ -132,12 +137,17 @@ public abstract class BaseField {
     }
 
 	@JsonIgnore
-	public boolean includeFormula() {
-		if (Strings.CS.equals(type, FieldType.INPUT.name())) {
-			return StringUtils.isNotEmpty(((InputField) this).getFormula());
+	public static boolean includeFormula(BaseField field) {
+		if (Strings.CS.equals(field.getType(), FieldType.INPUT.name())) {
+            if (field instanceof InputField inputField) {
+                if (Strings.CI.equals(inputField.getDefaultValueType(), "formula")) {
+                    return StringUtils.isNotEmpty(inputField.getFormula());
+                }
+            }
+
 		}
-		if (Strings.CS.equals(type, FieldType.FORMULA.name())) {
-			return StringUtils.isNotEmpty(((FormulaField) this).getFormula());
+		if (Strings.CS.equals(field.getType(), FieldType.FORMULA.name())) {
+			return StringUtils.isNotEmpty(((FormulaField) field).getFormula());
 		}
 		return false;
 	}
@@ -172,26 +182,27 @@ public abstract class BaseField {
     }
 
     @JsonIgnore
-    public boolean canImport() {
-		// 序列号、附件、图片、分割线, 计算 不支持导入.
-        return !Strings.CS.equalsAny(type, FieldType.SERIAL_NUMBER.name()) && !Strings.CS.equalsAny(type, FieldType.ATTACHMENT.name())
-                && !Strings.CS.equalsAny(type, FieldType.PICTURE.name()) && !Strings.CS.equalsAny(type, FieldType.DIVIDER.name())
-				&& !Strings.CS.equals(type, FieldType.FORMULA.name()) && readable;
+    public static boolean canImport(BaseField field) {
+		// 序列号、附件、图片、分割线、公式字段（计算/文本+公式）、不可见字段, 不支持导入.
+        return !Strings.CS.equalsAny(field.getType(), FieldType.SERIAL_NUMBER.name()) && !Strings.CS.equalsAny(field.getType(), FieldType.ATTACHMENT.name())
+                && !Strings.CS.equalsAny(field.getType(), FieldType.PICTURE.name()) && !Strings.CS.equalsAny(field.getType(), FieldType.DIVIDER.name())
+                && field.getReadable();
     }
+
 
 	@JsonIgnore
 	public boolean canExport() {
-		// 序列号、附件、图片、分割线, 计算 不支持导入.
+		// 序列号、附件、图片、分割线, 不支持导出.
 		return !Strings.CS.equalsAny(type, FieldType.SERIAL_NUMBER.name()) && !Strings.CS.equalsAny(type, FieldType.ATTACHMENT.name())
 				&& !Strings.CS.equalsAny(type, FieldType.PICTURE.name()) && !Strings.CS.equalsAny(type, FieldType.DIVIDER.name()) && readable;
 	}
 
 	@JsonIgnore
 	public boolean canDisplay() {
-		// 公式、附件、图片、分割线, 子表格, 不可见字段等这些, 不支持在子列表等场景展示.
-		return !Strings.CS.equalsAny(type, FieldType.ATTACHMENT.name())
+		// 附件、图片、分割线、子表格、不可见字段等这些, 不支持在子列表等场景展示.
+		return !Strings.CS.equalsAny(type, FieldType.ATTACHMENT.name()) && !Strings.CS.equalsAny(type, FieldType.PICTURE.name())
 				&& !Strings.CS.equalsAny(type, FieldType.SUB_PRICE.name()) && !Strings.CS.equalsAny(type, FieldType.SUB_PRODUCT.name())
-				&& !Strings.CS.equalsAny(type, FieldType.PICTURE.name()) && !Strings.CS.equalsAny(type, FieldType.DIVIDER.name()) && readable;
+				&& !Strings.CS.equalsAny(type, FieldType.DIVIDER.name()) && readable;
 	}
 
     @JsonIgnore

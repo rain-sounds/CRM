@@ -136,7 +136,7 @@ public class ModuleFieldService {
         }
         String tableName = FORM_TABLE.get(request.getFormKey());
         if (StringUtils.isBlank(tableName)) {
-            throw new GenericException(Translator.get("module.form.illegal.unique.check"));
+            tableName = "custom_form_data";
         }
         String value = request.getValue();
         if (Strings.CI.equals(field.getType(), FieldType.PHONE.toString())) {
@@ -151,7 +151,11 @@ public class ModuleFieldService {
         } else {
             repeatName = commonMapper.checkFieldRepeatName(tableName, tableName + "_field", request.getId(), value, currentOrg);
         }
-        return FieldRepeatCheckResponse.builder().name(repeatName).repeat(StringUtils.isNotBlank(repeatName)).build();
+        boolean repeat = false;
+        if (StringUtils.isNotBlank(repeatName)) {
+            repeat = Strings.CS.equals(request.getValue(), repeatName);
+        }
+        return FieldRepeatCheckResponse.builder().name(repeatName).repeat(repeat).build();
     }
 
 	@SuppressWarnings("unchecked")
@@ -281,7 +285,7 @@ public class ModuleFieldService {
         Map<String, Object> orderProductsField = JSON.parseMap(orderProductsFieldBlob.getProp());
 
         List<Map<String, Object>> subFields = (List<Map<String, Object>>) orderProductsField.get("subFields");
-        Map<String, Object> orderProductAmount = null;
+        Map<String, Object> orderProductAmount = new HashMap<>();
         String orderProductPriceId = null;
         String orderProductNumberId = null;
         for (Map<String, Object> subField : subFields) {
@@ -311,7 +315,7 @@ public class ModuleFieldService {
     }
 
     private String getOrderAmountFormula(String orderAmountFormulaId) {
-        String orderProductAmountFormula = String.format("""
+        return String.format("""
                 {
                     "source": "SUM(${%s})",
                     "display": "SUM(产品明细.金额)",
@@ -338,7 +342,6 @@ public class ModuleFieldService {
                         ]
                     }
                 }""", orderAmountFormulaId, orderAmountFormulaId, orderAmountFormulaId);
-        return orderProductAmountFormula;
     }
 
     private String getOrderProductAmountFormula(String orderProductPriceId, String orderProductNumberId) {

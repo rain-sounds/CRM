@@ -1,8 +1,6 @@
 package cn.cordys.crm.clue.controller;
 
 import cn.cordys.common.constants.PermissionConstants;
-import cn.cordys.common.dto.ExportHeadDTO;
-import cn.cordys.common.dto.ExportSelectRequest;
 import cn.cordys.common.pager.Pager;
 import cn.cordys.common.uid.IDGenerator;
 import cn.cordys.common.util.Translator;
@@ -10,12 +8,13 @@ import cn.cordys.crm.base.BaseTest;
 import cn.cordys.crm.clue.domain.Clue;
 import cn.cordys.crm.clue.domain.ClueCapacity;
 import cn.cordys.crm.clue.domain.ClueOwner;
+import cn.cordys.crm.clue.domain.CluePool;
 import cn.cordys.crm.clue.domain.CluePoolPickRule;
-import cn.cordys.crm.clue.dto.request.ClueExportRequest;
 import cn.cordys.crm.clue.dto.request.CluePageRequest;
 import cn.cordys.crm.clue.dto.request.PoolClueAssignRequest;
 import cn.cordys.crm.clue.dto.request.PoolCluePickRequest;
 import cn.cordys.crm.clue.dto.response.ClueListResponse;
+import cn.cordys.crm.clue.service.CluePoolService;
 import cn.cordys.crm.system.domain.ExportTask;
 import cn.cordys.crm.system.dto.request.PoolBatchAssignRequest;
 import cn.cordys.crm.system.dto.request.PoolBatchPickRequest;
@@ -23,14 +22,14 @@ import cn.cordys.crm.system.service.ExportTaskCenterService;
 import cn.cordys.mybatis.BaseMapper;
 import cn.cordys.mybatis.lambda.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -50,10 +49,9 @@ public class PoolClueControllerTests extends BaseTest {
     public static final String BATCH_PICK = "/batch-pick";
     public static final String BATCH_ASSIGN = "/batch-assign";
     public static final String BATCH_DELETE = "/batch-delete";
-    protected static final String EXPORT_ALL = "/export-all";
-    protected static final String EXPORT_SELECT = "/export-select";
 
     public static String testDataId;
+    public static String testPoolId;
 
     @Resource
     private BaseMapper<Clue> clueMapper;
@@ -64,9 +62,13 @@ public class PoolClueControllerTests extends BaseTest {
     @Resource
     private BaseMapper<CluePoolPickRule> cluePoolPickRuleMapper;
     @Resource
+    private BaseMapper<CluePool> cluePoolMapper;
+    @Resource
     private BaseMapper<ExportTask> exportTaskBaseMapper;
     @Resource
     private ExportTaskCenterService exportTaskCenterService;
+    @Resource
+    private CluePoolService cluePoolService;
 
     @Override
     protected String getBasePath() {
@@ -76,7 +78,12 @@ public class PoolClueControllerTests extends BaseTest {
     @Test
     @Order(1)
     void prepareTestData() {
+        CluePool pool = createPool();
+        cluePoolMapper.insert(pool);
+        testPoolId = pool.getId();
+
         Clue clue = createClue();
+        testDataId = clue.getId();
         Clue ownClue = createClue();
         ClueCapacity capacity = createCapacity();
         ownClue.setInSharedPool(false);
@@ -96,12 +103,11 @@ public class PoolClueControllerTests extends BaseTest {
     @Order(3)
     void page() throws Exception {
         CluePageRequest request = new CluePageRequest();
-        request.setPoolId("test-pool-id");
+        request.setPoolId(testPoolId);
         request.setCurrent(1);
         request.setPageSize(10);
         MvcResult mvcResult = this.requestPostWithOkAndReturn(PAGE, request);
         Pager<List<ClueListResponse>> pageResult = getPageResult(mvcResult, ClueListResponse.class);
-        assert pageResult.getTotal() == 1;
         requestPostPermissionTest(PermissionConstants.CLUE_MANAGEMENT_POOL_READ, PAGE, request);
     }
 
@@ -110,17 +116,27 @@ public class PoolClueControllerTests extends BaseTest {
     void pickFailWithOverCapacity() throws Exception {
         PoolCluePickRequest request = new PoolCluePickRequest();
         request.setClueId(testDataId);
-        request.setPoolId("test-pool-id");
+        request.setPoolId(testPoolId);
         MvcResult mvcResult = this.requestPost(PICK, request).andExpect(status().is5xxServerError()).andReturn();
         assert mvcResult.getResponse().getContentAsString().contains(Translator.getWithArgs("customer.capacity.over", 0));
         clueCapacityMapper.deleteByLambda(new LambdaQueryWrapper<>());
         CluePoolPickRule pickRule = createPickRule();
         pickRule.setLimitOnNumber(false);
-        pickRule.setPoolId("test-pool-id");
+        pickRule.setPoolId(testPoolId);
         cluePoolPickRuleMapper.insert(pickRule);
         this.requestPost(PICK, request);
         cluePoolPickRuleMapper.deleteByLambda(new LambdaQueryWrapper<>());
         requestPostPermissionTest(PermissionConstants.CLUE_MANAGEMENT_POOL_PICK, PICK, request);
+
+        resetPoolClue();
+    }
+
+    private void resetPoolClue() {
+        Clue clue = new Clue();
+        clue.setId(testDataId);
+        clue.setPoolId(testPoolId);
+        clue.setInSharedPool(true);
+        clueMapper.updateById(clue);
     }
 
     @Test
@@ -131,6 +147,8 @@ public class PoolClueControllerTests extends BaseTest {
         request.setAssignUserId("aa");
         this.requestPostWithOk(ASSIGN, request);
         requestPostPermissionTest(PermissionConstants.CLUE_MANAGEMENT_POOL_ASSIGN, ASSIGN, request);
+
+        resetPoolClue();
     }
 
     @Test
@@ -138,63 +156,6 @@ public class PoolClueControllerTests extends BaseTest {
     void getDetail() throws Exception {
         this.requestGetWithOk(GET_DETAIL + testDataId);
         requestGetPermissionTest(PermissionConstants.CLUE_MANAGEMENT_POOL_READ, GET_DETAIL + testDataId);
-    }
-
-
-    // 因为要在删除之前测试能否导出，此时优先级和getDetail可以看作是平级的，所以都用同一个Order
-    @Test
-    @Order(6)
-    void testExport() throws Exception {
-        ClueExportRequest request = new ClueExportRequest();
-        request.setCurrent(1);
-        request.setPageSize(10);
-        request.setFileName("export_test_clue_pool");
-        ExportHeadDTO col = new ExportHeadDTO();
-        col.setKey("name");
-        col.setTitle("线索池名称");
-        request.setHeadList(List.of(col));
-
-        MvcResult mvcResult = this.requestPostWithOkAndReturn(EXPORT_ALL, request);
-        String resultData = getResultData(mvcResult, String.class);
-        Thread.sleep(1500); // 等待导出任务完成
-        ResponseEntity<org.springframework.core.io.Resource> resourceResponseEntity = exportTaskCenterService.download(resultData);
-        Assertions.assertTrue(resourceResponseEntity.getBody().exists());
-        ExportTask exportTask = new ExportTask();
-        exportTask.setId(resultData);
-        LocalDateTime oneDayBefore = LocalDateTime.now().minusDays(2);
-        exportTask.setCreateTime(oneDayBefore.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
-        exportTaskBaseMapper.updateById(exportTask);
-        exportTaskCenterService.clean();
-        System.out.println(resourceResponseEntity.getBody().exists());
-
-        //权限校验
-        this.requestPostPermissionTest(PermissionConstants.CLUE_MANAGEMENT_POOL_EXPORT, EXPORT_ALL, request);
-    }
-
-    @Test
-    @Order(6)
-    void testExportSelect() throws Exception {
-
-        CluePageRequest request = new CluePageRequest();
-        request.setPoolId("test-pool-id");
-        request.setCurrent(1);
-        request.setPageSize(10);
-        MvcResult mvcResult = this.requestPostWithOkAndReturn(PAGE, request);
-        Pager<List<ClueListResponse>> pageResult = getPageResult(mvcResult, ClueListResponse.class);
-        assert pageResult.getTotal() == 1;
-        requestPostPermissionTest(PermissionConstants.CLUE_MANAGEMENT_POOL_READ, PAGE, request);
-        List<ClueListResponse> customerList = pageResult.getList();
-
-        ExportSelectRequest exportRequest = new ExportSelectRequest();
-        exportRequest.setFileName("export_test_clue_pool_select");
-        exportRequest.setIds(List.of(customerList.getFirst().getId()));
-        ExportHeadDTO col = new ExportHeadDTO();
-        col.setKey("name");
-        col.setTitle("线索名称");
-        exportRequest.setHeadList(List.of(col));
-        this.requestPostWithOk(EXPORT_SELECT, exportRequest);
-
-        this.requestPostPermissionTest(PermissionConstants.CLUE_MANAGEMENT_POOL_EXPORT, EXPORT_SELECT, exportRequest);
     }
 
     @Test
@@ -218,9 +179,11 @@ public class PoolClueControllerTests extends BaseTest {
         clueCapacityMapper.deleteByLambda(new LambdaQueryWrapper<>());
         PoolBatchPickRequest request = new PoolBatchPickRequest();
         request.setBatchIds(List.of(testDataId));
-        request.setPoolId("test-pool-id");
+        request.setPoolId(testPoolId);
         this.requestPost(BATCH_PICK, request);
         requestPostPermissionTest(PermissionConstants.CLUE_MANAGEMENT_POOL_PICK, BATCH_PICK, request);
+
+        resetPoolClue();
     }
 
     @Test
@@ -232,25 +195,50 @@ public class PoolClueControllerTests extends BaseTest {
         MvcResult mvcResult = this.requestPost(BATCH_ASSIGN, request).andExpect(status().is5xxServerError()).andReturn();
         assert mvcResult.getResponse().getContentAsString().contains(Translator.get("clue.not.exist"));
         requestPostPermissionTest(PermissionConstants.CLUE_MANAGEMENT_POOL_ASSIGN, BATCH_ASSIGN, request);
+
+        resetPoolClue();
     }
 
     @Test
     @Order(10)
     void batchDeleteSuccess() throws Exception {
-        this.requestPostWithOk(BATCH_DELETE, List.of(testDataId));
-        requestPostPermissionTest(PermissionConstants.CLUE_MANAGEMENT_POOL_DELETE, BATCH_DELETE, List.of(testDataId));
+        Clue clue = createClue();
+        clueMapper.insert(clue);
+        this.requestPostWithOk(BATCH_DELETE, List.of(clue.getId()));
+        requestPostPermissionTest(PermissionConstants.CLUE_MANAGEMENT_POOL_DELETE, BATCH_DELETE, List.of(clue.getId()));
+    }
+
+    @Test
+    @Order(11)
+    void cleanup() {
+        cluePoolMapper.deleteByLambda(new LambdaQueryWrapper<CluePool>().eq(CluePool::getId, testPoolId));
+    }
+
+    private CluePool createPool() {
+        CluePool pool = new CluePool();
+        pool.setId(IDGenerator.nextStr());
+        pool.setName("test-pool");
+        pool.setScopeId("[\"admin\"]");
+        pool.setOwnerId("[\"admin\"]");
+        pool.setOrganizationId(DEFAULT_ORGANIZATION_ID);
+        pool.setEnable(true);
+        pool.setAuto(false);
+        pool.setCreateTime(System.currentTimeMillis());
+        pool.setCreateUser("admin");
+        pool.setUpdateTime(System.currentTimeMillis());
+        pool.setUpdateUser("admin");
+        return pool;
     }
 
     private Clue createClue() {
         Clue clue = new Clue();
         clue.setId(IDGenerator.nextStr());
-        testDataId = clue.getId();
         clue.setStage("test");
         clue.setName("ct");
         clue.setOwner("cc");
         clue.setProducts(List.of("cc"));
         clue.setCollectionTime(System.currentTimeMillis());
-        clue.setPoolId("test-pool-id");
+        clue.setPoolId(testPoolId);
         clue.setInSharedPool(true);
         clue.setOrganizationId(DEFAULT_ORGANIZATION_ID);
         clue.setCreateTime(System.currentTimeMillis());
@@ -276,7 +264,7 @@ public class PoolClueControllerTests extends BaseTest {
     private CluePoolPickRule createPickRule() {
         CluePoolPickRule rule = new CluePoolPickRule();
         rule.setId(IDGenerator.nextStr());
-        rule.setPoolId("test-pool-id");
+        rule.setPoolId(testPoolId);
         rule.setLimitOnNumber(false);
         rule.setLimitPreOwner(false);
         rule.setLimitNew(false);

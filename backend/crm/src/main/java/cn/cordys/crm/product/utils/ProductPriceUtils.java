@@ -17,6 +17,7 @@ public class ProductPriceUtils {
 	public static LinkedHashMap<String, Object> getSystemFieldMap(ProductPriceResponse data, Map<String, List<OptionDTO>> optionMap) {
 		LinkedHashMap<String, Object> systemFieldMap = new LinkedHashMap<>();
 		systemFieldMap.put("name", data.getName());
+		systemFieldMap.put("id", data.getId());
 		systemFieldMap.put("status", getStatusName(data.getStatus(), optionMap));
 		systemFieldMap.put("createUser", data.getCreateUserName());
 		systemFieldMap.put("createTime", TimeUtils.getDateTimeStr(data.getCreateTime()));
@@ -28,7 +29,7 @@ public class ProductPriceUtils {
 	public static String getStatusName(String status, Map<String, List<OptionDTO>> optionMap) {
 		if (optionMap.containsKey(BusinessModuleField.PRICE_STATUS.getBusinessKey())) {
 			for (OptionDTO option : optionMap.get(BusinessModuleField.PRICE_STATUS.getBusinessKey())) {
-				if (option.getId().equals(status)) {
+				if (option.getIdAsString().equals(status)) {
 					return option.getName();
 				}
 			}

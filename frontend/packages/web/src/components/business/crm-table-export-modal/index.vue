@@ -3,7 +3,6 @@
     v-model:show="show"
     :title="t('common.export')"
     :width="800"
-    :auto-focus="false"
     :show-back="false"
     closable
     :ok-text="t('common.export')"
@@ -11,6 +10,12 @@
     @confirm="confirmHandler"
     @cancel="closeHandler"
   >
+    <n-alert v-if="props.showApprovalTip" type="warning" class="mb-[16px]">
+      <template #icon>
+        <CrmIcon type="iconicon_info_circle_filled" :size="20" />
+      </template>
+      {{ props.showApprovalTip }}
+    </n-alert>
     <n-form
       ref="formRef"
       :model="form"
@@ -39,7 +44,7 @@
       </n-form-item>
     </n-form>
 
-    <div class="flex h-[calc(100%-78px)] overflow-hidden">
+    <div class="flex overflow-hidden" :class="props.showApprovalTip ? 'h-[calc(100%-148px)]' : 'h-[calc(100%-78px)]'">
       <div class="flex flex-[1.5] flex-col overflow-hidden border border-[var(--text-n8)]">
         <div class="flex items-center bg-[var(--text-n9)] px-[16px] py-[8px]">
           <n-checkbox :checked="isCheckedAll" :indeterminate="indeterminate" @update:checked="handleChangeAll">
@@ -125,6 +130,7 @@
   import {
     FormInst,
     FormItemRule,
+    NAlert,
     NButton,
     NCheckbox,
     NForm,
@@ -144,6 +150,7 @@
   import { ExportTableColumnItem } from '@lib/shared/models/common';
 
   import CrmDrawer from '@/components/pure/crm-drawer/index.vue';
+  import CrmIcon from '@/components/pure/crm-icon-font/index.vue';
   import FieldSection from './components/fieldSection.vue';
 
   import {
@@ -161,6 +168,8 @@
     exportCustomerOpenSeaAll,
     exportCustomerOpenSeaSelected,
     exportCustomerSelected,
+    exportCustomFormAll,
+    exportCustomFormSelected,
     exportInvoicedAll,
     exportInvoicedSelected,
     exportOpportunityAll,
@@ -171,9 +180,13 @@
     exportPaymentPlanSelected,
     exportPaymentRecordAll,
     exportPaymentRecordSelected,
+    exportProductAll,
     exportProductPriceAll,
     exportProductPriceSelected,
+    exportProductSelected,
   } from '@/api/modules';
+
+  import useExportFieldCache from './useExportFieldCache';
 
   const props = defineProps<{
     params: Record<string, any>;
@@ -187,12 +200,17 @@
       | 'contract'
       | 'contractPaymentPlan'
       | 'contractPaymentRecord'
+      | 'product'
       | 'price'
       | 'businessTitle'
       | 'invoice'
       | 'outsourcing';
+      | 'customForm';
     exportColumns: ExportTableColumnItem[];
     isExportAll?: boolean;
+    showApprovalTip?: string;
+    customFormTypeString?: string;
+    customFormId?: string;
   }>();
   const emit = defineEmits<{
     (e: 'createSuccess'): void;
@@ -216,6 +234,7 @@
     contract: t('module.contract'),
     contractPaymentPlan: t('module.paymentPlan'),
     contractPaymentRecord: t('module.paymentRecord'),
+    product: t('module.productManagement'),
     price: t('module.productManagementPrice'),
     businessTitle: t('module.businessTitle'),
     invoice: t('module.invoice'),
@@ -228,23 +247,27 @@
     fileName: '',
   });
 
-  watch(
-    () => show.value,
-    (newVal) => {
-      if (newVal) {
-        form.value.fileName = `${dayjs().format('YYYYMMDD-HHmmss')}-${typeStringMap[props.type]}`;
-      }
-    }
-  );
-
   function validator(rule: FormItemRule, value: string) {
     if (/\//g.test(value)) {
       return Promise.reject(new Error(t('common.notAllowForwardSlash')));
     }
     return Promise.resolve();
   }
+  const excludedUniqueIdTypes = ['price', 'contract', 'order'];
 
-  const systemList = computed(() => props.exportColumns.filter((item) => item.columnType === ColumnTypeEnum.SYSTEM));
+  const uniqueIdColumn: ExportTableColumnItem = {
+    key: 'id',
+    title: t('common.uniqueID'),
+    columnType: ColumnTypeEnum.SYSTEM,
+  };
+
+  const systemList = computed(() => {
+    const list = props.exportColumns.filter((item) => item.columnType === ColumnTypeEnum.SYSTEM);
+    if (excludedUniqueIdTypes.includes(props.type)) {
+      return list;
+    }
+    return [...list, uniqueIdColumn];
+  });
   const customList = computed(() => props.exportColumns.filter((item) => item.columnType === ColumnTypeEnum.CUSTOM));
   const showFieldList = computed(() =>
     props.exportColumns.filter((item) => item.columnType === ColumnTypeEnum.SHOW_FIELD)
@@ -252,7 +275,24 @@
   const allList = computed(() => [...systemList.value, ...customList.value, ...showFieldList.value]);
 
   // 已选
-  const selectedList = ref<any[]>([]);
+  const selectedList = ref<ExportTableColumnItem[]>([]);
+
+  const { getSelectedListByCache, saveSelectedListCache } = useExportFieldCache({
+    type: computed(() => props.type),
+    customFormId: computed(() => props.customFormId),
+    columns: allList,
+  });
+
+  watch(
+    () => show.value,
+    async (newVal) => {
+      if (newVal) {
+        const typeString = props.type === 'customForm' ? props.customFormTypeString : typeStringMap[props.type];
+        form.value.fileName = `${dayjs().format('YYYYMMDD-HHmmss')}-${typeString}`;
+        selectedList.value = await getSelectedListByCache();
+      }
+    }
+  );
 
   const updateSelectedList = (ids: string[], sourceList: any[]) => {
     const newItems = sourceList.filter((item) => ids.includes(item.key));
@@ -327,10 +367,12 @@
     contract: exportContractAll,
     contractPaymentPlan: exportPaymentPlanAll,
     contractPaymentRecord: exportPaymentRecordAll,
+    product: exportProductAll,
     price: exportProductPriceAll,
     businessTitle: exportBusinessTitleAll,
     invoice: exportInvoicedAll,
     outsourcing: exportOutsourcingAll,
+    customForm: exportCustomFormAll,
   };
 
   const exportSelectedApiMap = {
@@ -343,10 +385,12 @@
     contract: exportContractSelected,
     contractPaymentPlan: exportPaymentPlanSelected,
     contractPaymentRecord: exportPaymentRecordSelected,
+    product: exportProductSelected,
     price: exportProductPriceSelected,
     businessTitle: exportBusinessTitleSelected,
     invoice: exportInvoicedSelected,
     outsourcing: exportOutsourcingSelected,
+    customForm: exportCustomFormSelected,
   };
 
   function confirmHandler() {
@@ -361,6 +405,7 @@
             fileName: form.value.fileName.trim(),
             headList: selectedList.value,
           });
+          await saveSelectedListCache(selectedList.value);
           form.value.fileName = '';
           show.value = false;
           message.success(t('common.exportTaskCreate'));

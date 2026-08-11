@@ -5,13 +5,13 @@
       filterable
       multiple
       tag
-      :placeholder="t('common.pleaseSelect')"
+      :placeholder="props.placeholder || t('common.pleaseSelect')"
       :render-tag="renderTag"
       :show-arrow="false"
       :show="false"
       :disabled="props.disabled"
       :status="props.status"
-      max-tag-count="responsive"
+      :max-tag-count="resolvedMaxTagCount"
       @click="handleShowSelectDrawer"
     />
     <CrmSelectUserDrawer
@@ -29,6 +29,8 @@
       :fetch-org-params="props.fetchOrgParams"
       :fetch-role-params="props.fetchRoleParams"
       :fetch-member-params="props.fetchMemberParams"
+      :max-count="props.maxCount"
+      :show-include-disabled="props.showIncludeDisabled"
       @confirm="handleSelectConfirm"
     />
   </div>
@@ -62,10 +64,15 @@
     fetchMemberParams?: Record<string, any>; // 成员入参
     baseParams?: Record<string, any>; // 基础公共入参
     status?: 'error' | 'success' | 'warning';
+    maxTagCount?: 'responsive' | number | false;
+    maxCount?: number;
+    placeholder?: string;
+    showIncludeDisabled?: boolean;
   };
   const props = withDefaults(defineProps<UserTagSelectorProps>(), {
     multiple: true,
     apiTypeKey: MemberApiTypeEnum.MODULE_ROLE,
+    maxTagCount: 'responsive',
   });
   const selectedList = defineModel<SelectedUsersItem[]>('selectedList', {
     required: false,
@@ -80,7 +87,7 @@
   }>();
 
   const showSelectDrawer = ref(false);
-  const crmSelectUserDrawerRef = ref<InstanceType<typeof CrmSelectUserDrawer>>();
+  const resolvedMaxTagCount = computed(() => (props.maxTagCount === false ? undefined : props.maxTagCount));
   function handleShowSelectDrawer() {
     if (props.disabled) return;
     showSelectDrawer.value = true;
@@ -92,6 +99,7 @@
     } else {
       selectedList.value = params;
     }
+    modelValue.value = selectedList.value?.map((item) => item.id);
     showSelectDrawer.value = false;
     emit('confirm');
   }
@@ -106,12 +114,17 @@
         closable: !tagDisabled,
         onClose: () => {
           handleClose();
-          selectedList.value = selectedList.value?.filter((item) => item.id !== option.value);
+          selectedList.value = selectedList.value?.filter((item) => item.id !== option.value) ?? [];
+          modelValue.value = selectedList.value?.map((item) => item.id);
           emit('deleteTag');
         },
       },
       {
-        default: () => selectedList.value?.find((item) => item.id === option.value)?.name,
+        default: () => {
+          const current = selectedList.value?.find((item) => item.id === option.value);
+          return h('span', { class: 'one-line-text' }, { default: () => current?.name });
+        },
+        tooltipContent: () => selectedList.value?.find((item) => item.id === option.value)?.name,
       }
     );
   };

@@ -73,7 +73,7 @@ public class SysOperationLogService {
 
             List<OptionDTO> userList = extUserMapper.selectUserOptionByIds(userIds);
             Map<String, String> userMap = userList.stream()
-                    .collect(Collectors.toMap(OptionDTO::getId, OptionDTO::getName));
+                    .collect(Collectors.toMap(OptionDTO::getIdAsString, OptionDTO::getName));
 
             list.forEach(item -> item.setOperatorName(userMap.getOrDefault(item.getOperator(), StringUtils.EMPTY)));
         }
@@ -95,7 +95,6 @@ public class SysOperationLogService {
      * 获取日志详情
      *
      * @param id 日志ID
-     *
      * @return 日志详情
      */
     public OperationLogDetailResponse getLogDetail(String id, String orgId) {
@@ -123,17 +122,15 @@ public class SysOperationLogService {
                 .orElse("");
 
         try {
-            List<JsonDifferenceDTO> differences = new ArrayList<>();
-            JsonDifferenceUtils.compareJson(oldString, newString, differences);
-
-            // 过滤掉不需要的字段
-            differences = filterIgnoreFields(differences);
+            List<JsonDifferenceDTO> differences = getJsonDifferences(oldString, newString);
 
             if (CollectionUtils.isNotEmpty(differences)) {
                 // 获取模块对应处理服务
                 BaseModuleLogService moduleLogService = ModuleLogServiceFactory.getModuleLogService(operationLog.getModule());
 
                 if (moduleLogService != null) {
+                    moduleLogService.setOldValue(oldString);
+                    moduleLogService.setNewValue(newString);
                     differences = moduleLogService.handleLogField(differences, orgId);
                 } else {
                     handleDefaultDifferences(operationLog, differences);
@@ -149,16 +146,21 @@ public class SysOperationLogService {
         return logResponse;
     }
 
+    public List<JsonDifferenceDTO> getJsonDifferences(String oldString, String newString) throws Exception {
+        List<JsonDifferenceDTO> differences = new ArrayList<>();
+        JsonDifferenceUtils.compareJson(oldString, newString, differences);
+
+        // 过滤掉不需要的字段
+        differences = filterIgnoreFields(differences);
+        return differences;
+    }
+
     // 默认差异处理逻辑
     private void handleDefaultDifferences(OperationLog operationLog, List<JsonDifferenceDTO> differences) {
         // 特殊处理合同业务更新字段
         if (Strings.CI.equals(operationLog.getModule(), LogModule.CONTRACT_BUSINESS_TITLE)
                 && Strings.CI.equals(operationLog.getType(), LogType.UPDATE)) {
-            differences.forEach(diff -> {
-                if (Strings.CI.equals(diff.getColumn(), "name")) {
-                    diff.setColumn("companyName");
-                }
-            });
+            differences.removeIf(diff -> Strings.CS.equalsAny(diff.getColumn(), "id", "type", "companyNumber", "approvalStatus", "unapprovedReason"));
         }
         // 通用翻译
         differences.forEach(BaseModuleLogService::translatorDifferInfo);
@@ -170,15 +172,14 @@ public class SysOperationLogService {
      * 例如：organizationId
      *
      * @param differences
-     *
      * @return
      */
     private List<JsonDifferenceDTO> filterIgnoreFields(List<JsonDifferenceDTO> differences) {
         differences = differences
                 .stream()
                 .filter(differ -> !Strings.CS.equalsAny(differ.getColumn(),
-                        "organizationId", "createUser", "updateUser", "createTime", "updateTime", "departmentName", "supervisorName", "lastStage", "pos"))
-                .toList();
+                        "organizationId", "createUser", "updateUser", "createTime", "updateTime", "departmentName", "supervisorName", "lastStage", "pos", "approved"))
+                .collect(Collectors.toList());
         return differences;
     }
 }

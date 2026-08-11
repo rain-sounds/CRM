@@ -116,11 +116,15 @@
 
   import { getPersonalInfo } from '@/api/modules';
   import { defaultUserInfo } from '@/config/business';
+  import useModal from '@/hooks/useModal.js';
   import { useUserStore } from '@/store';
+  import useLicenseStore from '@/store/modules/setting/license.js';
   import { hasAnyPermission } from '@/utils/permission';
 
   const { t } = useI18n();
   const userStore = useUserStore();
+  const { openModal } = useModal();
+  const licenseStore = useLicenseStore();
 
   const visible = defineModel<boolean>('visible', {
     required: true,

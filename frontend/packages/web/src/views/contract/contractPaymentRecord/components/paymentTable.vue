@@ -350,7 +350,7 @@
     });
   }
 
-  const { useTableRes, customFieldsFilterConfig } = await useFormCreateTable({
+  const { useTableRes, customFieldsFilterConfig, fieldList } = await useFormCreateTable({
     formKey: props.formKey,
     excludeFieldIds: ['contractId', 'paymentPlanId'],
     operationColumn: {
@@ -429,7 +429,7 @@
   } = useTableRes;
 
   const exportColumns = computed<ExportTableColumnItem[]>(() =>
-    getExportColumns(propsRes.value.columns, customFieldsFilterConfig.value as FilterFormItem[], [], true)
+    getExportColumns(propsRes.value.columns, customFieldsFilterConfig.value as FilterFormItem[], fieldList.value, true)
   );
 
   const exportParams = computed(() => {
@@ -492,7 +492,11 @@
   }
 
   function searchData(val?: string, refreshId?: string) {
-    setLoadListParams({ keyword: val ?? keyword.value, viewId: activeTab.value, contractId: props.sourceId });
+    setLoadListParams({
+      keyword: val ?? keyword.value,
+      viewId: props.isContractTab ? 'ALL' : activeTab.value,
+      contractId: props.sourceId,
+    });
     loadList(false, refreshId);
     getStatistic();
     if (!refreshId) {

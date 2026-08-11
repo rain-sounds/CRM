@@ -28,7 +28,7 @@
       :accept="props.fieldConfig.type === FieldTypeEnum.PICTURE ? 'image/*' : '*/*'"
       :list-type="props.fieldConfig.pictureShowType === 'card' ? 'image-card' : 'text'"
       :custom-request="customRequest"
-      :disabled="props.fieldConfig.editable === false || !!props.fieldConfig.resourceFieldId"
+      :disabled="props.fieldConfig.editable === false || props.disabled || !!props.fieldConfig.resourceFieldId"
       :file-list-class="props.isSubTableRender ? 'crm-upload--subtable-file-list' : ''"
       :trigger-style="getTriggerStyle"
       multiple
@@ -70,6 +70,7 @@
   import CrmIcon from '@/components/pure/crm-icon-font/index.vue';
 
   import { uploadTempFile } from '@/api/modules';
+  import useUserStore from '@/store/modules/user';
 
   import { FormCreateField } from '../../types';
 
@@ -79,6 +80,7 @@
     formConfig?: FormConfig;
     isSubTableField?: boolean; // 是否是子表字段
     isSubTableRender?: boolean; // 是否是子表渲染
+    disabled?: boolean;
   }>();
   const emit = defineEmits<{
     (e: 'change', value: string[], files: UploadFileInfo[]): void;
@@ -86,6 +88,7 @@
 
   const { t } = useI18n();
   const Message = useMessage();
+  const userStore = useUserStore();
 
   const fileKeys = defineModel<string[]>('value', {
     default: () => [],
@@ -202,8 +205,8 @@
           fileKeysMap.value[key] = key;
           fileList.value.push({
             id: key,
-            thumbnailUrl: `${PreviewPictureUrl}/${key}`,
-            url: `${PreviewPictureUrl}/${key}`,
+            thumbnailUrl: `${PreviewPictureUrl}/${key}?userId=${userStore.userInfo.id}`,
+            url: `${PreviewPictureUrl}/${key}?userId=${userStore.userInfo.id}`,
             name: key,
             status: 'finished',
             type: 'image/*',

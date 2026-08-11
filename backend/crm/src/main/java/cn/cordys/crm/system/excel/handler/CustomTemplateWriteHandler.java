@@ -3,9 +3,12 @@ package cn.cordys.crm.system.excel.handler;
 import cn.cordys.common.resolver.field.DateTimeResolver;
 import cn.cordys.common.resolver.field.LocationResolver;
 import cn.cordys.common.resolver.field.NumberResolver;
+import cn.cordys.common.util.JSON;
 import cn.cordys.common.util.Translator;
+import cn.cordys.crm.system.constants.FieldType;
 import cn.cordys.crm.system.constants.SheetKey;
 import cn.cordys.crm.system.dto.field.DateTimeField;
+import cn.cordys.crm.system.dto.field.InputField;
 import cn.cordys.crm.system.dto.field.InputNumberField;
 import cn.cordys.crm.system.dto.field.LocationField;
 import cn.cordys.crm.system.dto.field.base.BaseField;
@@ -62,11 +65,11 @@ public class CustomTemplateWriteHandler implements RowWriteHandler, SheetWriteHa
 
     public CustomTemplateWriteHandler(List<BaseField> fields) {
         int index = 0;
-		List<BaseField> importFields = fields.stream().filter(f -> StringUtils.isEmpty(f.getResourceFieldId()) && f.canImport()).toList();
+		List<BaseField> importFields = fields.stream().filter(f -> StringUtils.isEmpty(f.getResourceFieldId()) && f.canImport(f)).toList();
 		for (BaseField field : importFields) {
 			if (field instanceof SubField subField && CollectionUtils.isNotEmpty(subField.getSubFields())) {
 				for (BaseField f : subField.getSubFields()) {
-					if (StringUtils.isEmpty(f.getResourceFieldId()) && f.canImport()) {
+					if (StringUtils.isEmpty(f.getResourceFieldId()) && f.canImport(f)) {
 						downOffSet.add(index);
 						setExtra(f, index++);
 					}
@@ -135,6 +138,14 @@ public class CustomTemplateWriteHandler implements RowWriteHandler, SheetWriteHa
             fieldIndexMap.forEach((k, v) -> {
                 if (k.needComment()) {
                     setComment(v, buildComment(k));
+                }
+                if (Strings.CS.equals(k.getType(), FieldType.INPUT.name())) {
+                    if (k instanceof InputField inputField) {
+                        if (Strings.CI.equals(inputField.getDefaultValueType(), "formula")) {
+                            Map map = JSON.parseObject(inputField.getFormula(), Map.class);
+                            setComment(v, map.get("display").toString());
+                        }
+                    }
                 }
             });
         }
@@ -214,17 +225,22 @@ public class CustomTemplateWriteHandler implements RowWriteHandler, SheetWriteHa
 
     private String getLocationComment(BaseField field) {
         StringBuilder sb = new StringBuilder();
+		sb.append(Translator.get("format.preview")).append(": ");
         LocationField locationField = (LocationField) field;
-        if (Strings.CS.equals(locationField.getLocationType(), LocationResolver.C)) {
-            sb.append(Translator.get("format.preview")).append(": ").append(Translator.get("location.c"));
-        } else if (Strings.CS.equals(locationField.getLocationType(), LocationResolver.P)) {
-            sb.append(Translator.get("format.preview")).append(": ").append(Translator.get("location.p"));
+		if (!Strings.CS.equals(locationField.getScope(), LocationResolver.CN)) {
+			sb.append(Translator.get("location.c"));
+			if (!Strings.CS.equals(locationField.getLocationType(), LocationResolver.C)) {
+				sb.append("-");
+			}
+		}
+		if (Strings.CS.equals(locationField.getLocationType(), LocationResolver.P)) {
+            sb.append(Translator.get("location.p"));
         } else if (Strings.CS.equals(locationField.getLocationType(), LocationResolver.PC)) {
-            sb.append(Translator.get("format.preview")).append(": ").append(Translator.get("location.pc"));
+            sb.append(Translator.get("location.pc"));
         } else if (Strings.CS.equals(locationField.getLocationType(), LocationResolver.PCD)) {
-            sb.append(Translator.get("format.preview")).append(": ").append(Translator.get("location.pcd"));
-        } else {
-            sb.append(Translator.get("format.preview")).append(": ").append(Translator.get("location.pcd.detail"));
+            sb.append(Translator.get("location.pcd"));
+        } else if (Strings.CS.equals(locationField.getLocationType(), LocationResolver.PCD_D)){
+            sb.append(Translator.get("location.pcd.detail"));
         }
         return sb.toString();
     }

@@ -64,6 +64,9 @@ import {
   EnablePaymentRecordViewUrl,
   DeletePaymentRecordViewUrl,
   DragPaymentRecordViewUrl,
+  PreCheckPaymentPlanImportUrl,
+  DownloadPaymentPlanTemplateUrl,
+  ImportPaymentPlanUrl,
   PreCheckPaymentRecordImportUrl,
   DownloadPaymentRecordTemplateUrl,
   ImportPaymentRecordUrl,
@@ -91,6 +94,9 @@ import {
   ContractInvoicedDetailUrl,
   ContractInvoicedExportAllUrl,
   ContractInvoicedExportSelectedUrl,
+  PreCheckContractInvoicedImportUrl,
+  DownloadContractInvoicedTemplateUrl,
+  ImportContractInvoicedUrl,
   ContractInvoicedFormConfigSnapshotUrl,
   ContractInvoicedFormConfigUrl,
   ContractInvoicedPageUrl,
@@ -109,18 +115,32 @@ import {
   GetContractDetailSnapshotUrl,
   ContractInvoicedDetailSnapshotUrl,
   ContractStatisticUrl,
+  SortContractUrl,
+  PreCheckContractImportUrl,
+  DownloadContractTemplateUrl,
+  ImportContractUrl,
   GetPaymentRecordStatisticUrl,
   InvoiceMaterialPageUrl,
   InvoiceMaterialAddUrl,
   InvoiceMaterialUpdateUrl,
   InvoiceMaterialDeleteUrl,
   GetInvoiceMaterialDetailUrl,
+  UpdateContractStatusUrl,
+  UpdateContractStatusRollbackUrl,
+  SortContractStatusUrl,
+  AddContractStatusUrl,
+  GetContractStatusConfigUrl,
+  DeleteContractStatusUrl,
+  UpdateContractStageUrl,
+  SwitchContractCirculationTypeUrl,
+  SaveContractCirculationConfigUrl,
 } from '@lib/shared/api/requrls/contract';
 import type { CustomerTabHidden } from '@lib/shared/models/customer';
 import type {
   ChartResponseDataItem,
   CommonList,
   GenerateChartParams,
+  ImportUploadParams,
   TableDraggedParams,
   TableExportParams,
   TableExportSelectedParams,
@@ -151,12 +171,31 @@ import type {
   InvoiceMaterialItem,
   SaveInvoiceMaterialParams,
 } from '@lib/shared/models/contract';
-import type { BatchOperationResult, BatchUpdateQuotationStatusParams } from '@lib/shared/models/opportunity';
+import type {
+  BatchOperationResult,
+  BatchUpdateQuotationStatusParams,
+  SaveCirculationConfigParams,
+  UpdateStageParams,
+  StageBoardDraggedParams,
+  StageBoardPageQueryParams,
+} from '@lib/shared/models/opportunity';
 import type { BatchUpdatePoolAccountParams } from '@lib/shared/models/customer';
+import {
+  StageBaseParams,
+  OpportunityStageConfig,
+  UpdateOpportunityStageRollbackParams,
+  UpdateStageBaseParams,
+} from '@lib/shared/models/opportunity';
+import type { CirculationTypeEnum } from '@lib/shared/enums/opportunityEnum';
 export default function useContractApi(CDR: CordysAxios) {
   // 合同列表
-  function getContractList(data: TableQueryParams) {
+  function getContractList(data: StageBoardPageQueryParams) {
     return CDR.post<CommonList<ContractItem>>({ url: ContractPageUrl, data }, { ignoreCancelToken: true });
+  }
+
+  // 合同看板拖拽排序
+  function sortContract(data: StageBoardDraggedParams) {
+    return CDR.post({ url: SortContractUrl, data });
   }
 
   // 添加合同
@@ -165,8 +204,8 @@ export default function useContractApi(CDR: CordysAxios) {
   }
 
   // 更新合同
-  function updateContract(data: UpdateContractParams) {
-    return CDR.post({ url: ContractUpdateUrl, data });
+  function updateContract(data: UpdateContractParams, approvalTaskId?: string) {
+    return CDR.post({ url: ContractUpdateUrl, data, params: { approvalTaskId } });
   }
 
   // 删除合同
@@ -175,13 +214,13 @@ export default function useContractApi(CDR: CordysAxios) {
   }
 
   // 合同详情
-  function getContractDetail(id: string) {
-    return CDR.get<ContractDetail>({ url: `${GetContractDetailUrl}/${id}` });
+  function getContractDetail(id: string, approvalTaskId?: string) {
+    return CDR.get<ContractDetail>({ url: `${GetContractDetailUrl}/${id}`, params: { approvalTaskId } });
   }
 
   // 合同详情快照
-  function getContractDetailSnapshot(id: string) {
-    return CDR.get<ContractDetail>({ url: `${GetContractDetailSnapshotUrl}/${id}` });
+  function getContractDetailSnapshot(id: string, approvalTaskId?: string) {
+    return CDR.get<ContractDetail>({ url: `${GetContractDetailSnapshotUrl}/${id}`, params: { approvalTaskId } });
   }
 
   // 获取合同表单配置
@@ -191,14 +230,15 @@ export default function useContractApi(CDR: CordysAxios) {
     });
   }
 
-  function getContractFormSnapshotConfig(id?: string) {
+  function getContractFormSnapshotConfig(id?: string, approvalTaskId?: string) {
     return CDR.get<FormDesignConfigDetailParams>({
       url: `${GetContractFormSnapshotConfigUrl}/${id}`,
+      params: { approvalTaskId },
     });
   }
 
-  function changeContractStatus(id: string, stage: string, voidReason?: string) {
-    return CDR.post({ url: `${ChangeContractStatusUrl}`, data: { stage, id, voidReason } });
+  function changeContractStatus(data: UpdateStageParams) {
+    return CDR.post({ url: `${ChangeContractStatusUrl}`, data });
   }
 
   // 获取合同tab显隐藏
@@ -459,12 +499,26 @@ export default function useContractApi(CDR: CordysAxios) {
     return CDR.post({ url: DragPaymentRecordViewUrl, data });
   }
 
-  function preCheckImportContractPaymentRecord(file: File) {
-    return CDR.uploadFile<{ data: ValidateInfo }>(
-      { url: PreCheckPaymentRecordImportUrl },
-      { fileList: [file] },
-      'file'
+  function preCheckImportContractPaymentPlan(params: ImportUploadParams) {
+    return CDR.uploadFile<{ data: ValidateInfo }>({ url: PreCheckPaymentPlanImportUrl }, params, 'file');
+  }
+
+  function downloadContractPaymentPlanTemplate() {
+    return CDR.get(
+      {
+        url: DownloadPaymentPlanTemplateUrl,
+        responseType: 'blob',
+      },
+      { isTransformResponse: false, isReturnNativeResponse: true }
     );
+  }
+
+  function importContractPaymentPlan(params: ImportUploadParams) {
+    return CDR.uploadFile({ url: ImportPaymentPlanUrl }, params, 'file');
+  }
+
+  function preCheckImportContractPaymentRecord(params: ImportUploadParams) {
+    return CDR.uploadFile<{ data: ValidateInfo }>({ url: PreCheckPaymentRecordImportUrl }, params, 'file');
   }
 
   function downloadContractPaymentRecordTemplate() {
@@ -477,15 +531,15 @@ export default function useContractApi(CDR: CordysAxios) {
     );
   }
 
-  function importContractPaymentRecord(file: File) {
-    return CDR.uploadFile({ url: ImportPaymentRecordUrl }, { fileList: [file] }, 'file');
+  function importContractPaymentRecord(params: ImportUploadParams) {
+    return CDR.uploadFile({ url: ImportPaymentRecordUrl }, params, 'file');
   }
 
   // 合同-工商抬头导入
-  function preCheckImportBusinessTitle(file: File, importType?: string) {
+  function preCheckImportBusinessTitle(params: ImportUploadParams) {
     return CDR.uploadFile<{ data: ValidateInfo }>(
       { url: PreCheckBusinessTitleImportUrl },
-      { fileList: [file], request: {importType } },
+      params,
       'file'
     );
   }
@@ -500,8 +554,8 @@ export default function useContractApi(CDR: CordysAxios) {
     );
   }
 
-  function importBusinessTitle(file: File, importType?: string) {
-    return CDR.uploadFile({ url: ImportBusinessTitleUrl }, { fileList: [file], request: {importType} }, 'file');
+  function importBusinessTitle(params: ImportUploadParams) {
+    return CDR.uploadFile({ url: ImportBusinessTitleUrl }, params, 'file');
   }
 
   // 工商抬头列表
@@ -590,18 +644,21 @@ export default function useContractApi(CDR: CordysAxios) {
   }
 
   // 更新发票
-  function updateInvoiced(data: UpdateContractInvoiceParams) {
-    return CDR.post({ url: ContractInvoicedUpdateUrl, data });
+  function updateInvoiced(data: UpdateContractInvoiceParams, approvalTaskId?: string) {
+    return CDR.post({ url: ContractInvoicedUpdateUrl, data, params: { approvalTaskId } });
   }
 
   // 发票详情
-  function getInvoicedDetail(id: string) {
-    return CDR.get<ContractInvoiceDetail>({ url: `${ContractInvoicedDetailUrl}/${id}` });
+  function getInvoicedDetail(id: string, approvalTaskId?: string) {
+    return CDR.get<ContractInvoiceDetail>({ url: `${ContractInvoicedDetailUrl}/${id}`, params: { approvalTaskId } });
   }
 
   // 发票详情快照
-  function getInvoicedDetailSnapshot(id: string) {
-    return CDR.get<ContractInvoiceDetail>({ url: `${ContractInvoicedDetailSnapshotUrl}/${id}` });
+  function getInvoicedDetailSnapshot(id: string, approvalTaskId?: string) {
+    return CDR.get<ContractInvoiceDetail>({
+      url: `${ContractInvoicedDetailSnapshotUrl}/${id}`,
+      params: { approvalTaskId },
+    });
   }
 
   // 获取发票表单配置
@@ -612,9 +669,10 @@ export default function useContractApi(CDR: CordysAxios) {
   }
 
   // 获取发票表单配置快照
-  function getInvoicedFormSnapshotConfig(id?: string) {
+  function getInvoicedFormSnapshotConfig(id?: string, approvalTaskId?: string) {
     return CDR.get<FormDesignConfigDetailParams>({
       url: `${ContractInvoicedFormConfigSnapshotUrl}/${id}`,
+      params: { approvalTaskId },
     });
   }
 
@@ -646,6 +704,24 @@ export default function useContractApi(CDR: CordysAxios) {
   // 导出选中发票
   function exportInvoicedSelected(data: TableExportSelectedParams) {
     return CDR.post({ url: ContractInvoicedExportSelectedUrl, data });
+  }
+
+  function preCheckImportContractInvoiced(params: ImportUploadParams) {
+    return CDR.uploadFile<{ data: ValidateInfo }>({ url: PreCheckContractInvoicedImportUrl }, params, 'file');
+  }
+
+  function downloadContractInvoicedTemplate() {
+    return CDR.get(
+      {
+        url: DownloadContractInvoicedTemplateUrl,
+        responseType: 'blob',
+      },
+      { isTransformResponse: false, isReturnNativeResponse: true }
+    );
+  }
+
+  function importContractInvoiced(params: ImportUploadParams) {
+    return CDR.uploadFile({ url: ImportContractInvoicedUrl }, params, 'file');
   }
 
   // 获取发票 tab 显隐
@@ -693,6 +769,24 @@ export default function useContractApi(CDR: CordysAxios) {
     return CDR.post({ url: DragContractInvoicedViewUrl, data });
   }
 
+  function preCheckImportContract(params: ImportUploadParams) {
+    return CDR.uploadFile<{ data: ValidateInfo }>({ url: PreCheckContractImportUrl }, params, 'file');
+  }
+
+  function downloadContractTemplate() {
+    return CDR.get(
+      {
+        url: DownloadContractTemplateUrl,
+        responseType: 'blob',
+      },
+      { isTransformResponse: false, isReturnNativeResponse: true }
+    );
+  }
+
+  function importContract(params: ImportUploadParams) {
+    return CDR.uploadFile({ url: ImportContractUrl }, params, 'file');
+  }
+
   // 合同统计
   function getContractStatistic(data: TableQueryParams) {
     return CDR.post({ url: ContractStatisticUrl, data }, { ignoreCancelToken: true });
@@ -722,6 +816,49 @@ export default function useContractApi(CDR: CordysAxios) {
 
   function getInvoiceMaterialDetail(id: string) {
     return CDR.get<InvoiceMaterialItem>({ url: `${GetInvoiceMaterialDetailUrl}/${id}` });
+  // 更新合同状态配置
+  function updateContractStatus(data: UpdateStageBaseParams) {
+    return CDR.post({ url: UpdateContractStatusUrl, data });
+  }
+
+  // 合同状态回退配置
+  function updateContractStatusRollback(data: UpdateOpportunityStageRollbackParams) {
+    return CDR.post({ url: UpdateContractStatusRollbackUrl, data });
+  }
+
+  // 合同状态排序
+  function sortContractStatus(data: string[]) {
+    return CDR.post({ url: SortContractStatusUrl, data });
+  }
+
+  // 添加合同状态
+  function addContractStatus(data: StageBaseParams) {
+    return CDR.post({ url: AddContractStatusUrl, data });
+  }
+
+  // 获取合同状态配置
+  function getContractStatusConfig() {
+    return CDR.get<OpportunityStageConfig>({ url: GetContractStatusConfigUrl }, { ignoreCancelToken: true });
+  }
+
+  // 删除合同状态
+  function deleteContractStatus(id: string) {
+    return CDR.get({ url: `${DeleteContractStatusUrl}/${id}` });
+  }
+
+  // 更新阶段
+  function updateContractStage(data: { id: string; stage: string }) {
+    return CDR.post({ url: UpdateContractStageUrl, data });
+  }
+
+  // 保存高级流转配置
+  function saveContractAdvanceConfig(data: SaveCirculationConfigParams) {
+    return CDR.post({ url: SaveContractCirculationConfigUrl, data });
+  }
+
+  // 切换流转配置
+  function switchContractCirculationType(type: CirculationTypeEnum) {
+    return CDR.get({ url: `${SwitchContractCirculationTypeUrl}/${type}` });
   }
 
   return {
@@ -731,6 +868,7 @@ export default function useContractApi(CDR: CordysAxios) {
     getContractDetail,
     getContractDetailSnapshot,
     getContractList,
+    sortContract,
     getContractTab,
     getContractViewDetail,
     getContractViewList,
@@ -750,6 +888,9 @@ export default function useContractApi(CDR: CordysAxios) {
     batchUpdateContract,
     approvalContract,
     revokeContract,
+    preCheckImportContract,
+    downloadContractTemplate,
+    importContract,
     getContractStatistic,
     // 回款计划
     getPaymentPlanList,
@@ -789,6 +930,9 @@ export default function useContractApi(CDR: CordysAxios) {
     enablePaymentRecordView,
     deletePaymentRecordView,
     dragPaymentRecordView,
+    preCheckImportContractPaymentPlan,
+    importContractPaymentPlan,
+    downloadContractPaymentPlanTemplate,
     preCheckImportContractPaymentRecord,
     importContractPaymentRecord,
     downloadContractPaymentRecordTemplate,
@@ -841,5 +985,19 @@ export default function useContractApi(CDR: CordysAxios) {
     updateInvoiceMaterial,
     deleteInvoiceMaterial,
     getInvoiceMaterialDetail,
+    // 合同阶段
+    updateContractStatus,
+    updateContractStatusRollback,
+    sortContractStatus,
+    addContractStatus,
+    getContractStatusConfig,
+    deleteContractStatus,
+    updateContractStage,
+    saveContractAdvanceConfig,
+    switchContractCirculationType,
+    // 发票导入
+    preCheckImportContractInvoiced,
+    downloadContractInvoicedTemplate,
+    importContractInvoiced,
   };
 }

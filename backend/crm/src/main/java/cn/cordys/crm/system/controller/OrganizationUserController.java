@@ -10,6 +10,7 @@ import cn.cordys.context.OrganizationContext;
 import cn.cordys.crm.system.dto.request.*;
 import cn.cordys.crm.system.dto.response.RoleListResponse;
 import cn.cordys.crm.system.dto.response.UserImportResponse;
+import cn.cordys.crm.system.dto.response.EnableOptionDTO;
 import cn.cordys.crm.system.dto.response.UserPageResponse;
 import cn.cordys.crm.system.dto.response.UserResponse;
 import cn.cordys.crm.system.service.OrganizationConfigService;
@@ -22,6 +23,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.shiro.authz.annotation.Logical;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -139,13 +141,20 @@ public class OrganizationUserController {
 
     @GetMapping(value = "/option")
     @Operation(summary = "获取用户下拉option")
-    public List<OptionDTO> getUserList() {
-        return organizationUserService.getUserOptions(OrganizationContext.getOrganizationId());
+    public List<EnableOptionDTO> getUserList(@RequestParam(required = false, defaultValue = "false") Boolean includeDisabled) {
+        return organizationUserService.getUserOptions(OrganizationContext.getOrganizationId(), includeDisabled);
+    }
+
+    @GetMapping(value = "/admin/option")
+    @Operation(summary = "获取管理员用户下拉option")
+    @RequiresPermissions(PermissionConstants.PROCESS_SETTING_READ)
+    public List<EnableOptionDTO> getAdminUserList(@RequestParam(required = false, defaultValue = "false") Boolean includeDisabled) {
+        return organizationUserService.getAdminUserOptions(OrganizationContext.getOrganizationId(), includeDisabled);
     }
 
     @GetMapping(value = "/role/option")
     @Operation(summary = "获取用户角色下拉option")
-    @RequiresPermissions(PermissionConstants.SYS_ORGANIZATION_READ)
+    @RequiresPermissions(value = {PermissionConstants.SYS_ORGANIZATION_READ, PermissionConstants.PROCESS_SETTING_READ}, logical = Logical.OR)
     public List<OptionDTO> getUserRoleList() {
         List<RoleListResponse> list = roleService.list(OrganizationContext.getOrganizationId());
         return list.stream().map(role -> new OptionDTO(role.getId(), role.getName())).toList();

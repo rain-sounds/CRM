@@ -2,7 +2,7 @@
   <CrmModal
     v-model:show="showModal"
     size="medium"
-    :title="`${t('common.import')}${props.title}` || t('crmImportButton.formExcelImport')"
+    :title="`${t('common.import')}${props.title ?? ''}` || t('crmImportButton.formExcelImport')"
     :ok-loading="props.confirmLoading"
     :positive-text="t('crmImportButton.validateTemplate')"
     :ok-button-props="{ disabled: fileList.length < 1 }"
@@ -50,7 +50,13 @@
                     class="cursor-pointer text-[var(--text-n4)] hover:text-[var(--primary-1)]"
                   />
                 </template>
-                {{ t('crmImportButton.importUpdates.tooltip') }}
+                <div>
+                  <div>{{ t('crmImportButton.importUpdates.tooltip') }}</div>
+                  <div>{{ t('crmImportButton.importUpdates.defaultLogic') }}</div>
+                  <div>{{ t('crmImportButton.importUpdates.defaultLogic.emptyValue') }}</div>
+                  <div>{{ t('crmImportButton.importUpdates.defaultLogic.workflow') }}</div>
+                  <div>{{ t('crmImportButton.importUpdates.defaultLogic.unique') }}</div>
+                </div>
               </n-tooltip>
             </div>
           </n-radio>

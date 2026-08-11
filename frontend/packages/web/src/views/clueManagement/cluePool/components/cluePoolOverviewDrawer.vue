@@ -11,6 +11,7 @@
     :show-tab-setting="true"
     :formViewSize="formViewSize"
     @button-select="handleSelect"
+    @button-pop-update="handleButtonPopUpdate"
     @saved="() => (refreshKey += 1)"
   >
     <template #left>
@@ -23,6 +24,7 @@
           :column="layout === 'vertical' ? 3 : undefined"
           :label-width="layout === 'vertical' ? 'auto' : undefined"
           :value-align="layout === 'vertical' ? 'start' : undefined"
+          :readonly="!hasAnyPermission(['CLUE_MANAGEMENT_POOL:UPDATE'])"
           @init="handleDescriptionInit"
         />
       </div>
@@ -75,6 +77,7 @@
   import { defaultTransferForm } from '@/config/opportunity';
   import useModal from '@/hooks/useModal';
   import useOpenNewPage from '@/hooks/useOpenNewPage';
+  import { hasAnyPermission } from '@/utils/permission';
 
   import { ClueRouteEnum } from '@/enums/routeEnum';
 
@@ -152,6 +155,18 @@
   const distributeForm = ref<TransferParams>({
     ...defaultTransferForm,
   });
+
+  function resetDistributeForm() {
+    distributeForm.value = { ...defaultTransferForm };
+    distributeFormRef.value?.formRef?.restoreValidation();
+  }
+
+  function handleButtonPopUpdate(key: string, visible: boolean) {
+    if (key === 'distribute' && visible) {
+      resetDistributeForm();
+    }
+  }
+
   function handleDistribute() {
     distributeFormRef.value?.formRef?.validate(async (error) => {
       if (!error) {
@@ -162,7 +177,7 @@
             clueId: sourceId.value,
           });
           Message.success(t('common.distributeSuccess'));
-          distributeForm.value = { ...defaultTransferForm };
+          resetDistributeForm();
           emit('remove');
           show.value = false;
         } catch (e) {

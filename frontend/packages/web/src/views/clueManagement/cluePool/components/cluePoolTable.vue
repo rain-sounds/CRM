@@ -9,7 +9,7 @@
     :columns="filterColumns"
     @page-change="propsEvent.pageChange"
     @page-size-change="propsEvent.pageSizeChange"
-    @sorter-change="propsEvent.sorterChange"
+    @sorter-change="handleSorterChange"
     @filter-change="propsEvent.filterChange"
     @batch-action="handleBatchAction"
     @refresh="searchData"
@@ -28,7 +28,16 @@
           :show-checkmark="false"
           label-field="name"
           class="w-[200px]"
-          @update-value="(e) => searchData(undefined, e)"
+          @update-value="handlePoolChange"
+        />
+        <CrmImportButton
+          v-if="hasAnyPermission(['CLUE_MANAGEMENT_POOL:IMPORT']) && !props.readonly"
+          :api-type="FormDesignKeyEnum.CLUE_POOL"
+          :title="t('module.cluePool')"
+          :pool-id="poolId"
+          :readonly="!poolId"
+          :disabled-tooltip="!poolId ? t('common.emptyPoolImportTip', { name: t('module.cluePool') }) : ''"
+          @import-success="() => searchData()"
         />
         <n-button
           v-if="hasAnyPermission(['CLUE_MANAGEMENT_POOL:EXPORT']) && !props.readonly"
@@ -41,13 +50,6 @@
           {{ t('common.exportAll') }}
         </n-button>
       </div>
-      <!-- 先不上 -->
-      <!-- <CrmImportButton
-          :validate-api="importUserPreCheck"
-          :import-save-api="importUsers"
-         :title="t('module.clueManagement')"
-          @import-success="() => searchData()"
-        /> -->
     </template>
     <template #actionRight>
       <div class="flex gap-[12px]">
@@ -124,7 +126,7 @@
   import { useI18n } from '@lib/shared/hooks/useI18n';
   import { characterLimit } from '@lib/shared/method';
   import type { CluePoolListItem } from '@lib/shared/models/clue';
-  import { ExportTableColumnItem } from '@lib/shared/models/common';
+  import { ExportTableColumnItem, type SortParams } from '@lib/shared/models/common';
   import type { TransferParams } from '@lib/shared/models/customer/index';
   import type { CluePoolItem } from '@lib/shared/models/system/module';
 
@@ -137,7 +139,7 @@
   import { BatchActionConfig } from '@/components/pure/crm-table/type';
   import CrmTableButton from '@/components/pure/crm-table-button/index.vue';
   import CrmBatchEditModal from '@/components/business/crm-batch-edit-modal/index.vue';
-  // import CrmImportButton from '@/components/business/crm-import-button/index.vue';
+  import CrmImportButton from '@/components/business/crm-import-button/index.vue';
   import CrmOperationButton from '@/components/business/crm-operation-button/index.vue';
   import CrmTableExportModal from '@/components/business/crm-table-export-modal/index.vue';
   import TransferModal from '@/components/business/crm-transfer-modal/index.vue';
@@ -211,16 +213,6 @@
       trigger: () => node,
       default: () => option.name,
     });
-  }
-
-  async function getCluePoolOptions() {
-    try {
-      cluePoolOptions.value = await getPoolOptions();
-      poolId.value = cluePoolOptions.value[0]?.id || '';
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error(error);
-    }
   }
 
   const keyword = ref('');
@@ -551,6 +543,14 @@
   });
 
   const { propsRes, propsEvent, tableQueryParams, loadList, setLoadListParams, setAdvanceFilter } = useTableRes;
+
+  function handleSorterChange(sorter: SortParams) {
+    if (poolId.value) {
+      setLoadListParams({ keyword: keyword.value, poolId: poolId.value, viewId: activeTab.value });
+      propsEvent.value.sorterChange(sorter);
+    }
+  }
+
   const hiddenColumns = computed<string[]>(() => {
     const cluePoolSetting = cluePoolOptions.value.find((item) => item.id === poolId.value);
     return cluePoolSetting?.fieldConfigs.filter((item) => !item.enable).map((item) => item.fieldId) || [];
@@ -589,6 +589,21 @@
     }
   }
 
+  function handlePoolChange(e: string) {
+    checkedRowKeys.value = [];
+    searchData(undefined, e);
+  }
+
+  async function getCluePoolOptions() {
+    try {
+      cluePoolOptions.value = await getPoolOptions();
+      poolId.value = cluePoolOptions.value[0]?.id || '';
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
+  }
+
   handleSearchData.value = searchData;
 
   const filterConfigList = computed(
@@ -607,7 +622,7 @@
   );
 
   const exportColumns = computed<ExportTableColumnItem[]>(() =>
-    getExportColumns(propsRes.value.columns, customFieldsFilterConfig.value as FilterFormItem[])
+    getExportColumns(propsRes.value.columns, customFieldsFilterConfig.value as FilterFormItem[], fieldList.value, true)
   );
 
   function handleFormCreateSaved(res: any) {
@@ -669,8 +684,7 @@
   );
 
   async function init() {
-    await getCluePoolOptions();
-    searchData();
+    getCluePoolOptions();
   }
 
   onBeforeMount(() => {

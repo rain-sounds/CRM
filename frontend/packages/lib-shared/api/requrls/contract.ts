@@ -8,12 +8,18 @@ export const GetContractDetailSnapshotUrl = '/contract/get/snapshot'; // 获取�
 export const GetContractFormConfigUrl = '/contract/module/form'; // 合同表单配置
 export const GetContractFormSnapshotConfigUrl = '/contract/module/form/snapshot'; // 合同表单配置
 export const GetContractTabUrl = '/contract/tab'; // 合同tab显隐
-export const ChangeContractStatusUrl = '/contract/stage/update';
+export const ChangeContractStatusUrl = '/contract/update/stage';
 export const BatchApproveContractUrl = '/contract/batch/approval';
 export const BatchUpdateContractUrl = '/contract/batch/update';
 export const ApproveContractUrl = '/contract/approval';
 export const RevokeContractUrl = '/contract/revoke';
 export const ContractStatisticUrl = '/contract/statistic';
+export const SortContractUrl = '/contract/sort';
+
+// 合同导入
+export const PreCheckContractImportUrl = '/contract/import/pre-check';
+export const DownloadContractTemplateUrl = '/contract/template/download';
+export const ImportContractUrl = '/contract/import';
 
 // 合同导出
 export const ExportContractAllUrl = '/contract/export-all'; // 合同导出全量
@@ -41,6 +47,11 @@ export const PaymentPlanDeleteUrl = '/contract/payment-plan/delete'; // 删除�
 export const GetPaymentPlanDetailUrl = '/contract/payment-plan/get'; // 获取回款计划详情
 export const GetPaymentPlanFormConfigUrl = '/contract/payment-plan/module/form'; // 回款计划表单配置
 export const GetPaymentPlanTabUrl = '/contract/payment-plan/tab'; // 回款计划tab显隐
+
+// 回款计划导入
+export const PreCheckPaymentPlanImportUrl = '/contract/payment-plan/import/pre-check';
+export const DownloadPaymentPlanTemplateUrl = '/contract/payment-plan/template/download';
+export const ImportPaymentPlanUrl = '/contract/payment-plan/import';
 
 // 回款计划导出
 export const ExportPaymentPlanAllUrl = '/contract/payment-plan/export-all'; // 回款计划导出全量
@@ -127,6 +138,11 @@ export const ContractInvoicedDeleteUrl = '/invoice/delete'; // 发票删除
 export const ContractInvoicedRevokeUrl = '/invoice/revoke'; // 发票撤回
 export const ContractInvoicedTabUrl = '/invoice/tab'; // 发票tab显隐
 
+// 发票导入
+export const PreCheckContractInvoicedImportUrl = '/invoice/import/pre-check'; // 发票导入预检查
+export const DownloadContractInvoicedTemplateUrl = '/invoice/template/download'; // 发票导入模板下载
+export const ImportContractInvoicedUrl = '/invoice/import'; // 发票导入
+
 // 发票视图
 export const UpdateContractInvoicedViewUrl = '/invoice/view/update'; // 更新发票视图
 export const DragContractInvoicedViewUrl = '/invoice/view/edit/pos'; // 拖拽发票视图排序
@@ -143,3 +159,13 @@ export const InvoiceMaterialAddUrl = '/contract/invoice-material/add';
 export const InvoiceMaterialUpdateUrl = '/contract/invoice-material/update';
 export const InvoiceMaterialDeleteUrl = '/contract/invoice-material/delete';
 export const GetInvoiceMaterialDetailUrl = '/contract/invoice-material/get';
+// 合同状态
+export const UpdateContractStatusUrl = '/contract/stage/update'; // 更新合同状态配置
+export const UpdateContractStatusRollbackUrl = '/contract/stage/update-rollback'; // 合同状态回退配置
+export const SortContractStatusUrl = '/contract/stage/sort'; // 合同状态排序
+export const AddContractStatusUrl = '/contract/stage/add'; // 合同状态添加
+export const GetContractStatusConfigUrl = '/contract/stage/get'; // 获取合同状态配置
+export const DeleteContractStatusUrl = '/contract/stage/delete'; // 删除合同状态
+export const UpdateContractStageUrl = '/contract/update/stage'; // 更新合同详情阶段
+export const SwitchContractCirculationTypeUrl = '/contract/stage/circulation-type'; // 切换流转类型
+export const SaveContractCirculationConfigUrl = '/contract/stage/advanced/config'; // 保存高级流转配置

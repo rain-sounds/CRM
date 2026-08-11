@@ -8,19 +8,50 @@
       <div v-if="!props.isPreview" class="flex items-center gap-[8px]">
         <CrmButtonGroup not-show-divider class="gap-[8px]" :list="appStore.getNavTopConfigList">
           <template #searchSlot>
-            <n-button v-if="showSearch" class="p-[8px]" quaternary @click="showDuplicateCheckDrawer = true">
+            <n-button
+              v-if="showSearch"
+              class="p-[8px]"
+              quaternary
+              @click="
+                () => {
+                  initDuplicateCheckDrawer = true;
+                  showDuplicateCheckDrawer = true;
+                }
+              "
+            >
               <template #icon>
                 <CrmIcon type="iconicon_search-outline_outlined" :size="16" />
               </template>
             </n-button>
             <span v-else></span>
           </template>
+          <template #taskSlot>
+            <n-button
+              class="p-[8px]"
+              quaternary
+              @click="
+                () => {
+                  initTaskDrawer = true;
+                  showTaskDrawer = true;
+                }
+              "
+            >
+              <n-badge value="1" dot :show="appStore.todoStatistic.total > 0">
+                <CrmIcon type="iconicon_contract" :size="16" />
+              </n-badge>
+            </n-button>
+          </template>
           <template #eventSlot>
             <n-button
               v-permission="['CUSTOMER_MANAGEMENT:READ', 'CLUE_MANAGEMENT:READ', 'OPPORTUNITY_MANAGEMENT:READ']"
               class="p-[8px]"
               quaternary
-              @click="showFollowDrawer = true"
+              @click="
+                () => {
+                  initFollowDrawer = true;
+                  showFollowDrawer = true;
+                }
+              "
             >
               <template #icon>
                 <CrmIcon type="iconicon_data_plan" :size="16" />
@@ -77,16 +108,18 @@
                   </div>
                   <div class="font-semibold">{{ appStore.versionInfo.latestVersion }}</div>
                 </div>
-                <div
-                  v-if="licenseStore.isEnterpriseVersion() && hasAnyPermission(['LICENSE:READ'])"
-                  class="flex flex-col gap-[4px]"
-                >
+                <div v-if="hasAnyPermission(['LICENSE:READ'])" class="flex flex-col gap-[4px]">
                   <n-divider class="!my-0" />
                   <div class="flex flex-col gap-[8px]">
                     <div class="flex items-center justify-between">
                       <div class="flex items-center gap-[8px]">
                         <div class="font-semibold text-[var(--text-n1)]">License</div>
-                        <CrmTag tooltip-disabled :type="getLicenseStatus.status" theme="light">
+                        <CrmTag
+                          v-if="licenseStore.isEnterpriseVersion()"
+                          tooltip-disabled
+                          :type="getLicenseStatus.status"
+                          theme="light"
+                        >
                           {{ getLicenseStatus.title }}
                         </CrmTag>
                       </div>
@@ -94,23 +127,24 @@
                         {{ t('common.update') }}
                       </n-button>
                     </div>
-                    <div class="flex items-center gap-[8px]">
+                    <div v-if="licenseStore.isEnterpriseVersion()" class="flex items-center gap-[8px]">
                       <div class="text-[12px] leading-[20px] text-[var(--text-n4)]">
                         {{ t('system.license.customerName') }}
                       </div>
                       <div class="font-semibold">{{ licenseStore?.licenseInfo?.corporation }}</div>
                     </div>
-                    <div class="flex items-center gap-[8px]">
+                    <div v-if="licenseStore.isEnterpriseVersion()" class="flex items-center gap-[8px]">
                       <div class="text-[12px] leading-[20px] text-[var(--text-n4)]">
                         {{ t('system.license.productionVersion') }}
                       </div>
                       <div class="font-semibold">
                         {{
-                          licenseVersionMap[licenseStore?.licenseInfo?.edition as keyof typeof licenseVersionMap] ?? '-'
+                          licenseVersionMap[licenseStore?.licenseInfo?.edition as keyof typeof licenseVersionMap] ??
+                          licenseVersionMap.Standard
                         }}
                       </div>
                     </div>
-                    <div class="flex items-center gap-[8px]">
+                    <div v-if="licenseStore.isEnterpriseVersion()" class="flex items-center gap-[8px]">
                       <div class="text-[12px] leading-[20px] text-[var(--text-n4)]">
                         {{ t('system.license.LicenseAccountCount') }}
                       </div>
@@ -118,7 +152,7 @@
                         {{ licenseStore?.licenseInfo?.count ?? '-' }}
                       </div>
                     </div>
-                    <div class="flex items-center gap-[8px]">
+                    <div v-if="licenseStore.isEnterpriseVersion()" class="flex items-center gap-[8px]">
                       <div class="text-[12px] leading-[20px] text-[var(--text-n4)]">
                         {{ t('system.license.authorizationTime') }}
                       </div>
@@ -159,11 +193,12 @@
     <MessageDrawer v-model:show="showMessageDrawer" />
     <licenseDrawer v-model:visible="showLicenseDrawer" />
     <Suspense>
-      <CrmDuplicateCheckDrawer v-model:visible="showDuplicateCheckDrawer" />
+      <CrmDuplicateCheckDrawer v-if="initDuplicateCheckDrawer" v-model:visible="showDuplicateCheckDrawer" />
     </Suspense>
   </n-layout-header>
-  <agentDrawer v-model:visible="showAgentDrawer" />
-  <CrmFollowDrawer v-model:visible="showFollowDrawer" />
+  <agentDrawer v-if="initAgentDrawer" v-model:visible="showAgentDrawer" />
+  <CrmFollowDrawer v-if="initFollowDrawer" v-model:visible="showFollowDrawer" />
+  <CrmTaskDrawer v-if="initTaskDrawer" v-model:show="showTaskDrawer" />
 </template>
 
 <script setup lang="ts">
@@ -183,7 +218,7 @@
   import CrmSvg from '@/components/pure/crm-svg/index.vue';
   import CrmTag from '@/components/pure/crm-tag/index.vue';
   import { lastScopedOptions } from '@/components/business/crm-duplicate-check-drawer/config';
-  import CrmDuplicateCheckDrawer from '@/components/business/crm-duplicate-check-drawer/index.vue';
+  import CrmTaskDrawer from '@/components/business/crm-task-drawer/index.vue';
   import CrmTopMenu from '@/components/business/crm-top-menu/index.vue';
   import licenseDrawer from '@/views/system/license/licenseDrawer.vue';
   import MessageDrawer from '@/views/system/message/components/messageDrawer.vue';
@@ -201,10 +236,13 @@
 
   const agentDrawer = defineAsyncComponent(() => import('@/components/business/crm-agent-drawer/index.vue'));
   const CrmFollowDrawer = defineAsyncComponent(() => import('@/components/business/crm-follow-drawer/index.vue'));
+  const CrmDuplicateCheckDrawer = defineAsyncComponent(
+    () => import('@/components/business/crm-duplicate-check-drawer/index.vue')
+  );
 
   const route = useRoute();
 
-  const { success, warning, loading } = useMessage();
+  const { loading } = useMessage();
   const { t } = useI18n();
   const { changeLocale, currentLocale } = useLocale(loading);
   const { openModal } = useModal();
@@ -262,8 +300,10 @@
 
   const hasValidApiKey = computed(() => userStore.apiKeyList.some((key) => !key.isExpire && key.enable));
   const showAgentDrawer = ref(false);
+  const initAgentDrawer = ref(false);
   function showAgent() {
     if (hasValidApiKey.value) {
+      initAgentDrawer.value = true;
       showAgentDrawer.value = true;
     } else {
       openModal({
@@ -285,38 +325,31 @@
   }
 
   const showSearch = computed(() => lastScopedOptions.value.length);
+  const initDuplicateCheckDrawer = ref(false);
   const showDuplicateCheckDrawer = ref(false);
 
+  const initFollowDrawer = ref(false);
   const showFollowDrawer = ref(false);
+  const initTaskDrawer = ref(false);
+  const showTaskDrawer = ref(false);
 
   const { legacyCopy } = useLegacyCopy();
   function copyVersion(version: string) {
     legacyCopy(version);
   }
 
-  const moreActions = computed<ActionsItem[]>(() => {
-    if (licenseStore.hasLicense()) {
-      return [
-        {
-          label: t('settings.help.doc'),
-          key: 'helpDoc',
-          iconType: 'iconicon_help_circle',
-        },
-        {
-          label: t('settings.help.apiDoc'),
-          key: 'apiDoc',
-          iconType: 'iconicon_info_circle',
-        },
-      ];
-    }
-    return [
-      {
-        label: t('settings.help.doc'),
-        key: 'helpDoc',
-        iconType: 'iconicon_help_circle',
-      },
-    ];
-  });
+  const moreActions: ActionsItem[] = [
+    {
+      label: t('settings.help.doc'),
+      key: 'helpDoc',
+      iconType: 'iconicon_help_circle',
+    },
+    {
+      label: t('settings.help.apiDoc'),
+      key: 'apiDoc',
+      iconType: 'iconicon_info_circle',
+    },
+  ];
 
   function selectMoreActions(item: ActionsItem) {
     switch (item.key) {
@@ -344,7 +377,6 @@
       appStore.initMessage();
     }
     appStore.connectSystemMessageSSE(userStore.showSystemNotify);
-    appStore.showSQLBot();
     userStore.initApiKeyList();
   });
 

@@ -8,24 +8,39 @@ import cn.cordys.common.dto.UserDeptDTO;
 import cn.cordys.common.exception.GenericException;
 import cn.cordys.common.util.JSON;
 import cn.cordys.common.util.Translator;
+import cn.cordys.crm.approval.constants.ApprovalNodeTypeEnum;
+import cn.cordys.crm.approval.constants.ApprovalStatus;
+import cn.cordys.crm.approval.constants.ApprovalTaskType;
+import cn.cordys.crm.approval.domain.ApprovalInstance;
+import cn.cordys.crm.approval.domain.ApprovalNode;
+import cn.cordys.crm.approval.domain.ApprovalNodeLink;
+import cn.cordys.crm.approval.domain.ApprovalTask;
+import cn.cordys.crm.approval.mapper.ExtApprovalInstanceMapper;
+import cn.cordys.crm.approval.service.ApprovalFlowService;
+import cn.cordys.crm.approval.service.ApprovalInstanceService;
 import cn.cordys.crm.clue.mapper.ExtClueMapper;
 import cn.cordys.crm.customer.mapper.ExtCustomerContactMapper;
 import cn.cordys.crm.customer.mapper.ExtCustomerMapper;
 import cn.cordys.crm.opportunity.mapper.ExtOpportunityMapper;
+import cn.cordys.crm.system.constants.FieldType;
+import cn.cordys.crm.system.domain.ModuleField;
 import cn.cordys.crm.system.domain.User;
 import cn.cordys.crm.system.dto.field.base.BaseField;
 import cn.cordys.crm.system.dto.field.base.SubField;
 import cn.cordys.crm.system.dto.response.ModuleFormConfigDTO;
 import cn.cordys.crm.system.dto.response.UserResponse;
+import cn.cordys.crm.system.mapper.ExtAttachmentMapper;
 import cn.cordys.crm.system.mapper.ExtModuleFieldMapper;
 import cn.cordys.crm.system.mapper.ExtOrganizationUserMapper;
 import cn.cordys.crm.system.mapper.ExtUserMapper;
 import cn.cordys.mybatis.BaseMapper;
+import cn.cordys.mybatis.lambda.LambdaQueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.annotation.Resource;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,6 +73,23 @@ public class BaseService {
     private ExtClueMapper extClueMapper;
     @Resource
     private ExtModuleFieldMapper extModuleFieldMapper;
+    @Resource
+    private BaseMapper<ModuleField> moduleFieldMapper;
+    @Resource
+    private ExtAttachmentMapper extAttachmentMapper;
+	@Resource
+	private ApprovalInstanceService approvalInstanceService;
+	@Resource
+	private BaseMapper<ApprovalNodeLink> nodeLinkMapper;
+	@Resource
+	private BaseMapper<ApprovalNode> approvalNodeMapper;
+	@Resource
+	private BaseMapper<ApprovalTask> approvalTaskMapper;
+	@Lazy
+	@Resource
+	private ApprovalFlowService approvalFlowService;
+	@Resource
+	private ExtApprovalInstanceMapper extApprovalInstanceMapper;
 
 
     /**
@@ -196,7 +228,7 @@ public class BaseService {
         }
         return extUserMapper.selectUserOptionByIds(userIds)
                 .stream()
-                .collect(Collectors.toMap(OptionDTO::getId, OptionDTO::getName));
+                .collect(Collectors.toMap(OptionDTO::getIdAsString, OptionDTO::getName));
     }
 
     public String getUserName(String userId) {
@@ -251,7 +283,7 @@ public class BaseService {
         }
         return extCustomerContactMapper.selectContactOptionByIds(contactIds)
                 .stream()
-                .collect(Collectors.toMap(OptionDTO::getId, OptionDTO::getName));
+                .collect(Collectors.toMap(OptionDTO::getIdAsString, OptionDTO::getName));
     }
 
 
@@ -368,22 +400,44 @@ public class BaseService {
         Map<String, Object> originResourceLog = JSON.parseToMap(JSON.toJSONString(originResource));
         Map<String, Object> modifiedResourceLog = JSON.parseToMap(JSON.toJSONString(modifiedResource));
 
-        // 添加原始字段值
+        // 收集所有字段ID，检测附件类型字段
+        Set<String> allFieldIds = new HashSet<>();
         if (originResourceFields != null) {
             originResourceFields.stream()
                     .filter(BaseModuleFieldValue::valid)
-                    .forEach(field ->
-                            originResourceLog.put(field.getFieldId(), field.getFieldValue())
-                    );
+                    .forEach(field -> allFieldIds.add(field.getFieldId()));
         }
-
-        // 添加修改后的字段值（过滤无效字段）
         if (modifiedResourceFields != null) {
             modifiedResourceFields.stream()
                     .filter(BaseModuleFieldValue::valid)
-                    .forEach(field ->
-                            modifiedResourceLog.put(field.getFieldId(), field.getFieldValue())
-                    );
+                    .forEach(field -> allFieldIds.add(field.getFieldId()));
+        }
+        Set<String> attachmentFieldIds = filterAttachmentFieldIds(allFieldIds);
+
+        // 添加原始字段值（附件类型字段将ID替换为名称）
+        if (originResourceFields != null) {
+            originResourceFields.stream()
+                    .filter(BaseModuleFieldValue::valid)
+                    .forEach(field -> {
+                        Object value = field.getFieldValue();
+                        if (attachmentFieldIds.contains(field.getFieldId())) {
+                            value = replaceAttachmentIdsWithNames(value);
+                        }
+                        originResourceLog.put(field.getFieldId(), value);
+                    });
+        }
+
+        // 添加修改后的字段值（过滤无效字段，附件类型字段将ID替换为名称）
+        if (modifiedResourceFields != null) {
+            modifiedResourceFields.stream()
+                    .filter(BaseModuleFieldValue::valid)
+                    .forEach(field -> {
+                        Object value = field.getFieldValue();
+                        if (attachmentFieldIds.contains(field.getFieldId())) {
+                            value = replaceAttachmentIdsWithNames(value);
+                        }
+                        modifiedResourceLog.put(field.getFieldId(), value);
+                    });
         }
 
         try {
@@ -414,6 +468,10 @@ public class BaseService {
         Map<String, Object> originResourceLog = JSON.parseToMap(JSON.toJSONString(originResource));
         Map<String, Object> modifiedResourceLog = JSON.parseToMap(JSON.toJSONString(modifiedResource));
         Set<String> subRefKey = getSubTableRefIds(moduleFormConfigDTO);
+
+        // 从表单配置中获取附件类型字段ID集合
+        Set<String> attachmentFieldIds = getAttachmentFieldIdsFromFormConfig(moduleFormConfigDTO);
+
         if (CollectionUtils.isNotEmpty(originResourceFields)) {
             Map<String, String> oldFieldNameMap = getFieldNameMap(originResourceFields, moduleFormConfigDTO);
             List<BaseModuleFieldValue> validFields = originResourceFields.stream()
@@ -431,6 +489,10 @@ public class BaseService {
             Map<String, String> subTableIdKeyMap = getSubTableIdKeyMap(moduleFormConfigDTO);
             fillResourceLog(modifiedResourceLog, validFields, newFieldNameMap, subTableIdKeyMap, subTableKeyName, subRefKey, moduleFormConfigDTO);
         }
+
+        // 将附件字段中的附件ID替换为附件名称
+        replaceAttachmentValuesInLog(originResourceLog, attachmentFieldIds);
+        replaceAttachmentValuesInLog(modifiedResourceLog, attachmentFieldIds);
 
         try {
             OperationLogContext.setContext(
@@ -517,7 +579,7 @@ public class BaseService {
                 .toList());
         List<OptionDTO> fieldOptions = extModuleFieldMapper.getSourceOptionsByIds("sys_module_field", fieldIds);
         Map<String, String> nameMap = fieldOptions.stream()
-                .collect(Collectors.toMap(OptionDTO::getId, OptionDTO::getName));
+                .collect(Collectors.toMap(OptionDTO::getIdAsString, OptionDTO::getName));
 
         if (CollectionUtils.isNotEmpty(moduleFormConfigDTO.getFields())) {
             for (BaseField field : moduleFormConfigDTO.getFields()) {
@@ -580,7 +642,7 @@ public class BaseService {
         }
         return extCustomerMapper.getCustomerOptionsByIds(customerIds)
                 .stream()
-                .collect(Collectors.toMap(OptionDTO::getId, OptionDTO::getName));
+                .collect(Collectors.toMap(OptionDTO::getIdAsString, OptionDTO::getName));
     }
 
     /**
@@ -595,7 +657,7 @@ public class BaseService {
         }
         return extOpportunityMapper.getOpportunityOptionsByIds(opportunityIds)
                 .stream()
-                .collect(Collectors.toMap(OptionDTO::getId, OptionDTO::getName));
+                .collect(Collectors.toMap(OptionDTO::getIdAsString, OptionDTO::getName));
     }
 
 
@@ -611,7 +673,7 @@ public class BaseService {
         }
         return extClueMapper.selectOptionByIds(clueIds)
                 .stream()
-                .collect(Collectors.toMap(OptionDTO::getId, OptionDTO::getName));
+                .collect(Collectors.toMap(OptionDTO::getIdAsString, OptionDTO::getName));
 
     }
 
@@ -627,11 +689,190 @@ public class BaseService {
         }
         return extCustomerContactMapper.selectContactPhoneOptionByIds(contactIds)
                 .stream()
-                .collect(Collectors.toMap(OptionDTO::getId, OptionDTO::getName));
+                .collect(Collectors.toMap(OptionDTO::getIdAsString, OptionDTO::getName));
     }
 
     public String getAndCheckOptionName(String option) {
         return option == null ? Translator.get("common.option.not_exist") : option;
     }
 
+	/**
+	 * 获取审批中的业务资源是否第一个审批节点已通过
+	 * @param resourceIds 资源ID集合
+	 * @return 是否第一个审批节点已通过
+	 */
+	public Map<String, Boolean> getApprovingResourceFirstNodeApproved(List<String> resourceIds, String currentOrgId) {
+		if (CollectionUtils.isEmpty(resourceIds)) {
+			return Map.of();
+		}
+		Map<String, Boolean> firstNodeApproved = new HashMap<>(resourceIds.size());
+		List<ApprovalInstance> latestInstances = approvalInstanceService.getLatestInstances(resourceIds);
+		if (CollectionUtils.isEmpty(latestInstances)) {
+			return Map.of();
+		}
+		List<String> flowVersionIds = latestInstances.stream().map(ApprovalInstance::getFlowVersionId).distinct().toList();
+		List<ApprovalNodeLink> nodeLinks = nodeLinkMapper.selectListByLambda(new LambdaQueryWrapper<ApprovalNodeLink>().in(ApprovalNodeLink::getFlowVersionId, flowVersionIds));
+		List<ApprovalNode> allNodes = approvalNodeMapper.selectListByLambda(new LambdaQueryWrapper<ApprovalNode>().in(ApprovalNode::getFlowVersionId, flowVersionIds));
+		List<ApprovalTask> allTasks = approvalTaskMapper.selectListByLambda(new LambdaQueryWrapper<ApprovalTask>().in(ApprovalTask::getInstanceId, latestInstances.stream().map(ApprovalInstance::getId).toList()));
+		Map<String, String> nodeTypeMap = allNodes.stream().collect(Collectors.toMap(ApprovalNode::getId, ApprovalNode::getNodeType));
+		Map<String, List<String>> nodeLinkMap = nodeLinks.stream().filter(nodeLink -> nodeTypeMap.containsKey(nodeLink.getToNodeId()) && ApprovalNodeTypeEnum.valueOf(nodeTypeMap.get(nodeLink.getToNodeId())) != ApprovalNodeTypeEnum.END)
+				.collect(Collectors.groupingBy(ApprovalNodeLink::getToNodeId, Collectors.mapping(ApprovalNodeLink::getFromNodeId, Collectors.toList())));
+		latestInstances.forEach(latestInstance -> {
+			if (isFirstApproverNode(nodeLinkMap, nodeTypeMap, latestInstance.getCurrentNodeId())) {
+				// 当前审批实例处于第一个审批节点, 所以第一个节点为审批中
+				boolean multiApprover = approvalFlowService.isCurrentNodeMultiApprover(latestInstance.getCurrentNodeId(), latestInstance.getSubmitterId(), currentOrgId);
+				if (!multiApprover) {
+					// 单人审批, 判断是否存在加签通过
+					Integer nodeRound = extApprovalInstanceMapper.getNodeRound(latestInstance.getId(), latestInstance.getCurrentNodeId());
+					Optional<ApprovalTask> signApproved = allTasks.stream().filter(task -> Strings.CI.equals(task.getType(), ApprovalTaskType.SN.name()) && Strings.CI.equals(task.getNodeId(), latestInstance.getCurrentNodeId())
+							&& Strings.CI.equals(task.getInstanceId(), latestInstance.getId()) && nodeRound.equals(task.getNodeRound()) && Strings.CI.equals(task.getStatus(), ApprovalStatus.APPROVED.name())).findAny();
+					if (signApproved.isPresent()) {
+						firstNodeApproved.put(latestInstance.getResourceId(), true);
+						return;
+					}
+				}
+				firstNodeApproved.put(latestInstance.getResourceId(), false);
+			} else {
+				// 当前审批实例不是处于第一个审批节点, 所以第一个节点已完成
+				firstNodeApproved.put(latestInstance.getResourceId(), true);
+			}
+		});
+		return firstNodeApproved;
+	}
+
+
+	/**
+	 * 当前节点是否第一个审批节点
+	 * @param nodeLinkMap 节点链接信息(toNodeId -> fromNodeId列表)
+	 * @param nodeTypeMap 节点类型集合
+	 * @param currentNodeId 当前节点ID
+	 * @return 是否第一个审批节点
+	 */
+	private boolean isFirstApproverNode(Map<String, List<String>> nodeLinkMap, Map<String, String> nodeTypeMap, String currentNodeId) {
+		return isFirstApproverNodeRecursive(nodeLinkMap, nodeTypeMap, currentNodeId, new HashSet<>());
+	}
+
+	/**
+	 * 递归判断当前节点是否第一个审批节点
+	 * @param nodeLinkMap 节点链接信息
+	 * @param nodeTypeMap 节点类型集合
+	 * @param nodeId 当前节点ID
+	 * @param visited 已访问的节点集合(防止循环)
+	 * @return 是否第一个审批节点
+	 */
+	private boolean isFirstApproverNodeRecursive(Map<String, List<String>> nodeLinkMap, Map<String, String> nodeTypeMap, String nodeId, Set<String> visited) {
+		// 防止循环引用
+		if (visited.contains(nodeId)) {
+			return false;
+		}
+		visited.add(nodeId);
+
+		// 获取当前节点的前驱节点列表
+		List<String> preNodeIds = nodeLinkMap.get(nodeId);
+		if (CollectionUtils.isEmpty(preNodeIds)) {
+			// 没有前驱节点，说明是第一个审批节点
+			return true;
+		}
+
+		// 遍历所有前驱节点
+		for (String preNodeId : preNodeIds) {
+			if (StringUtils.isBlank(preNodeId)) {
+				continue;
+			}
+			String nodeType = nodeTypeMap.get(preNodeId);
+			if (StringUtils.isBlank(nodeType)) {
+				continue;
+			}
+			ApprovalNodeTypeEnum nodeTypeEnum = ApprovalNodeTypeEnum.valueOf(nodeType);
+			if (nodeTypeEnum == ApprovalNodeTypeEnum.START) {
+				// 找到 START 节点，说明当前节点不是第一个审批节点
+				return true;
+			}
+			if (nodeTypeEnum == ApprovalNodeTypeEnum.CONDITION || nodeTypeEnum == ApprovalNodeTypeEnum.DEFAULT) {
+				// 继续往前找
+				boolean isFirst = isFirstApproverNodeRecursive(nodeLinkMap, nodeTypeMap, preNodeId, visited);
+				if (isFirst) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * 从字段ID集合中筛选出附件类型的字段ID
+	 *
+	 * @param fieldIds 字段ID集合
+	 * @return 附件类型字段ID集合
+	 */
+	private Set<String> filterAttachmentFieldIds(Set<String> fieldIds) {
+		if (fieldIds.isEmpty()) {
+			return Collections.emptySet();
+		}
+		LambdaQueryWrapper<ModuleField> queryWrapper = new LambdaQueryWrapper<>();
+		queryWrapper.in(ModuleField::getId, new ArrayList<>(fieldIds))
+				.eq(ModuleField::getType, FieldType.ATTACHMENT.name());
+		List<ModuleField> attachmentFields = moduleFieldMapper.selectListByLambda(queryWrapper);
+		return attachmentFields.stream().map(ModuleField::getId).collect(Collectors.toSet());
+	}
+
+	/**
+	 * 将附件字段值中的附件ID替换为附件名称
+	 * 在记录操作日志时调用，确保即使附件被删除，日志中仍保留附件名称
+	 *
+	 * @param fieldValue 附件字段值（附件ID列表）
+	 * @return 替换为附件名称后的值
+	 */
+	private Object replaceAttachmentIdsWithNames(Object fieldValue) {
+		if (fieldValue == null) {
+			return null;
+		}
+		List<String> ids;
+		if (fieldValue instanceof List) {
+			ids = ((List<?>) fieldValue).stream().map(String::valueOf).toList();
+		} else {
+			ids = JSON.parseArray(fieldValue.toString(), String.class);
+		}
+		if (CollectionUtils.isEmpty(ids)) {
+			return fieldValue;
+		}
+		List<String> names = extAttachmentMapper.selectNameByIds(ids);
+		if (CollectionUtils.isNotEmpty(names)) {
+			return names;
+		}
+		return fieldValue;
+	}
+
+	/**
+	 * 从表单配置中获取附件类型字段ID集合
+	 *
+	 * @param formConfig 表单配置
+	 * @return 附件类型字段ID集合
+	 */
+	private Set<String> getAttachmentFieldIdsFromFormConfig(ModuleFormConfigDTO formConfig) {
+		if (formConfig == null || CollectionUtils.isEmpty(formConfig.getFields())) {
+			return Collections.emptySet();
+		}
+		return formConfig.getFields().stream()
+				.filter(field -> Strings.CS.equals(field.getType(), FieldType.ATTACHMENT.name()))
+				.map(BaseField::getId)
+				.collect(Collectors.toSet());
+	}
+
+	/**
+	 * 替换日志中附件字段的值（将附件ID替换为附件名称）
+	 *
+	 * @param resourceLog      日志数据
+	 * @param attachmentFieldIds 附件类型字段ID集合
+	 */
+	private void replaceAttachmentValuesInLog(Map<String, Object> resourceLog, Set<String> attachmentFieldIds) {
+		if (CollectionUtils.isEmpty(attachmentFieldIds) || resourceLog == null) {
+			return;
+		}
+		for (String fieldId : attachmentFieldIds) {
+			if (resourceLog.containsKey(fieldId)) {
+				resourceLog.put(fieldId, replaceAttachmentIdsWithNames(resourceLog.get(fieldId)));
+			}
+		}
+	}
 }

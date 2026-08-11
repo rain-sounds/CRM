@@ -12,7 +12,7 @@ export const logTypeOption = [
   },
   {
     value: OperationTypeEnum.UPDATE,
-    label: 'common.modify',
+    label: 'common.update',
   },
   {
     value: OperationTypeEnum.DELETE,
@@ -82,6 +82,12 @@ export const defaultNavList: ActionItem[] = [
     key: 'search',
     iconType: 'iconicon_search-outline_outlined',
     slotName: 'searchSlot',
+  },
+  {
+    label: t('system.message.todoList'),
+    key: 'task',
+    iconType: 'iconicon_contract',
+    slotName: 'taskSlot',
   },
   {
     label: t('menu.agent'),

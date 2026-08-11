@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia';
 import dayjs from 'dayjs';
 
+import { useI18n } from '@lib/shared/hooks/useI18n';
 import { LicenseInfo } from '@lib/shared/models/system/authorizedManagement';
 
 import { getLicense } from '@/api/modules';
+import type { DialogOptionsConfig } from '@/hooks/useModal';
 
 const useLicenseStore = defineStore('license', {
   persist: true,
@@ -25,7 +27,7 @@ const useLicenseStore = defineStore('license', {
       return this.licenseInfo?.status === 'valid';
     },
     isEnterpriseVersion() {
-      return this.licenseInfo?.status !== 'not_found';
+      return ['valid', 'expired'].includes(this.licenseInfo?.status || '');
     },
     getExpirationTime(resTime: string) {
       if (!this.isEnterpriseVersion()) {
@@ -88,6 +90,29 @@ const useLicenseStore = defineStore('license', {
         // eslint-disable-next-line no-console
         console.log(error);
       }
+    },
+    getNoLicenseModalConfig(): DialogOptionsConfig {
+      const { t } = useI18n();
+      return {
+        title: t('common.tip'),
+        type: 'warning',
+        positiveText: t('common.gotIt'),
+        positiveButtonProps: {
+          type: 'primary',
+        },
+        content: () =>
+          h('div', { class: 'flex flex-col gap-[8px]' }, [
+            t('common.businessFeatureTip'),
+            h(
+              'a',
+              { href: 'https://cordys.cn/pricing.html', target: '_blank', class: 'text-[var(--primary-8)]' },
+              { default: () => 'https://cordys.cn/pricing.html' }
+            ),
+          ]),
+        onPositiveClick: async () => {
+          return Promise.resolve();
+        },
+      };
     },
   },
 });

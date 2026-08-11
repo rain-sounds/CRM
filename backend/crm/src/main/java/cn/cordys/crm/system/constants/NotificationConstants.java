@@ -21,6 +21,9 @@ public class NotificationConstants {
         //客户管理
         @Schema(description = "message.customer")
         String CUSTOMER = "CUSTOMER";
+        //客户管理
+        @Schema(description = "message.approval")
+        String APPROVAL = "APPROVAL";
         //线索管理
         @Schema(description = "message.clue")
         String CLUE = "CLUE";
@@ -33,6 +36,9 @@ public class NotificationConstants {
         //合同管理
         @Schema(description = "message.contract")
         String CONTRACT = "CONTRACT";
+        //订单管理
+        @Schema(description = "message.order")
+        String ORDER = "ORDER";
         //系统
         @Schema(description = "message.system")
         String SYSTEM = "SYSTEM";
@@ -67,9 +73,9 @@ public class NotificationConstants {
         @Schema(description = "message.customer_follow_up_plan_due")
         String CUSTOMER_FOLLOW_UP_PLAN_DUE = "CUSTOMER_FOLLOW_UP_PLAN_DUE";
         //----线索管理----
-		//新建线索
-		@Schema(description = "message.clue_add")
-		String CLUE_ADD = "CLUE_ADD";
+        //新建线索
+        @Schema(description = "message.clue_add")
+        String CLUE_ADD = "CLUE_ADD";
         //自动移入线索池
         @Schema(description = "message.clue_automatic_move_pool")
         String CLUE_AUTOMATIC_MOVE_POOL = "CLUE_AUTOMATIC_MOVE_POOL";
@@ -95,9 +101,9 @@ public class NotificationConstants {
         @Schema(description = "message.clue_follow_up_plan_due")
         String CLUE_FOLLOW_UP_PLAN_DUE = "CLUE_FOLLOW_UP_PLAN_DUE";
         //-------项目管理----
-		//新建项目
-		@Schema(description = "message.business_add")
-		String BUSINESS_ADD = "BUSINESS_ADD";
+        //新建项目
+        @Schema(description = "message.business_add")
+        String BUSINESS_ADD = "BUSINESS_ADD";
         //项目删除
         @Schema(description = "message.business_deleted")
         String BUSINESS_DELETED = "BUSINESS_DELETED";
@@ -145,7 +151,20 @@ public class NotificationConstants {
         @Schema(description = "message.sync_organization_structure")
         String SYNC_ORGANIZATION_STRUCTURE = "SYNC_ORGANIZATION_STRUCTURE";
 
+        @Schema(description = "message.contract_approval")
+        String CONTRACT_APPROVAL = "CONTRACT_APPROVAL";
 
+        @Schema(description = "message.order_approval")
+        String ORDER_APPROVAL = "ORDER_APPROVAL";
+
+        @Schema(description = "message.invoice_approval")
+        String INVOICE_APPROVAL = "INVOICE_APPROVAL";
+
+		@Schema(description = "message.approval_todo")
+		String APPROVAL_TODO = "APPROVAL_TODO";
+
+		@Schema(description = "message.approval_cc")
+		String APPROVAL_CC = "APPROVAL_CC";
     }
 
     public interface RelatedUser {
@@ -193,9 +212,9 @@ public class NotificationConstants {
         @Schema(description = "message.customer_follow_up_plan_due_text")
         String CUSTOMER_FOLLOW_UP_PLAN_DUE_TEXT = "CUSTOMER_FOLLOW_UP_PLAN_DUE_TEXT";
 
-		//请注意！${OPERATOR}新建${customerName}线索给您，请知悉！
-		@Schema(description = "message.clue_add_text")
-		String CLUE_ADD_TEXT = "CLUE_ADD_TEXT";
+        //请注意！${OPERATOR}新建${customerName}线索给您，请知悉！
+        @Schema(description = "message.clue_add_text")
+        String CLUE_ADD_TEXT = "CLUE_ADD_TEXT";
 
         //请注意！根据系统规则，您负责的${clueName}的销售线索，已被移入线索池！
         @Schema(description = "message.clue_automatic_move_pool_text")
@@ -229,9 +248,9 @@ public class NotificationConstants {
         @Schema(description = "message.clue_follow_up_plan_due_text")
         String CLUE_FOLLOW_UP_PLAN_DUE_TEXT = "CLUE_FOLLOW_UP_PLAN_DUE_TEXT";
 
-		//请注意！${OPERATOR}新建${customerName}客户给您，请知悉！
-		@Schema(description = "message.business_add_text")
-		String BUSINESS_ADD_TEXT = "BUSINESS_ADD_TEXT";
+        //请注意！${OPERATOR}新建${customerName}客户给您，请知悉！
+        @Schema(description = "message.business_add_text")
+        String BUSINESS_ADD_TEXT = "BUSINESS_ADD_TEXT";
 
         //请注意！您负责的${businessName}项目，已被${OPERATOR}删除！
         @Schema(description = "message.business_deleted_text")
@@ -244,10 +263,6 @@ public class NotificationConstants {
         //请注意！您创建的${businessName}项目跟进计划，已到预定时间，请及时跟进！
         @Schema(description = "message.business_follow_up_plan_due_text")
         String BUSINESS_FOLLOW_UP_PLAN_DUE_TEXT = "BUSINESS_FOLLOW_UP_PLAN_DUE_TEXT";
-
-        //${OPERATOR}审批了${name}报价单，审批结果为${state}
-        @Schema(description = "message.business_quotation_approval_text")
-        String BUSINESS_QUOTATION_APPROVAL_TEXT = "BUSINESS_QUOTATION_APPROVAL_TEXT";
 
         //${OPERATOR}删除了${name}报价单
         @Schema(description = "message.business_quotation_deleted_text")
@@ -287,6 +302,24 @@ public class NotificationConstants {
         //同步组织架构完成
         @Schema(description = "message.sync_organization_structure_text")
         String SYNC_ORGANIZATION_STRUCTURE_TEXT = "SYNC_ORGANIZATION_STRUCTURE_TEXT";
+
+        @Schema(description = "message.approval_result_text")
+        String CONTRACT_APPROVAL_TEXT = "CONTRACT_APPROVAL_TEXT";
+
+        @Schema(description = "message.approval_result_text")
+        String ORDER_APPROVAL_TEXT = "ORDER_APPROVAL_TEXT";
+
+        @Schema(description = "message.approval_result_text")
+        String INVOICE_APPROVAL_TEXT = "INVOICE_APPROVAL_TEXT";
+
+        @Schema(description = "message.approval_result_text")
+        String BUSINESS_QUOTATION_APPROVAL_TEXT = "BUSINESS_QUOTATION_APPROVAL_TEXT";
+
+		@Schema(description = "message.approval_todo_text")
+		String APPROVAL_TODO_TEXT = "APPROVAL_TODO_TEXT";
+
+		@Schema(description = "message.approval_cc_text")
+		String APPROVAL_CC_TEXT = "APPROVAL_CC_TEXT";
     }
 
 

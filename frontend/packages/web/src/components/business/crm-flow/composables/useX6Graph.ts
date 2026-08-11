@@ -5,6 +5,7 @@ import { Graph, Selection } from '@antv/x6';
 
 interface CreateGraphOptions {
   container: HTMLElement;
+  resizeTarget?: HTMLElement;
 }
 
 const MIN_SCALE = 0.5;
@@ -20,6 +21,7 @@ function clampScale(value: number): number {
 export default function useX6Graph() {
   let graph: Graph | null = null;
   let resizeObserver: ResizeObserver | null = null;
+  let unbindWheelPan: (() => void) | null = null;
   let panMode = false;
 
   function createGraph(options: CreateGraphOptions): FlowGraphController {
@@ -29,6 +31,8 @@ export default function useX6Graph() {
     // 重建前先释放旧资源，避免事件和 observer 泄漏
     resizeObserver?.disconnect();
     resizeObserver = null;
+    unbindWheelPan?.();
+    unbindWheelPan = null;
     graph?.dispose();
 
     graph = new Graph({
@@ -76,11 +80,31 @@ export default function useX6Graph() {
 
     graph.centerContent(); // 画布内容居中显示
 
+    // 触控板双指移动在浏览器里表现为 wheel 事件。
+    // 无 Ctrl/⌘ 时把 wheel 转成画布平移；有 Ctrl/⌘ 时保留 X6 内置缩放逻辑。
+    const handleWheelPan = (event: WheelEvent) => {
+      if (!graph || event.ctrlKey || event.metaKey) {
+        return;
+      }
+
+      event.preventDefault();
+
+      const deltaX = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? event.deltaX * 16 : event.deltaX;
+      const deltaY = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? event.deltaY * 16 : event.deltaY;
+      graph.translateBy(-deltaX, -deltaY);
+    };
+
+    options.container.addEventListener('wheel', handleWheelPan, { passive: false });
+    unbindWheelPan = () => {
+      options.container.removeEventListener('wheel', handleWheelPan);
+    };
+
     const resizeGraph = () => {
       if (!graph) {
         return;
       }
-      const { clientWidth, clientHeight } = options.container;
+      const resizeSource = options.resizeTarget ?? options.container;
+      const { clientWidth, clientHeight } = resizeSource;
       if (!clientWidth || !clientHeight) {
         return;
       }
@@ -92,7 +116,7 @@ export default function useX6Graph() {
       resizeObserver = new ResizeObserver(() => {
         resizeGraph();
       });
-      resizeObserver.observe(options.container);
+      resizeObserver.observe(options.resizeTarget ?? options.container);
     }
 
     const controller: FlowGraphController = {
@@ -164,6 +188,8 @@ export default function useX6Graph() {
       dispose() {
         resizeObserver?.disconnect();
         resizeObserver = null;
+        unbindWheelPan?.();
+        unbindWheelPan = null;
         graph?.dispose();
         graph = null;
         panMode = false;

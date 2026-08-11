@@ -4,6 +4,22 @@
       <div v-for="item of props.description" :key="item.label" class="crm-description-item">
         <slot :name="item.slotName" :item="item">
           <div v-if="item.isTitle" class="crm-description-title">{{ item.label }}</div>
+          <div
+            v-else-if="
+              item.fieldInfo && [FieldTypeEnum.SUB_PRICE, FieldTypeEnum.SUB_PRODUCT].includes(item.fieldInfo.type)
+            "
+            class="flex w-full flex-wrap"
+          >
+            <div class="crm-description-label mb-[16px]">{{ item.label }}</div>
+            <CrmSubTable
+              v-if="item.fieldInfo?.subFields?.length"
+              :data="item.value as Record<string,any>[]"
+              :sub-fields="item.fieldInfo?.subFields || []"
+              :option-map="item.optionMap"
+              :sum-columns="item.fieldInfo?.sumColumns"
+            />
+            <div v-else>-</div>
+          </div>
           <template v-else>
             <div class="crm-description-label">{{ item.label }}</div>
             <div class="crm-description-value">
@@ -29,7 +45,11 @@
                     />
                   </template>
                 </template>
-                <div v-else-if="item.isAttachment" class="text-[var(--primary-8)]" @click="handleAttachmentClick(item)">
+                <div
+                  v-else-if="item.isAttachment && (item.value as any[])?.length"
+                  class="text-[var(--primary-8)]"
+                  @click="handleAttachmentClick(item)"
+                >
                   {{ t('crm.description.attachment', { count: (item.value as any[])?.length }) }}
                 </div>
                 <div v-else-if="item.isLink" class="text-[var(--primary-8)]" @click="openLink(item)">
@@ -55,8 +75,10 @@
 
   import CrmTag from '@/components/pure/crm-tag/index.vue';
   import CrmFileListPop from '@/components/business/crm-file-list-pop/index.vue';
+  import CrmSubTable from '@/components/pure/crm-sub-table/index.vue';
 
-  import { AttachmentInfo } from '@cordys/web/src/components/business/crm-form-create/types';
+  import { AttachmentInfo, type FormCreateField } from '@cordys/web/src/components/business/crm-form-create/types';
+  import { FieldTypeEnum } from '@lib/shared/enums/formDesignEnum';
 
   export interface CrmDescriptionItem {
     label: string;
@@ -67,6 +89,8 @@
     slotName?: string;
     valueSlotName?: string;
     isAttachment?: boolean;
+    fieldInfo?: FormCreateField;
+    optionMap?: Record<string, any>;
     [key: string]: any;
   }
 
@@ -114,8 +138,7 @@
       color: var(--text-n1);
     }
     .crm-description-label {
-      @apply break-words;
-
+      word-break: break-all;
       width: 20%;
       font-size: 14px;
       color: var(--text-n2);

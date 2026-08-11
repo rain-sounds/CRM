@@ -25,7 +25,7 @@
       :multiple="[FieldTypeEnum.MEMBER_MULTIPLE, FieldTypeEnum.DEPARTMENT_MULTIPLE].includes(fieldConfig.type)"
       :drawer-title="t('crmFormDesign.selectDataSource', { type: props.fieldConfig.name })"
       :api-type-key="MemberApiTypeEnum.FORM_FIELD"
-      :disabled="props.fieldConfig.editable === false || !!props.fieldConfig.resourceFieldId"
+      :disabled="props.fieldConfig.editable === false || props.disabled || !!props.fieldConfig.resourceFieldId"
       :member-types="memberTypes"
       :disabled-node-types="
         [FieldTypeEnum.MEMBER, FieldTypeEnum.MEMBER_MULTIPLE].includes(props.fieldConfig.type)
@@ -63,9 +63,11 @@
     isSubTableRender?: boolean; // 是否是子表渲染
     isDescriptionRender?: boolean; // 是否是描述渲染
     feedback?: string;
+    disabled?: boolean;
   }>();
   const emit = defineEmits<{
     (e: 'change', value: string | number | (string | number)[]): void;
+    (e: 'changeOptions', value: SelectedUsersItem[]): void;
   }>();
 
   const { t } = useI18n();
@@ -109,12 +111,15 @@
     () => props.fieldConfig.initialOptions,
     (val) => {
       if ([FieldTypeEnum.MEMBER_MULTIPLE, FieldTypeEnum.DEPARTMENT_MULTIPLE].includes(props.fieldConfig.type)) {
-        selectedUsers.value = val as SelectedUsersItem[];
+        selectedUsers.value = cloneDeep(val as SelectedUsersItem[]);
       } else if (Array.isArray(val) && val.length) {
-        selectedUsers.value = [val[0]];
+        selectedUsers.value = [
+          val.find((item) => (item as SelectedUsersItem).id === value.value) as SelectedUsersItem,
+        ].filter(Boolean);
       } else {
-        selectedUsers.value = val || [];
+        selectedUsers.value = cloneDeep(val || []);
       }
+      selectedUsers.value = selectedUsers.value?.filter((item) => (value.value as string[]).includes(item.id));
     },
     {
       immediate: true,
@@ -133,9 +138,11 @@
           ? ids
           : ids[0]
       );
+      emit('changeOptions', selectedUsers.value);
     } else {
       value.value = [];
       emit('change', []);
+      emit('changeOptions', []);
     }
   }
 

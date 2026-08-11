@@ -1,14 +1,16 @@
 <template>
   <CrmDrawer
     v-model:show="visible"
-    width="75%"
+    :width="props.width"
+    :min-width="props.minWidth"
     :footer="false"
     :closable="false"
     :close-on-esc="false"
+    :mask-closable="false"
     :loading="loading"
     header-class="crm-process-drawer-header"
     body-content-class="!p-0"
-    @cancel="handleCancel"
+    @mask-click="handleCancel"
   >
     <template #header>
       <div class="crm-process-drawer-header-content">
@@ -36,23 +38,33 @@
             no-content
             :tab-list="props.tabList"
             type="line"
+            :before-leave="props.beforeChangeTab"
           />
         </div>
         <div class="crm-process-drawer-header-item flex justify-end gap-[12px]">
-          <slot name="headerActions">
+          <slot v-if="!props.readonly" name="headerActions">
             <n-button type="primary" ghost class="n-btn-outline-primary" @click="handleCancel">
               {{ t('common.cancel') }}
             </n-button>
             <n-button
+              v-if="activeTab !== props.tabList[0].name"
               type="primary"
               ghost
               class="n-btn-outline-primary"
-              :disabled="activeTab === props.tabList[props.tabList.length - 1].name"
-              @click="() => emit('nextStep')"
+              @click="() => emit('changeStep', 'prev')"
+            >
+              {{ t('common.lastStep') }}
+            </n-button>
+            <n-button
+              v-if="activeTab !== props.tabList[props.tabList.length - 1].name"
+              type="primary"
+              ghost
+              class="n-btn-outline-primary"
+              @click="() => emit('changeStep', 'next')"
             >
               {{ t('common.nextStep') }}
             </n-button>
-            <n-button type="primary" @click="() => emit('save')">
+            <n-button type="primary" :loading="loading" @click="() => emit('save')">
               {{ t('common.save') }}
             </n-button>
           </slot>
@@ -77,14 +89,25 @@
 
   const { t } = useI18n();
 
-  const props = defineProps<{
-    tabList: CrmTabListItem[];
-    title?: string;
-  }>();
+  const props = withDefaults(
+    defineProps<{
+      tabList: CrmTabListItem[];
+      loading: boolean;
+      title?: string;
+      readonly?: boolean;
+      width?: string | number;
+      minWidth?: number;
+      beforeChangeTab?: (newVal: string | number, oldVal: string | number | null) => boolean | Promise<boolean>;
+    }>(),
+    {
+      width: '75%',
+      minWidth: 800,
+    }
+  );
 
   const emit = defineEmits<{
     (e: 'save'): void;
-    (e: 'nextStep'): void;
+    (e: 'changeStep', type: 'prev' | 'next'): void;
     (e: 'cancel'): void;
   }>();
 
@@ -96,11 +119,8 @@
     default: '',
   });
 
-  const loading = ref(false);
-
   function handleCancel() {
     emit('cancel');
-    visible.value = false;
   }
 
   watchEffect(() => {

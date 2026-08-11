@@ -59,8 +59,9 @@
       const codeKey = isDingBrowser ? 'authCode' : 'code';
       const authParams = isDingBrowser ? ['code', 'authCode', 'state'] : ['code', 'state'];
       const code = getQueryVariable(codeKey);
+      const state = getQueryVariable('state') ?? '';
       if (code) {
-        const res = await getThirdOauthCallback(code, type);
+        const res = await getThirdOauthCallback(code, type, state);
         const boolean = userStore.qrCodeLogin(res.data.data);
         if (boolean) {
           setLoginExpires();
@@ -107,7 +108,7 @@
     const isLark =
       navigator.userAgent.includes('feishu') ||
       navigator.userAgent.includes('lark') ||
-      getQueryVariable('state') === 'LARK';
+      getQueryVariable('state')?.startsWith('lark.') === true;
     if (!hasToken()) {
       if (isWXWork) {
         await handleOauthLogin('wecom', CompanyTypeEnum.WE_COM_OAUTH2, false);
@@ -163,7 +164,11 @@
   onMounted(() => {
     adjustOSTheme();
     window.onerror = (_message) => {
-      if (typeof _message === 'string' && _message.includes('Failed to fetch dynamically imported')) {
+      if (
+        typeof _message === 'string' &&
+        (_message.includes('Failed to fetch dynamically imported') ||
+          _message.includes('error loading dynamically imported module'))
+      ) {
         showUpdateMessage();
       }
     };
@@ -173,7 +178,8 @@
         event &&
         event.reason &&
         event.reason.message &&
-        event.reason.message.includes('Failed to fetch dynamically imported')
+        (event.reason.message.includes('Failed to fetch dynamically imported') ||
+          event.reason.message.includes('error loading dynamically imported module'))
       ) {
         showUpdateMessage();
       }

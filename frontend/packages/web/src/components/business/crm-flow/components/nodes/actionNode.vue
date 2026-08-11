@@ -1,13 +1,18 @@
 <template>
   <BaseFlowNode
     :name="nodeData.name ?? ''"
+    :number="nodeData.number"
     :description="nodeData.description"
+    :description-items="nodeData.descriptionItems"
     :show-content="nodeData.showContent ?? true"
     :selected="Boolean(nodeData.selected)"
+    :invalid="Boolean(nodeData.invalid)"
     node-type="action"
     :icon="iconConfig"
-    deletable
+    :title-editable="Boolean(!nodeData.isPanMode && !nodeData.readonly)"
+    :deletable="!nodeData.readonly"
     @delete="handleDelete"
+    @title-edit="handleTitleEdit"
   />
 </template>
 
@@ -17,6 +22,8 @@
   import BaseFlowNode from './baseFlowNode.vue';
 
   import useX6NodeData from '../../composables/useX6NodeData';
+  import { renameFlowByGraphData } from '../../graph/renameRegistry';
+  import type { FlowNodeDescriptionItem } from '../../types';
   import type { Node } from '@antv/x6';
 
   defineOptions({
@@ -44,11 +51,18 @@
   }>();
 
   const { nodeData } = useX6NodeData<{
+    kind: 'action';
+    nodeId?: string;
     name?: string;
+    number?: string;
     description?: string;
+    descriptionItems?: FlowNodeDescriptionItem[];
     actionType?: string;
     showContent?: boolean;
     selected?: boolean;
+    invalid?: boolean;
+    readonly?: boolean;
+    isPanMode?: boolean;
   }>(toRef(props, 'node'));
 
   const iconConfig = computed<ActionIconConfig>(() => {
@@ -58,5 +72,16 @@
 
   function handleDelete() {
     emit('delete');
+  }
+
+  function handleTitleEdit(value: string, done?: () => void) {
+    const data = nodeData.value;
+    renameFlowByGraphData(data, value);
+    props.node?.setData?.({
+      ...data,
+      name: value,
+      invalid: false,
+    });
+    done?.();
   }
 </script>

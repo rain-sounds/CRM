@@ -34,6 +34,14 @@ public enum ModuleKey {
      */
     OUTSOURCING("outsourcing");
 
+
+    /**
+     * *******************************************
+     * 注意：
+     *      新增菜单不要在moduleKey中添加了
+     * *******************************************
+     */
+
     private final String key;
 
     ModuleKey(String key) {

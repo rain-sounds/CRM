@@ -1,12 +1,11 @@
 package cn.cordys.crm.order.controller;
 
+import cn.cordys.common.constants.FormKey;
 import cn.cordys.common.constants.PermissionConstants;
+import cn.cordys.common.dto.stage.*;
 import cn.cordys.context.OrganizationContext;
-import cn.cordys.crm.opportunity.dto.request.StageRollBackRequest;
-import cn.cordys.crm.order.dto.request.OrderStageAddRequest;
-import cn.cordys.crm.order.dto.request.OrderStageUpdateRequest;
-import cn.cordys.crm.order.dto.response.OrderStageConfigListResponse;
 import cn.cordys.crm.order.service.OrderStageService;
+import cn.cordys.crm.system.service.StageAdvancedConfigService;
 import cn.cordys.security.SessionUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,10 +23,12 @@ public class OrderStageController {
 
     @Resource
     private OrderStageService orderStageService;
+    @Resource
+    private StageAdvancedConfigService stageAdvancedConfigService;
 
     @GetMapping("/get")
     @Operation(summary = "订单状态配置列表")
-    public OrderStageConfigListResponse getStageConfigList() {
+    public StageConfigsResponse getStageConfigList() {
         return orderStageService.getStageConfigList(OrganizationContext.getOrganizationId());
     }
 
@@ -35,7 +36,7 @@ public class OrderStageController {
     @PostMapping("/add")
     @Operation(summary = "添加订单状态流")
     @RequiresPermissions(value = {PermissionConstants.MODULE_SETTING_UPDATE})
-    public String add(@RequestBody OrderStageAddRequest request) {
+    public String add(@RequestBody StageAddRequest request) {
         return orderStageService.addStageConfig(request, SessionUtils.getUserId(), OrganizationContext.getOrganizationId());
     }
 
@@ -59,7 +60,7 @@ public class OrderStageController {
     @PostMapping("/update")
     @Operation(summary = "更新订单阶段配置")
     @RequiresPermissions(value = {PermissionConstants.MODULE_SETTING_UPDATE})
-    public void update(@Validated @RequestBody OrderStageUpdateRequest request) {
+    public void update(@Validated @RequestBody StageUpdateRequest request) {
         orderStageService.update(request, SessionUtils.getUserId());
     }
 
@@ -70,4 +71,22 @@ public class OrderStageController {
     public void sort(@RequestBody List<String> ids) {
         orderStageService.sort(ids, OrganizationContext.getOrganizationId());
     }
+
+
+    @GetMapping("/circulation-type/{type}")
+    @Operation(summary = "基础/高级流转切换")
+    @RequiresPermissions(value = {PermissionConstants.MODULE_SETTING_UPDATE})
+    public void circulationType(@PathVariable String type) {
+        stageAdvancedConfigService.switchType(type, FormKey.ORDER.getKey(), OrganizationContext.getOrganizationId());
+    }
+
+
+    @PostMapping("/advanced/config")
+    @Operation(summary = "订单流转配置保存")
+    @RequiresPermissions(value = {PermissionConstants.MODULE_SETTING_UPDATE})
+    public void advancedConfigAdd(@RequestBody StageAdvancedConfigRequest request) {
+        stageAdvancedConfigService.saveAdvancedConfig(request, FormKey.ORDER.getKey(), OrganizationContext.getOrganizationId(), SessionUtils.getUserId());
+    }
+
+
 }

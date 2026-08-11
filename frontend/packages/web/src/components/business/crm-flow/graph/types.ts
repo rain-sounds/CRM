@@ -1,4 +1,4 @@
-import type { FlowNodeType } from '../types';
+import type { FlowNodeDescriptionItem, FlowNodeType } from '../types';
 import type { Graph } from '@antv/x6';
 
 export type FlowGraphDataKind = 'start' | 'action' | 'end' | 'condition-branch' | 'add-condition' | 'add-node';
@@ -6,15 +6,21 @@ export type FlowGraphDataKind = 'start' | 'action' | 'end' | 'condition-branch' 
 export interface FlowGraphNodeData {
   kind: FlowGraphDataKind; // 图层节点种类：既包含 DSL 节点，也包含 add-node 等图层辅助节点
   nodeId?: string; // 对应 DSL 节点 id（主链节点）
+  number?: string;
   nodeType?: FlowNodeType; // 锚点业务节点类型（常用于 add-node 场景下识别来源节点类型）
   groupId?: string; // 条件组 id（condition-group）
   branchId?: string; // 条件分支 id（if / else 分支）
   name?: string;
   description?: string;
+  sort?: number;
+  descriptionItems?: FlowNodeDescriptionItem[];
   actionType?: string; // 动作节点的扩展类型（如 approval）。
   showContent?: boolean; // 当前视图模式下是否显示节点第二行内容（description）
   isElse?: boolean;
   selected?: boolean; // 选中
+  invalid?: boolean; // 校验异常
+  readonly?: boolean; // 详情态只读
+  isPanMode?: boolean; // 画布是否处于拖拽模式（true 时禁用节点标题编辑等交互）
 }
 
 export interface FlowGraphLayoutNode {

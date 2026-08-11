@@ -18,6 +18,7 @@
       </div>
       <div class="flex items-center gap-[4px]">
         <CrmPopConfirm
+          v-if="!props.readonly"
           :title="t('crm.fileListModal.deleteTipTitle')"
           icon-type="error"
           :content="t('crm.fileListModal.deleteTipContent')"
@@ -30,10 +31,10 @@
           <n-button :disabled="props.readonly" type="error" text>{{ t('common.delete') }}</n-button>
         </CrmPopConfirm>
         <template v-if="/(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(file.type)">
-          <n-divider vertical />
+          <n-divider v-if="!props.readonly" vertical />
           <n-button type="default" text @click="handlePreview(file)">{{ t('common.preview') }}</n-button>
         </template>
-        <n-divider vertical />
+        <n-divider v-if="/(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(file.type) || !props.readonly" vertical />
         <n-button type="default" text @click="handleDownload(file)">{{ t('common.download') }}</n-button>
       </div>
     </div>
@@ -53,6 +54,7 @@
   import CrmPopConfirm from '@/components/pure/crm-pop-confirm/index.vue';
 
   import { downloadAttachment } from '@/api/modules';
+  import useUserStore from '@/store/modules/user';
 
   import { AttachmentInfo } from '../crm-form-create/types';
 
@@ -66,6 +68,7 @@
 
   const Message = useMessage();
   const { t } = useI18n();
+  const userStore = useUserStore();
 
   async function handleDelete(file: AttachmentInfo, close: () => void) {
     close();
@@ -75,7 +78,7 @@
   const showPreview = ref(false);
   const previewSrc = ref('');
   function handlePreview(file: AttachmentInfo) {
-    previewSrc.value = `${PreviewAttachmentUrl}/${file.id}`;
+    previewSrc.value = `${PreviewAttachmentUrl}/${file.id}?userId=${userStore.userInfo.id}`;
     showPreview.value = true;
   }
 
@@ -109,5 +112,6 @@
     border: 1px solid var(--text-n8);
     border-radius: var(--border-radius-small);
     background-color: var(--text-n10);
+    gap: 8px;
   }
 </style>

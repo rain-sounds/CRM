@@ -5,6 +5,7 @@ import useAgentApi from '@lib/shared/api/modules/agent';
 import useClueApi from '@lib/shared/api/modules/clue';
 import useContractApi from '@lib/shared/api/modules/contract';
 import useCustomerApi from '@lib/shared/api/modules/customer';
+import useCustomFormApi from '@lib/shared/api/modules/customForm';
 import useFollowApi from '@lib/shared/api/modules/follow';
 import useOpportunityApi from '@lib/shared/api/modules/opportunity';
 import useOrderApi from '@lib/shared/api/modules/order';
@@ -15,6 +16,7 @@ import useLoginApi from '@lib/shared/api/modules/system/login';
 import useMessageApi from '@lib/shared/api/modules/system/message';
 import useModuleApi from '@lib/shared/api/modules/system/module';
 import useOrgApi from '@lib/shared/api/modules/system/org';
+import useProcess from '@lib/shared/api/modules/system/process';
 
 import checkStatus from '../http/checkStatus';
 
@@ -37,6 +39,7 @@ const followApi = useFollowApi(CDR);
 const contractApi = useContractApi(CDR);
 const orderApi = useOrderApi(CDR);
 const agentApi = useAgentApi(CDR);
+const processApi = useProcess(CDR);
 
 export const {
   getFollowPlanDetail,
@@ -381,6 +384,7 @@ export const {
   getFieldCustomerList,
   getFieldOpportunityList,
   getFieldContractList,
+  getFieldInvoiceList,
   getFieldProductList,
   checkRepeat,
   uploadTempFile,
@@ -398,6 +402,7 @@ export const {
   getFieldContractPaymentPlanList,
   getFieldContractPaymentRecordList,
   getFieldBusinessTitleList,
+  getDatasourceFieldConfig,
 } = moduleApi;
 
 export const {
@@ -413,8 +418,46 @@ export const {
   getApiKeyList,
 } = businessApi;
 
-export const { isLogin, signout, getKey, login, getThirdOauthCallback, getThirdCallback } = loginApi;
+export const { isLogin, signout, getKey, login, getThirdOauthCallback, getThirdCallback, getOauthState } = loginApi;
 
 export const { getLicense, addLicense } = licenseApi;
 
 export const { getAgentOptions } = agentApi;
+
+export const {
+  getCustomFormAdmins,
+  getCustomFormDataDetail,
+  getCustomFormDataPage,
+  getCustomFormDetail,
+  getCustomFormList,
+  getCustomFormRoles,
+  getCustomFormRoleUsers,
+  addCustomForm,
+  addCustomFormData,
+  saveCustomFormAdmins,
+  updateCustomForm,
+  updateCustomFormData,
+  batchUpdateCustomFormData,
+  batchDeleteCustomFormData,
+  deleteCustomFormData,
+} = useCustomFormApi(CDR);
+
+export const {
+  getTodoStatistic,
+  addApprovalProcess,
+  getPendingApprovalList,
+  getProcessedApprovalList,
+  getInitiatedApprovalList,
+  getCcApprovalList,
+  getApprovalConfigDetail,
+  agreeApproval,
+  rejectApproval,
+  batchAgreeApproval,
+  batchRejectApproval,
+  getApprovalResourceDetail,
+  backApproval,
+  addSignApproval,
+  revokeApproval,
+  revokeResource,
+  reviewResource,
+} = processApi;

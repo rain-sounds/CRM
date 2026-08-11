@@ -2,7 +2,6 @@ import dayjs from 'dayjs';
 
 import { OperatorEnum } from '@lib/shared/enums/commonEnum';
 import { FieldTypeEnum } from '@lib/shared/enums/formDesignEnum';
-import { QuotationStatusEnum } from '@lib/shared/enums/opportunityEnum';
 import { useI18n } from '@lib/shared/hooks/useI18n';
 import { getSessionStorageTempState } from '@lib/shared/method/local-storage';
 import type { TransferParams } from '@lib/shared/models/customer/index';
@@ -98,11 +97,34 @@ export const getOptHomeConditions = async (
 
 export const quotationStatus = [
   {
-    value: QuotationStatusEnum.NORMAL,
+    value: false,
     label: t('common.normal'),
   },
   {
-    value: QuotationStatusEnum.VOIDED,
+    value: true,
     label: t('common.voided'),
   },
 ];
+
+export const quotationDataActionMap = {
+  edit: {
+    label: t('common.edit'),
+    key: 'edit',
+    permission: ['OPPORTUNITY_QUOTATION:UPDATE'],
+  },
+  download: {
+    label: t('common.download'),
+    key: 'download',
+    permission: ['OPPORTUNITY_QUOTATION:DOWNLOAD'],
+  },
+  voided: {
+    label: t('common.voided'),
+    key: 'voided',
+    permission: ['OPPORTUNITY_QUOTATION:VOIDED'],
+  },
+  delete: {
+    label: t('common.delete'),
+    key: 'delete',
+    permission: ['OPPORTUNITY_QUOTATION:DELETE'],
+  },
+};

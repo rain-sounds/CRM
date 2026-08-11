@@ -7,42 +7,58 @@
         <template #trigger>
           <n-upload
             v-model:file-list="fileList"
+            :custom-request="customRequest"
             :multiple="props.multiple"
             class="crm-file-input-upload"
             :show-file-list="false"
             :max="10"
+            directory-dnd
             @change="({ file, fileList }) => handleFileChange(file as CrmFileItem, fileList as CrmFileItem[])"
-            @before-upload="({ file, fileList })=>beforeUpload(file as CrmFileItem, fileList as CrmFileItem[])"
+            @before-upload="({ file, fileList }) => beforeUpload(file as CrmFileItem, fileList as CrmFileItem[])"
+            @update-file-list="handleFileListChange"
           >
             <CrmIcon type="iconicon_link1" :size="16" class="text-[var(--text-n4)]" />
           </n-upload>
         </template>
-        {{ t('crmFormDesign.file') }}
+        {{ fileList.length === 10 ? t('crm.approval.fileLimitTip') : t('crmFormDesign.file') }}
       </n-tooltip>
     </div>
     <n-input
-      v-model="value"
+      v-model:value="value"
       type="textarea"
       :maxlength="300"
       :autosize="{
         minRows: 3,
       }"
+      :status="valueStatus"
       class="crm-file-input"
       resizable
       clearable
-      show-count
     />
-    <CrmFileList
-      v-if="fileList.length > 0"
-      :files="fileList as unknown as AttachmentInfo[]"
-      class="mt-[8px]"
-      @deleteFile="handleDeleteFile"
-    />
+    <div class="flex justify-end text-[var(--text-n4)]">{{ value.length }}/300</div>
+    <span v-if="valueStatus === 'error'" class="text-[var(--error-red)]">
+      {{ t('common.notNull', { value: props.name }) }}
+    </span>
+    <n-scrollbar :content-style="{ maxHeight: '400px' }" class="mt-[8px]">
+      <CrmFileList
+        v-if="fileList.length > 0"
+        :files="fileList as unknown as AttachmentInfo[]"
+        @deleteFile="handleDeleteFile"
+      />
+    </n-scrollbar>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { NInput, NTooltip, NUpload, type UploadFileInfo, useMessage } from 'naive-ui';
+  import {
+    NInput,
+    NScrollbar,
+    NTooltip,
+    NUpload,
+    type UploadCustomRequestOptions,
+    type UploadFileInfo,
+    useMessage,
+  } from 'naive-ui';
 
   import { useI18n } from '@lib/shared/hooks/useI18n';
 
@@ -50,6 +66,8 @@
   import { getFileEnum } from '@/components/pure/crm-upload/iconMap';
   import type { CrmFileItem } from '@/components/pure/crm-upload/types';
   import CrmFileList from '../crm-file-list/index.vue';
+
+  import { uploadTempAttachment } from '@/api/modules';
 
   import type { AttachmentInfo } from '../crm-form-create/types';
 
@@ -62,6 +80,8 @@
       isLimit?: boolean; // 是否限制文件大小
       accept?: string; // 接受的文件类型
       fileTypeTip?: string; // 文件类型不合法提示
+      required?: boolean;
+      name?: string;
     }>(),
     {
       multiple: true,
@@ -72,7 +92,7 @@
     }
   );
   const emit = defineEmits<{
-    (e: 'change', value: string, fileList: CrmFileItem[]): void;
+    (e: 'change', value: string, fileList: UploadFileInfo[]): void;
   }>();
 
   const { t } = useI18n();
@@ -81,9 +101,10 @@
   const value = defineModel<string>('value', {
     required: true,
   });
-  const fileList = defineModel<CrmFileItem[]>('fileList', {
-    default: () => [],
+  const fileList = defineModel<UploadFileInfo[]>('fileList', {
+    default: [],
   });
+  const valueStatus = ref();
 
   function handleFileChange(file: CrmFileItem, fs: Array<CrmFileItem>) {
     const lastFileList = fs.map((e: any) => {
@@ -97,15 +118,6 @@
     file.url = URL.createObjectURL(file.file as Blob);
     file.size = file.file?.size;
     emit('change', value.value, lastFileList);
-  }
-
-  // 判断文件是否重复
-  function isFileRepeat(file: CrmFileItem, fs: CrmFileItem[], allowRepeat: boolean): boolean {
-    if (!allowRepeat) {
-      const isRepeat = fs.some((item: CrmFileItem) => item.name === file.name && item.local);
-      return isRepeat;
-    }
-    return false;
   }
 
   // 判断文件大小
@@ -128,9 +140,13 @@
     const maxSize = props.maxSize || 50;
 
     //  附件上传校验名称重复
-    if (fileList.value.length > 0 && isFileRepeat(file, fileList.value, props.allowRepeat)) {
-      Message.warning(t('crm.upload.repeatFileTip'));
-      return false; // 文件重复，返回 false 以阻止上传
+    if (fileList.value.length > 0) {
+      // 附件上传校验名称重复
+      const isRepeat = fileList.value.filter((item) => item.name === file.name).length >= 1;
+      if (isRepeat) {
+        Message.warning(t('crm.upload.repeatFileTip'));
+        return false;
+      }
     }
 
     //  校验文件大小
@@ -154,8 +170,68 @@
   }
 
   function handleDeleteFile(fileId: string) {
-    fileList.value = fileList.value.filter((file: CrmFileItem) => file.id !== fileId);
+    fileList.value = fileList.value.filter((file: UploadFileInfo) => file.id !== fileId);
   }
+
+  async function customRequest({ file, onFinish, onError, onProgress }: UploadCustomRequestOptions) {
+    let timer: NodeJS.Timeout | null = null;
+    try {
+      file.status = 'uploading';
+      // 模拟上传进度
+      let upLoadProgress = 0;
+      timer = setInterval(() => {
+        if (upLoadProgress < 50) {
+          // 进度在0-50%之间较快
+          const randomIncrement = Math.floor(Math.random() * 10) + 1; // 随机增加 5-10 的百分比
+          upLoadProgress += randomIncrement;
+          onProgress({ percent: upLoadProgress });
+        } else if (upLoadProgress < 100) {
+          // 进度在50%-100%之间较慢
+          const randomIncrement = Math.floor(Math.random() * 10) + 1; // 随机增加 1-5 的百分比
+          upLoadProgress = Math.min(upLoadProgress + randomIncrement, 99);
+          onProgress({ percent: upLoadProgress });
+        }
+      }, 100); // 定时器间隔为 100 毫秒
+      const res = await uploadTempAttachment(file.file);
+      onProgress({ percent: 100 });
+      clearInterval(timer as unknown as number);
+      onFinish();
+      fileList.value = fileList.value.map((f) => {
+        if (f.id === file.id) {
+          return {
+            ...f,
+            id: res.data[0],
+            local: false,
+          };
+        }
+        return f;
+      });
+      emit('change', value.value, fileList.value);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(error);
+      clearInterval(timer as unknown as number);
+      file.status = 'error';
+      onError();
+    }
+  }
+
+  function validate() {
+    if (props.required && value.value.trim() === '') {
+      valueStatus.value = 'error';
+      return false;
+    }
+    valueStatus.value = '';
+    return true;
+  }
+
+  function handleFileListChange(files: UploadFileInfo[]) {
+    emit('change', value.value, files);
+  }
+
+  defineExpose({
+    validate,
+  });
 </script>
 
 <style lang="less" scoped>

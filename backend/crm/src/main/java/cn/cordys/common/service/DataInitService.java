@@ -4,6 +4,10 @@ package cn.cordys.common.service;
 import cn.cordys.common.util.OnceInterface;
 import cn.cordys.common.util.OnceInterfaceAction;
 import cn.cordys.crm.clue.service.ClueService;
+import cn.cordys.crm.contract.service.ContractInvoiceService;
+import cn.cordys.crm.contract.service.ContractService;
+import cn.cordys.crm.opportunity.service.OpportunityQuotationService;
+import cn.cordys.crm.order.service.OrderService;
 import cn.cordys.crm.system.domain.Parameter;
 import cn.cordys.crm.system.service.ModuleFieldExtService;
 import cn.cordys.crm.system.service.ModuleFieldService;
@@ -41,6 +45,14 @@ public class DataInitService {
     private ModuleFieldService moduleFieldService;
     @Resource
     private ClueService clueService;
+	@Resource
+	private ContractService contractService;
+	@Resource
+	private ContractInvoiceService contractInvoiceService;
+	@Resource
+	private OpportunityQuotationService opportunityQuotationService;
+	@Resource
+	private OrderService orderService;
 
     public void initOneTime() {
         RLock lock = redisson.getLock("init_data_lock");
@@ -76,6 +88,10 @@ public class DataInitService {
 			initOneTime(moduleFieldExtService::refreshFormulaOldReferencedId, "refresh.formula.old.referenced.id");
             initOneTime(moduleFormService::initUpgradeForm, "init.upgrade.form.v1.8.0");
             initOneTime(moduleFormService::initUpgradeForm, "init.upgrade.form.v1.8.0.outsourcing");
+			initOneTime(contractService::handleOldApprovalData, "handler.contract.approval.status");
+			initOneTime(contractInvoiceService::handleOldApprovalData, "handler.contract.invoice.approval.status");
+			initOneTime(opportunityQuotationService::handleOldApprovalData, "handler.quotation.approval.status");
+			initOneTime(orderService::handleOldApprovalData, "handler.order.approval.status");
 		} finally {
             lock.unlock();
         }

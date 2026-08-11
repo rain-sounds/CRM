@@ -1,5 +1,6 @@
 /** 图布局：负责所有图形元素的位置和连线关系 */
 import type { FlowNode, FlowSchema } from '../types';
+import { clearRenameHandlers, registerBranchRenameHandler, registerMainNodeRenameHandler } from './renameRegistry';
 import type { FlowGraphLayoutEdge, FlowGraphLayoutNode, FlowGraphLayoutResult } from './types';
 
 export interface FlowLayoutOptions {
@@ -57,6 +58,10 @@ function createMainNodeLayout(
   y: number,
   options: FlowLayoutOptions
 ): FlowGraphLayoutNode {
+  registerMainNodeRenameHandler(node.id, (value: string) => {
+    node.name = value;
+    node.invalid = false;
+  });
   return {
     id: node.id,
     shape: shapeByNodeType(node.type),
@@ -69,9 +74,12 @@ function createMainNodeLayout(
       nodeId: node.id,
       nodeType: node.type,
       name: node.name,
+      number: node.number,
       description: node.type !== 'end' ? node.description : undefined,
+      descriptionItems: node.type === 'action' ? node.descriptionItems : undefined,
       actionType: node.type === 'action' ? node.actionType : undefined,
       showContent: options.showNodeDescription,
+      invalid: node.invalid,
     },
   };
 }
@@ -184,8 +192,13 @@ function createConditionBranchNodeLayout(
   branchNodeId: string,
   branchCardX: number,
   branchStartY: number,
+  sort: number | undefined,
   options: FlowLayoutOptions
 ): FlowGraphLayoutNode {
+  registerBranchRenameHandler(groupId, branch.id, (value: string) => {
+    branch.name = value;
+    branch.invalid = false;
+  });
   return {
     id: branchNodeId,
     shape: 'flow-condition-branch-node',
@@ -198,9 +211,12 @@ function createConditionBranchNodeLayout(
       groupId,
       branchId: branch.id,
       name: branch.name,
+      number: branch.number,
+      sort,
       description: branch.description,
       showContent: options.showNodeDescription,
       isElse: branch.isElse,
+      invalid: branch.invalid,
     },
   };
 }
@@ -349,6 +365,7 @@ function layoutConditionGroup(
     Math.max(0, branchWidths.length - 1) * options.branchColumnGap;
   // 当前分支槽位左边界，从整体居中位置开始
   let branchSlotLeft = centerX - totalBranchesWidth / 2;
+  let ifBranchIndex = 0;
 
   // 记录每个分支中心 x，用于绘制总线
   const branchCenters: number[] = [];
@@ -367,12 +384,15 @@ function layoutConditionGroup(
     const branchCardX = slotCenterX - options.cardWidth / 2;
     // 分支可视节点 id
     const branchNodeId = createBranchNodeId(node.id, branch.id);
+    const sort = branch.isElse ? undefined : (ifBranchIndex += 1);
 
     // 记录分支中心供后续总线使用
     branchCenters.push(slotCenterX);
 
     // 渲染分支卡片节点（if/else）
-    nodes.push(createConditionBranchNodeLayout(node.id, branch, branchNodeId, branchCardX, branchStartY, options));
+    nodes.push(
+      createConditionBranchNodeLayout(node.id, branch, branchNodeId, branchCardX, branchStartY, sort, options)
+    );
 
     // 渲染分支卡片下方 add-node
     nodes.push(
@@ -459,6 +479,8 @@ export default function buildFlowLayout(
   flow: FlowSchema,
   options: Partial<FlowLayoutOptions> = {}
 ): FlowGraphLayoutResult {
+  clearRenameHandlers(); // 在每次重新布局前调用，避免旧 key 泄漏到新图数据中
+
   // 允许业务场景覆写默认布局参数
   const mergedOptions: FlowLayoutOptions = {
     ...DEFAULT_FLOW_LAYOUT_OPTIONS,

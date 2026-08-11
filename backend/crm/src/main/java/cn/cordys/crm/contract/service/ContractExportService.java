@@ -1,19 +1,18 @@
 package cn.cordys.crm.contract.service;
 
+import cn.cordys.common.constants.FormKey;
 import cn.cordys.common.dto.ExportDTO;
-import cn.cordys.common.dto.ExportFieldParam;
 import cn.cordys.common.dto.FieldExportMeta;
-import cn.cordys.common.resolver.field.AbstractModuleFieldResolver;
-import cn.cordys.common.resolver.field.ModuleFieldResolverFactory;
+import cn.cordys.common.dto.stage.StageConfigResponse;
 import cn.cordys.common.service.BaseExportService;
 import cn.cordys.common.util.TimeUtils;
 import cn.cordys.common.util.Translator;
+import cn.cordys.crm.approval.service.ApprovalFlowService;
 import cn.cordys.crm.contract.dto.request.ContractPageRequest;
 import cn.cordys.crm.contract.dto.response.ContractListResponse;
 import cn.cordys.crm.contract.mapper.ExtContractMapper;
+import cn.cordys.crm.contract.mapper.ExtContractStageConfigMapper;
 import cn.cordys.crm.system.excel.domain.MergeResult;
-import cn.cordys.crm.system.service.ModuleFormService;
-import cn.cordys.registry.ExportThreadRegistry;
 import com.github.pagehelper.PageHelper;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -33,116 +31,72 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ContractExportService extends BaseExportService {
 
+    private static final String STAGE_CONFIG_MAP_KEY = "stageConfigMap";
+
     @Resource
     private ContractService contractService;
     @Resource
     private ExtContractMapper extContractMapper;
     @Resource
-    private ModuleFormService moduleFormService;
-
-    private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+    private ApprovalFlowService approvalFlowService;
+    @Resource
+    private ExtContractStageConfigMapper extContractStageConfigMapper;
 
     @Override
     protected MergeResult getExportMergeData(String taskId, ExportDTO exportParam) {
-        var exportList = collectExportList(exportParam);
-        if (CollectionUtils.isEmpty(exportList)) {
-            return MergeResult.builder().dataList(new ArrayList<>()).mergeRegions(new ArrayList<>()).handleCount(0).build();
+        var queryResult = collectExportList(exportParam);
+        var filteredList = queryResult.getLeft();
+        var queryCount = queryResult.getRight();
+        if (CollectionUtils.isEmpty(filteredList)) {
+            return MergeResult.builder().dataList(List.of()).mergeRegions(List.of()).handleCount(0).queryCount(queryCount).build();
         }
-        var dataList = contractService.buildList(exportList, exportParam.getOrgId());
-        moduleFormService.getBaseModuleFieldValues(dataList, ContractListResponse::getModuleFields);
-        var exportFieldParam = exportParam.getExportFieldParam();
-        return parallelBuildMergeResult(taskId, exportParam, dataList, exportFieldParam);
+        var dataList = contractService.buildList(filteredList, exportParam.getOrgId());
+        // 从缓存获取阶段配置，避免重复查询
+        Map<String, String> stageConfigMap = getOrLoadStageConfigMap(exportParam);
+        var result = buildExportMergeResult(taskId, exportParam, dataList,
+                ContractListResponse::getModuleFields,
+                (detail, fieldParam, metas, cache) -> buildDataWithSub(detail.getModuleFields(), fieldParam, metas,
+                        getSystemFieldMap(detail, metas, stageConfigMap), cache));
+        result.setQueryCount(queryCount);
+        return result;
     }
 
-    private List<ContractListResponse> collectExportList(ExportDTO exportParam) {
+    @SuppressWarnings("unchecked")
+    private Map<String, String> getOrLoadStageConfigMap(ExportDTO exportParam) {
+        return (Map<String, String>) exportParam.getExtraParams()
+                .computeIfAbsent(STAGE_CONFIG_MAP_KEY, key ->
+                        extContractStageConfigMapper.getStageConfigList(exportParam.getOrgId())
+                                .stream().collect(Collectors.toMap(StageConfigResponse::getId, StageConfigResponse::getName)));
+    }
+
+    private Pair<List<ContractListResponse>, Integer> collectExportList(ExportDTO exportParam) {
         var orgId = exportParam.getOrgId();
         var userId = exportParam.getUserId();
         var deptDataPermission = exportParam.getDeptDataPermission();
+        List<ContractListResponse> exportList;
         if (CollectionUtils.isNotEmpty(exportParam.getSelectIds())) {
-            return extContractMapper.getListByIds(exportParam.getSelectIds(), userId, orgId, deptDataPermission);
+            exportList = extContractMapper.getListByIds(exportParam.getSelectIds(), userId, orgId, deptDataPermission);
+            return Pair.of(exportList, exportList.size());
+        } else {
+            var request = (ContractPageRequest) exportParam.getPageRequest();
+            PageHelper.startPage(request.getCurrent(), request.getPageSize());
+            exportList = extContractMapper.list(request, orgId, userId, deptDataPermission, false);
+            int queryCount = exportList.size();
+            var filtered = filterExportPermission(exportList, orgId);
+            return Pair.of(filtered, queryCount);
         }
-        var request = (ContractPageRequest) exportParam.getPageRequest();
-        PageHelper.startPage(request.getCurrent(), request.getPageSize());
-        return extContractMapper.list(request, orgId, userId, deptDataPermission, false);
     }
 
-    /**
-     * 并行构建导出数据及合并区域
-     *
-     * @param taskId           导出任务ID
-     * @param exportParam      导出参数
-     * @param dataList         数据列表
-     * @param exportFieldParam 导出字段参数
-     *
-     * @return 合并结果
-     */
-    private MergeResult parallelBuildMergeResult(String taskId, ExportDTO exportParam,
-                                                 List<ContractListResponse> dataList,
-                                                 ExportFieldParam exportFieldParam) {
-        int size = dataList.size();
-        var cacheMap = new ConcurrentHashMap<>();
-        List<List<Object>> mergeRowData = new ArrayList<>(size);
-        List<int[]> mergeRegions = new ArrayList<>();
-
-        Semaphore dbSemaphore = new Semaphore(100);
-        List<Future<Pair<Integer, List<List<Object>>>>> futures = new ArrayList<>(size);
-
-        for (int i = 0; i < size; i++) {
-            final int idx = i;
-            ContractListResponse detail = dataList.get(i);
-            futures.add(executor.submit(() -> {
-                if (ExportThreadRegistry.isInterrupted(taskId)) {
-                    throw new InterruptedException("导出中断");
-                }
-                // 获取数据库访问许可
-                dbSemaphore.acquire();
-                try {
-                    List<List<Object>> buildData = buildData(detail, exportFieldParam, exportParam.getExportMetas(), cacheMap);
-                    return Pair.of(idx, buildData);
-                } finally {
-                    dbSemaphore.release();  // 确保释放
-                }
-            }));
-        }
-
-        // 收集结果（阻塞）
-        List<Pair<Integer, List<List<Object>>>> results = new ArrayList<>(size);
-        for (Future<Pair<Integer, List<List<Object>>>> f : futures) {
-            try {
-                results.add(f.get());
-            } catch (Exception e) {
-                log.error("Parse row data error: {}", e.getMessage());
-            }
-        }
-
-        results.sort(Comparator.comparingInt(Pair::getLeft));
-
-        int offset = 0;
-        for (Pair<Integer, List<List<Object>>> r : results) {
-            List<List<Object>> buildData = r.getRight();
-            if (buildData.size() > 1) {
-                mergeRegions.add(new int[]{offset, offset + buildData.size() - 1});
-            }
-            offset += buildData.size();
-            mergeRowData.addAll(buildData);
-        }
-
-        cacheMap.clear();
-
-        return MergeResult.builder()
-                .mergeRegions(mergeRegions)
-                .dataList(mergeRowData)
-                .handleCount(size)
-                .build();
+    private List<ContractListResponse> filterExportPermission(List<ContractListResponse> exportList, String orgId) {
+        return filterApprovalExportPermission(exportList, orgId, FormKey.CONTRACT.getKey(),
+                ContractListResponse::getId, ContractListResponse::getApprovalStatus,
+                approvalFlowService);
     }
 
-    private List<List<Object>> buildData(ContractListResponse detail, ExportFieldParam exportFieldParam, List<FieldExportMeta> exportMetas, Map<Object, Object> cacheMap) {
-        return buildDataWithSub(detail.getModuleFields(), exportFieldParam, exportMetas, getSystemFieldMap(detail, exportMetas), cacheMap);
-    }
-
-    public LinkedHashMap<String, Object> getSystemFieldMap(ContractListResponse data, List<FieldExportMeta> exportMetas) {
+    public LinkedHashMap<String, Object> getSystemFieldMap(ContractListResponse data, List<FieldExportMeta> exportMetas, Map<String, String> stageConfigMap) {
         LinkedHashMap<String, Object> systemFieldMap = new LinkedHashMap<>();
         systemFieldMap.put("name", data.getName());
+        systemFieldMap.put("id", data.getId());
         systemFieldMap.put("owner", data.getOwnerName());
         systemFieldMap.put("departmentId", data.getDepartmentName());
         systemFieldMap.put("customerId", data.getCustomerName());
@@ -155,7 +109,7 @@ public class ContractExportService extends BaseExportService {
             systemFieldMap.put("approvalStatus", Translator.get("contract.approval_status." + data.getApprovalStatus().toLowerCase(), Locale.SIMPLIFIED_CHINESE));
         }
         if (StringUtils.isNotBlank(data.getStage())) {
-            systemFieldMap.put("stage", Translator.get("contract.stage." + data.getStage().toLowerCase(), Locale.SIMPLIFIED_CHINESE));
+            systemFieldMap.put("stage", stageConfigMap.get(data.getStage()));
         }
 
         systemFieldMap.put("createUser", data.getCreateUserName());
@@ -164,25 +118,29 @@ public class ContractExportService extends BaseExportService {
         systemFieldMap.put("updateTime", TimeUtils.getDateTimeStr(data.getUpdateTime()));
         systemFieldMap.put("voidReason", data.getVoidReason());
 
-        // 将 exportMetas 转为 Map，避免重复遍历
         Map<String, FieldExportMeta> metaMap = exportMetas.stream()
                 .collect(Collectors.toMap(FieldExportMeta::getBusinessKey, Function.identity(), (a, b) -> a));
-
-        resolveAndPutTimeField(systemFieldMap, metaMap, "startTime", String.valueOf(data.getStartTime()));
-        resolveAndPutTimeField(systemFieldMap, metaMap, "endTime", String.valueOf(data.getEndTime()));
+        resolveAndPutTimeField(systemFieldMap, metaMap, "startTime", data.getStartTime());
+        resolveAndPutTimeField(systemFieldMap, metaMap, "endTime", data.getEndTime());
 
         return systemFieldMap;
     }
 
-    private void resolveAndPutTimeField(LinkedHashMap<String, Object> map,
-                                        Map<String, FieldExportMeta> metaMap,
-                                        String businessKey,
-                                        String rawValue) {
+    /**
+     * 解析合同开始结束时间
+     * @param sysMap 系统字段值集合
+     * @param metaMap 导出字段信息
+     * @param businessKey 业务Key
+     * @param rawValue 原始值
+     */
+    private void resolveAndPutTimeField(LinkedHashMap<String, Object> sysMap, Map<String, FieldExportMeta> metaMap,
+                                        String businessKey, Long rawValue) {
+        if (rawValue == null) {
+            return;
+        }
         FieldExportMeta meta = metaMap.get(businessKey);
-        if (meta != null) {
-            AbstractModuleFieldResolver resolver = ModuleFieldResolverFactory.getResolver(meta.getField().getType());
-            map.put(businessKey, resolver.transformToValue(meta.getField(), rawValue));
+        if (meta != null && meta.getField() != null) {
+            sysMap.put(businessKey, transformFieldValue(meta.getResolver(), meta.getField(), rawValue, new HashMap<>()));
         }
     }
-
 }

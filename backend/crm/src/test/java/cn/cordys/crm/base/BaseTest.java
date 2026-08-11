@@ -7,7 +7,8 @@ import cn.cordys.common.pager.Pager;
 import cn.cordys.common.permission.PermissionCache;
 import cn.cordys.common.uid.IDGenerator;
 import cn.cordys.common.util.JSON;
-
+import cn.cordys.common.util.rsa.RsaKey;
+import cn.cordys.common.util.rsa.RsaUtils;
 import cn.cordys.crm.system.domain.RolePermission;
 import cn.cordys.crm.system.domain.User;
 import cn.cordys.mybatis.BaseMapper;
@@ -112,6 +113,10 @@ public abstract class BaseTest {
     }
 
     private AuthInfo initAuthInfo(String username, String password) throws Exception {
+        RsaKey rsaKey = RsaUtils.getRsaKey();
+        password =  RsaUtils.publicEncrypt(password, rsaKey.getPublicKey());
+        username = RsaUtils.publicEncrypt(username, rsaKey.getPublicKey());
+
         MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.post("/login")
                         .content(String.format("{\"username\":\"%s\",\"password\":\"%s\",\"platform\":\"%s\"}", username, password, DEFAULT_PLATFORM))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -169,10 +174,15 @@ public abstract class BaseTest {
                 .andExpect(status().isOk());
     }
 
-    protected ResultActions requestGetStreamWithOk(String url, Object... uriVariables) throws Exception {
-        return mockMvc.perform(getRequestBuilder(url, uriVariables))
+    protected void requestGetStreamWithOk(String url, Object... uriVariables) throws Exception {
+        mockMvc.perform(getRequestBuilder(url, uriVariables))
                 .andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM))
                 .andExpect(status().isOk());
+    }
+
+    protected void requestGetStreamWith4xx(String url, Object... uriVariables) throws Exception {
+        mockMvc.perform(getRequestBuilder(url, uriVariables))
+                .andExpect(status().is4xxClientError());
     }
 
     protected MvcResult requestGetWithOkAndReturn(String url, Object... uriVariables) throws Exception {
