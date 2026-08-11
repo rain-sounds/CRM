@@ -302,7 +302,6 @@
         "sysEnable": false,
         "weComEnable": false,
         "smsEnable": false
-        "weComEnable": false
       },
       {
         "event": "CONTRACT_APPROVAL",

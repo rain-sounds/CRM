@@ -204,7 +204,7 @@
       | 'price'
       | 'businessTitle'
       | 'invoice'
-      | 'outsourcing';
+      | 'outsourcing'
       | 'customForm';
     exportColumns: ExportTableColumnItem[];
     isExportAll?: boolean;

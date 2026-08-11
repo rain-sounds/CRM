@@ -120,11 +120,6 @@ import {
   DownloadContractTemplateUrl,
   ImportContractUrl,
   GetPaymentRecordStatisticUrl,
-  InvoiceMaterialPageUrl,
-  InvoiceMaterialAddUrl,
-  InvoiceMaterialUpdateUrl,
-  InvoiceMaterialDeleteUrl,
-  GetInvoiceMaterialDetailUrl,
   UpdateContractStatusUrl,
   UpdateContractStatusRollbackUrl,
   SortContractStatusUrl,
@@ -134,6 +129,11 @@ import {
   UpdateContractStageUrl,
   SwitchContractCirculationTypeUrl,
   SaveContractCirculationConfigUrl,
+  InvoiceMaterialPageUrl,
+  InvoiceMaterialAddUrl,
+  InvoiceMaterialUpdateUrl,
+  InvoiceMaterialDeleteUrl,
+  GetInvoiceMaterialDetailUrl,
 } from '@lib/shared/api/requrls/contract';
 import type { CustomerTabHidden } from '@lib/shared/models/customer';
 import type {
@@ -724,6 +724,27 @@ export default function useContractApi(CDR: CordysAxios) {
     return CDR.uploadFile({ url: ImportContractInvoicedUrl }, params, 'file');
   }
 
+  // 开票资料
+  function getInvoiceMaterialList(data: TableQueryParams) {
+    return CDR.post<CommonList<InvoiceMaterialItem>>({ url: InvoiceMaterialPageUrl, data }, { ignoreCancelToken: true });
+  }
+
+  function addInvoiceMaterial(data: SaveInvoiceMaterialParams) {
+    return CDR.post({ url: InvoiceMaterialAddUrl, data });
+  }
+
+  function updateInvoiceMaterial(data: SaveInvoiceMaterialParams) {
+    return CDR.post({ url: InvoiceMaterialUpdateUrl, data });
+  }
+
+  function deleteInvoiceMaterial(id: string) {
+    return CDR.get({ url: `${InvoiceMaterialDeleteUrl}/${id}` });
+  }
+
+  function getInvoiceMaterialDetail(id: string) {
+    return CDR.get<InvoiceMaterialItem>({ url: `${GetInvoiceMaterialDetailUrl}/${id}` });
+  }
+
   // 获取发票 tab 显隐
   function getInvoicedTab() {
     return CDR.get<CustomerTabHidden>({ url: ContractInvoicedTabUrl });
@@ -797,25 +818,6 @@ export default function useContractApi(CDR: CordysAxios) {
     return CDR.post({ url: GetPaymentRecordStatisticUrl, data }, { ignoreCancelToken: true });
   }
 
-  // 开票资料
-  function getInvoiceMaterialList(data: TableQueryParams) {
-    return CDR.post<CommonList<InvoiceMaterialItem>>({ url: InvoiceMaterialPageUrl, data }, { ignoreCancelToken: true });
-  }
-
-  function addInvoiceMaterial(data: SaveInvoiceMaterialParams) {
-    return CDR.post({ url: InvoiceMaterialAddUrl, data });
-  }
-
-  function updateInvoiceMaterial(data: SaveInvoiceMaterialParams) {
-    return CDR.post({ url: InvoiceMaterialUpdateUrl, data });
-  }
-
-  function deleteInvoiceMaterial(id: string) {
-    return CDR.get({ url: `${InvoiceMaterialDeleteUrl}/${id}` });
-  }
-
-  function getInvoiceMaterialDetail(id: string) {
-    return CDR.get<InvoiceMaterialItem>({ url: `${GetInvoiceMaterialDetailUrl}/${id}` });
   // 更新合同状态配置
   function updateContractStatus(data: UpdateStageBaseParams) {
     return CDR.post({ url: UpdateContractStatusUrl, data });
@@ -979,12 +981,6 @@ export default function useContractApi(CDR: CordysAxios) {
     deleteContractInvoicedView,
     dragContractInvoicedView,
     getInvoicedTab,
-    // 开票资料
-    getInvoiceMaterialList,
-    addInvoiceMaterial,
-    updateInvoiceMaterial,
-    deleteInvoiceMaterial,
-    getInvoiceMaterialDetail,
     // 合同阶段
     updateContractStatus,
     updateContractStatusRollback,
@@ -999,5 +995,11 @@ export default function useContractApi(CDR: CordysAxios) {
     preCheckImportContractInvoiced,
     downloadContractInvoicedTemplate,
     importContractInvoiced,
+    // 开票资料
+    getInvoiceMaterialList,
+    addInvoiceMaterial,
+    updateInvoiceMaterial,
+    deleteInvoiceMaterial,
+    getInvoiceMaterialDetail,
   };
 }

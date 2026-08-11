@@ -9,6 +9,7 @@ import useCustomFormApi from '@lib/shared/api/modules/customForm';
 import useFollowApi from '@lib/shared/api/modules/follow';
 import useOpportunityApi from '@lib/shared/api/modules/opportunity';
 import useOrderApi from '@lib/shared/api/modules/order';
+import useOutsourcingApi from '@lib/shared/api/modules/outsourcing';
 import useProductApi from '@lib/shared/api/modules/product';
 import useLicenseApi from '@lib/shared/api/modules/system/authorizedManagement';
 import useBusinessApi from '@lib/shared/api/modules/system/business';
@@ -38,6 +39,7 @@ const licenseApi = useLicenseApi(CDR);
 const followApi = useFollowApi(CDR);
 const contractApi = useContractApi(CDR);
 const orderApi = useOrderApi(CDR);
+const outsourcingApi = useOutsourcingApi(CDR);
 const agentApi = useAgentApi(CDR);
 const processApi = useProcess(CDR);
 
@@ -441,6 +443,23 @@ export const {
   batchDeleteCustomFormData,
   deleteCustomFormData,
 } = useCustomFormApi(CDR);
+
+export const {
+  getOutsourcingList,
+  addOutsourcing,
+  updateOutsourcing,
+  getOutsourcingDetail,
+  getOutsourcingFormConfig,
+  deleteOutsourcing,
+  getOutsourcingViewList,
+  addOutsourcingView,
+  updateOutsourcingView,
+  deleteOutsourcingView,
+  getOutsourcingViewDetail,
+  fixedOutsourcingView,
+  enableOutsourcingView,
+  dragOutsourcingView,
+} = outsourcingApi;
 
 export const {
   getTodoStatistic,

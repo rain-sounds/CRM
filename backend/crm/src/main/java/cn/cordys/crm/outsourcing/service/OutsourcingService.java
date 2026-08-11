@@ -147,7 +147,7 @@ public class OutsourcingService {
 
     public OutsourcingGetResponse getWithDataPermissionCheck(String id, String userId, String orgId) {
         OutsourcingGetResponse getResponse = get(id);
-        dataScopeService.checkDataPermission(userId, orgId, getResponse.getOwner(), PermissionConstants.OUTSOURCING_READ);
+        dataScopeService.checkDataPermission(userId, orgId, List.of(getResponse.getOwner()), PermissionConstants.OUTSOURCING_READ);
         return getResponse;
     }
 
@@ -205,7 +205,7 @@ public class OutsourcingService {
     @OperationLog(module = LogModule.OUTSOURCING, type = LogType.UPDATE, resourceId = "{#request.id}")
     public Outsourcing update(OutsourcingUpdateRequest request, String userId, String orgId) {
         Outsourcing originOutsourcing = outsourcingMapper.selectByPrimaryKey(request.getId());
-        dataScopeService.checkDataPermission(userId, orgId, originOutsourcing.getOwner(), PermissionConstants.OUTSOURCING_UPDATE);
+        dataScopeService.checkDataPermission(userId, orgId, List.of(originOutsourcing.getOwner()), PermissionConstants.OUTSOURCING_UPDATE);
 
         Outsourcing outsourcing = BeanUtils.copyBean(new Outsourcing(), request);
         outsourcing.setUpdateTime(System.currentTimeMillis());
@@ -241,7 +241,7 @@ public class OutsourcingService {
     @OperationLog(module = LogModule.OUTSOURCING, type = LogType.DELETE, resourceId = "{#id}")
     public void delete(String id, String userId, String orgId) {
         Outsourcing originOutsourcing = outsourcingMapper.selectByPrimaryKey(id);
-        dataScopeService.checkDataPermission(userId, orgId, originOutsourcing.getOwner(), PermissionConstants.OUTSOURCING_DELETE);
+        dataScopeService.checkDataPermission(userId, orgId, List.of(originOutsourcing.getOwner()), PermissionConstants.OUTSOURCING_DELETE);
 
         outsourcingMapper.deleteByPrimaryKey(id);
     }

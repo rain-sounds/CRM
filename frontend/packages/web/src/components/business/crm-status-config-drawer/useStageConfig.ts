@@ -1,15 +1,12 @@
 import { computed, type Ref, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 
-import { FieldTypeEnum, FormDesignKeyEnum } from '@lib/shared/enums/formDesignEnum';
 import { CirculationTypeEnum } from '@lib/shared/enums/opportunityEnum';
 import { useI18n } from '@lib/shared/hooks/useI18n';
 import { getGenerateId } from '@lib/shared/method';
 import type { StageConfigItem } from '@lib/shared/models/opportunity';
 
 import type { ActionsItem } from '@/components/pure/crm-more-action/type';
-
-import { getDepartmentTree } from '@/api/modules';
 
 import { useStatusApiConfig, useStatusStrategyConfig, useStatusTextConfig } from './config';
 import type { StatusBizType, StatusFormModel, StatusRowItem, UseStatusConfigReturn } from './types';
@@ -29,56 +26,6 @@ export default function useStageConfig(type: Ref<StatusBizType>): UseStatusConfi
   const apiConfigMap = useStatusApiConfig();
   const strategyConfigMap = useStatusStrategyConfig();
 
-  const textConfig = computed(() => textConfigMap[type]);
-  const apiConfig = computed(() => apiConfigMap[type]);
-  const strategyConfig = computed(() => strategyConfigMap[type]);
-
-  // 部门选项
-  const departmentOptions = ref<{ label: string; value: string }[]>([]);
-
-  // 将部门树转换为扁平选项
-  function flattenDepartmentTree(nodes: any[], result: { label: string; value: string }[] = []) {
-    nodes.forEach((node) => {
-      result.push({ label: node.name, value: node.id });
-      if (node.children?.length) {
-        flattenDepartmentTree(node.children, result);
-      }
-    });
-    return result;
-  }
-
-  // 加载部门选项
-  async function loadDepartmentOptions() {
-    try {
-      const res = await getDepartmentTree();
-      departmentOptions.value = flattenDepartmentTree(res || []);
-    } catch {
-      departmentOptions.value = [];
-    }
-  }
-
-  // 动态表单项模型（包含部门选择器）
-  const formItemModel = computed(() => {
-    const baseModel = strategyConfig.value.formItemModel;
-    // 只在项目阶段配置时添加部门选择器
-    if (type === FormDesignKeyEnum.BUSINESS) {
-      return [
-        ...baseModel,
-        {
-          path: 'departmentId',
-          type: FieldTypeEnum.SELECT_MULTIPLE,
-          formItemClass: 'w-full flex-initial',
-          selectProps: {
-            options: departmentOptions.value,
-            clearable: true,
-            placeholder: t('common.pleaseSelect'),
-            maxTagCount: 3,
-          },
-        },
-      ];
-    }
-    return baseModel;
-  });
   const textConfig = computed(() => textConfigMap[type.value]);
   const apiConfig = computed(() => apiConfigMap[type.value]);
   const strategyConfig = computed(() => strategyConfigMap[type.value]);
@@ -99,7 +46,6 @@ export default function useStageConfig(type: Ref<StatusBizType>): UseStatusConfi
       name: '',
       rate: null,
       type: 'AFOOT',
-      departmentId: [],
       editing: true,
     };
   }
@@ -143,16 +89,12 @@ export default function useStageConfig(type: Ref<StatusBizType>): UseStatusConfi
   }
 
   async function init() {
-    // 加载部门选项
-    await loadDepartmentOptions();
     const res = await apiConfig.value.load();
     form.value = {
       runningStageRollback: res.afootRollBack,
       completedStageRollback: res.endRollBack,
       list: (res.stageConfigList || []).map((item: StageConfigItem) => ({
         ...item,
-        // 将逗号分隔的字符串转为数组（多选字段）
-        departmentId: item.departmentId ? item.departmentId.split(',').filter(Boolean) : [],
         _key: item.id,
         editing: false,
         draggable: item.type !== 'END',

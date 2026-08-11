@@ -54,7 +54,7 @@ export type FormKey =
   | FormDesignKeyEnum.ORDER
   | FormDesignKeyEnum.CONTRACT_ORDER
   | FormDesignKeyEnum.CUSTOMER_ORDER
-  | FormDesignKeyEnum.OUTSOURCING;
+  | FormDesignKeyEnum.OUTSOURCING
   | FormDesignKeyEnum.CUSTOM_FORM;
 
 export interface FormCreateTableProps {

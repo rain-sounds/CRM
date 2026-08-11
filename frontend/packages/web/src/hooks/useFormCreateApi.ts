@@ -442,7 +442,6 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
   function makeDescriptionItem(item: FormCreateField, form: FormDetail) {
     if (!item.readable) return; // 这里不过滤 show = false字段，在描述组件内过滤
     if (item.businessKey === 'expectedEndTime' && !item.resourceFieldId) {
-      // TODO:项目结束时间原位编辑
       descriptions.value.push({
         label: item.name,
         value: parseFormDetailValue(item, form),
@@ -1046,7 +1045,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
    */
   function specialFormFieldInit(field: FormCreateField) {
     if (props.formKey.value === FormDesignKeyEnum.BUSINESS && props.sourceId?.value) {
-      // 客户详情下创建项目，自动带入客户信息
+      // 客户详情下创建商机，自动带入客户信息
       if (field.businessKey === 'customerId') {
         specialInitialOptions.value = [
           {
@@ -1136,7 +1135,7 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
       ) &&
       props.sourceId?.value
     ) {
-      // 项目跟进计划和记录，需要赋予默认跟进类型、项目、项目对应客户
+      // 商机跟进计划和记录，需要赋予默认跟进类型、商机、商机对应客户
       if (field.businessKey === 'type') {
         return {
           defaultValue: 'CUSTOMER',
@@ -1236,25 +1235,6 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
         initialOptions: field.initialOptions,
       };
     }
-    // 跟进记录/计划表单，跟进方式默认选择"到访"
-    if (
-      [
-        FormDesignKeyEnum.FOLLOW_RECORD,
-        FormDesignKeyEnum.FOLLOW_PLAN,
-        FormDesignKeyEnum.FOLLOW_RECORD_CUSTOMER,
-        FormDesignKeyEnum.FOLLOW_PLAN_CUSTOMER,
-        FormDesignKeyEnum.FOLLOW_RECORD_CLUE,
-        FormDesignKeyEnum.FOLLOW_PLAN_CLUE,
-        FormDesignKeyEnum.FOLLOW_RECORD_BUSINESS,
-        FormDesignKeyEnum.FOLLOW_PLAN_BUSINESS,
-      ].includes(props.formKey.value) &&
-      (field.businessKey === 'followMethod' || field.businessKey === 'method')
-    ) {
-      return {
-        defaultValue: '1',
-        initialOptions: field.initialOptions,
-      };
-    }
     return {
       defaultValue: field.defaultValue,
       initialOptions: field.initialOptions,
@@ -1298,68 +1278,9 @@ export default function useFormCreateApi(props: FormCreateApiProps) {
     });
   }
 
-  /**
-   * 跟进记录/计划表单自定义处理：隐藏特定字段，添加"跟进部门"下拉
-   */
-  function handleFollowFormCustomization() {
-    const followFormKeys = [
-      FormDesignKeyEnum.FOLLOW_RECORD,
-      FormDesignKeyEnum.FOLLOW_PLAN,
-      FormDesignKeyEnum.FOLLOW_RECORD_CUSTOMER,
-      FormDesignKeyEnum.FOLLOW_PLAN_CUSTOMER,
-      FormDesignKeyEnum.FOLLOW_RECORD_CLUE,
-      FormDesignKeyEnum.FOLLOW_PLAN_CLUE,
-      FormDesignKeyEnum.FOLLOW_RECORD_BUSINESS,
-      FormDesignKeyEnum.FOLLOW_PLAN_BUSINESS,
-    ];
-    if (!followFormKeys.includes(props.formKey.value)) {
-      return;
-    }
-
-    const hideBusinessKeys = ['type', 'followMethod', 'method'];
-    const hideInternalKeys = ['recordIntentionProduct', 'planIntentionProduct'];
-
-    fieldList.value.forEach((item) => {
-      if (hideBusinessKeys.includes(item.businessKey || '') || hideInternalKeys.includes(item.internalKey || '')) {
-        item.readable = false;
-      }
-    });
-
-    // 添加"跟进部门"下拉字段（置顶，必填）
-    const departmentField: FormCreateField = {
-      id: `follow_department_${Date.now()}`,
-      name: '跟进部门',
-      type: FieldTypeEnum.SELECT,
-      businessKey: 'followDepartment',
-      readable: true,
-      editable: true,
-      showLabel: true,
-      description: '',
-      icon: '',
-      fieldWidth: 1,
-      rules: [{ key: FieldRuleEnum.REQUIRED }],
-      options: [
-        { label: '销售', value: '销售' },
-        { label: '售前', value: '售前' },
-        { label: '分析', value: '分析' },
-        { label: '编辑', value: '编辑' },
-      ],
-      defaultValue: '',
-      initialOptions: [],
-    };
-    fieldList.value.unshift(departmentField);
-  }
-
   async function initFormConfig() {
     try {
       loading.value = true;
-      const api = getFormConfigApiMap[props.formKey.value];
-      const res = await api(props.sourceId?.value ?? '');
-      moduleFormConfig.value = cloneDeep(res);
-      initFormFieldConfig(res.fields);
-      // 跟进记录/计划表单：隐藏特定字段并添加"跟进部门"下拉
-      handleFollowFormCustomization();
-      formConfig.value = res.formProp;
       const api = props.isDatasource ? getDatasourceFieldConfig : getFormConfigApiMap[props.formKey.value];
       if (props.formKey.value === FormDesignKeyEnum.CUSTOM_FORM) {
         const res = await api(props.customFormId?.value ?? '');

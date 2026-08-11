@@ -817,9 +817,8 @@ export const getFormConfigApiMap: Record<
   [FormDesignKeyEnum.ORDER]: getOrderFormConfig,
   [FormDesignKeyEnum.CONTRACT_ORDER]: getOrderFormConfig,
   [FormDesignKeyEnum.CUSTOMER_ORDER]: getOrderFormConfig,
-  [FormDesignKeyEnum.ORDER_SNAPSHOT]: (id) => getOrderFormSnapshotConfig(id),
-  [FormDesignKeyEnum.OUTSOURCING]: getOutsourcingFormConfig,
   [FormDesignKeyEnum.ORDER_SNAPSHOT]: getOrderFormSnapshotConfig,
+  [FormDesignKeyEnum.OUTSOURCING]: getOutsourcingFormConfig,
   [FormDesignKeyEnum.CUSTOM_FORM]: getCustomFormDetail,
 };
 

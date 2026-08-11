@@ -209,24 +209,6 @@ public class ModuleFormService {
      */
     @OperationLog(module = LogModule.SYSTEM_MODULE, type = LogType.UPDATE, resourceId = "{#saveParam.formKey}")
     public ModuleFormConfigDTO save(ModuleFormSaveRequest saveParam, String currentUserId, String currentOrgId) {
-        // 处理表单
-        LambdaQueryWrapper<ModuleForm> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(ModuleForm::getFormKey, saveParam.getFormKey()).eq(ModuleForm::getOrganizationId, currentOrgId);
-        List<ModuleForm> forms = moduleFormMapper.selectListByLambda(queryWrapper);
-        if (CollectionUtils.isEmpty(forms)) {
-            throw new GenericException(Translator.get("module.form.not_exist"));
-        }
-        // 自动补充缺失的业务字段（兼容新增业务字段但表单配置未同步的场景）
-        addMissingBusinessFields(saveParam);
-        preCheckForFieldSave(saveParam);
-        ModuleFormConfigDTO oldConfig = new ModuleFormConfigDTO();
-        oldConfig.setFields(getAllFields(saveParam.getFormKey(), currentOrgId));
-        ModuleForm form = forms.getFirst();
-        // 旧表单配置
-        ModuleFormBlob moduleFormBlob = moduleFormBlobMapper.selectByPrimaryKey(form.getId());
-        if (moduleFormBlob != null && StringUtils.isNotEmpty(moduleFormBlob.getProp())) {
-            oldConfig.setFormProp(JSON.parseObject(moduleFormBlob.getProp(), FormProp.class));
-        }
         // 设置表单日志上下文
         OperationLogContext.setContext(getModuleFormChangeLogContext(saveParam.getFormKey(), currentOrgId, saveParam));
         // 返回表单配置

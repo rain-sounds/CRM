@@ -16,7 +16,6 @@ export interface ContractItem {
   amount: number;
   alreadyPayAmount: number;
   pendingPayAmount: number;
-  approvalStatus: ProcessStatusType;
   approved?: boolean;
   approvalStatus: ProcessStatusEnum;
   stage: string;

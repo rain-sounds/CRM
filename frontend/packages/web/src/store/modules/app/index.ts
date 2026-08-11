@@ -105,6 +105,9 @@ const defaultModuleConfig = [
   },
   {
     moduleKey: ModuleConfigEnum.OUTSOURCING,
+    enable: true,
+  },
+  {
     moduleKey: ModuleConfigEnum.CUSTOM_FORM,
     enable: true,
   },

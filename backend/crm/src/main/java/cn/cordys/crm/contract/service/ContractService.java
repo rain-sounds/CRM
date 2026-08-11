@@ -119,8 +119,6 @@ public class ContractService implements ApprovalResourceHandler {
     @Resource
     private LogService logService;
     @Resource
-    private SqlSessionFactory sqlSessionFactory;
-    @Resource
     private CommonNoticeSendService commonNoticeSendService;
     @Resource
     private BaseMapper<MessageTaskConfig> messageTaskConfigMapper;
